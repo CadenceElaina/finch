@@ -6,9 +6,20 @@ interface PortfolioChartProps {
 }
 
 const PortfolioChart: React.FC<PortfolioChartProps> = ({ data }) => {
+  // Filter out entries with invalid values before passing to Google Charts
+  const validData = data.filter((entry) => {
+    const val = Number(entry.value);
+    return !isNaN(val) && isFinite(val);
+  });
+
+  // Don't render the chart if there's no valid data
+  if (validData.length === 0) {
+    return <div className="portfolio-chart"><p>No chart data yet</p></div>;
+  }
+
   const chartData = [
     ["Date", "Value"],
-    ...data.map((entry) => [entry.date, Number(entry.value)]),
+    ...validData.map((entry) => [entry.date, Number(entry.value)]),
   ];
   const options = {
     title: ``,

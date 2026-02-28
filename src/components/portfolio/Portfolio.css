@@ -255,3 +255,38 @@
   border-style: solid;
   border-color: gray transparent transparent;
 }
+
+/* Security list items */
+.securities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.security-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.security-symbol {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.security-remove-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.security-remove-btn:hover {
+  color: #e53935;
+}

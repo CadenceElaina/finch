@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { IoMdAddCircleOutline } from "react-icons/io";
+import axios from "axios";
+import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
 import "./AddToPortfolioModal.css";
+
+const BASE = `https://${YH_API_HOST}`;
+const headers = () => ({
+  "X-RapidAPI-Key": YH_API_KEY,
+  "X-RapidAPI-Host": YH_API_HOST,
+});
 
 interface AddToPortfolioModalProps {
   type?: "portfolio" | "watchlist";
@@ -26,15 +34,48 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
   const [quantity, setQuantity] = useState(0);
   const [purchaseDate, setPurchaseDate] = useState("");
   const [purchasePrice, setPurchasePrice] = useState(0);
+  const [validating, setValidating] = useState(false);
+  const [error, setError] = useState("");
 
-  const addSymbol = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      setShowSymbolInput(false);
+  const validateSymbol = async (raw: string): Promise<boolean> => {
+    const sym = raw.trim().toUpperCase();
+    if (!sym || !/^[A-Z0-9^.=\-]{1,12}$/.test(sym)) {
+      setError("Invalid symbol format");
+      return false;
+    }
+    setValidating(true);
+    setError("");
+    try {
+      const res = await axios.get(`${BASE}${ENDPOINTS.batchQuotes.path}`, {
+        params: { region: "US", symbols: sym },
+        headers: headers(),
+      });
+      const results = res.data?.quoteResponse?.result ?? [];
+      if (results.length === 0 || !results[0]?.symbol) {
+        setError(`Symbol "${sym}" not found`);
+        setValidating(false);
+        return false;
+      }
+      setSymbol(sym);
+      setValidating(false);
+      return true;
+    } catch {
+      setError("Could not validate symbol — try again");
+      setValidating(false);
+      return false;
     }
   };
 
-  const handleAddToList = () => {
-    setShowSymbolInput(false);
+  const addSymbol = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const ok = await validateSymbol(symbol);
+      if (ok) setShowSymbolInput(false);
+    }
+  };
+
+  const handleAddToList = async () => {
+    const ok = await validateSymbol(symbol);
+    if (ok) setShowSymbolInput(false);
   };
 
   const onCancel = () => {
@@ -55,12 +96,13 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
             <input
               placeholder="Type an investment symbol"
               value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
+              onChange={(e) => { setSymbol(e.target.value); setError(""); }}
               onKeyDown={addSymbol}
             />
-            <button className="addToPortfolio-button" onClick={handleAddToList}>
-              <IoMdAddCircleOutline size={24} />
+            <button className="addToPortfolio-button" onClick={handleAddToList} disabled={validating}>
+              {validating ? "..." : <IoMdAddCircleOutline size={24} />}
             </button>
+            {error && <div style={{ color: "red", fontSize: "0.85rem", marginTop: 4 }}>{error}</div>}
           </div>
         ) : (
           <>
