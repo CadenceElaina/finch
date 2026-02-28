@@ -11,11 +11,20 @@ import {
 
 // YH Finance is the primary API for quotes
 import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
+import { cacheStorage } from "../../services/storage";
 const YH_BASE = `https://${YH_API_HOST}`;
 const yhHeaders = () => ({
   "X-RapidAPI-Key": YH_API_KEY,
   "X-RapidAPI-Host": YH_API_HOST,
 });
+
+// Cache TTLs for localStorage persistence (survive page refreshes)
+const LS_TTL = {
+  quote: ENDPOINTS.batchQuotes.cache.gc,   // 5 min
+  quotePageData: 10 * 60_000,              // 10 min
+  movers: ENDPOINTS.movers.cache.gc,       // 5 min
+  trending: ENDPOINTS.trending.cache.gc,   // 5 min
+} as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseQuote(q: any, fallbackSymbol?: string): quoteType {
@@ -45,7 +54,7 @@ export const getBatchQuotes = async (
   const result: Record<string, quoteType | null> = {};
   const uncached: string[] = [];
 
-  // 1. Drain cache first
+  // 1. Drain React Query in-memory cache first
   for (const sym of symbols) {
     const cached = queryClient.getQueryData(["quote", sym]);
     if (cached) {
@@ -57,9 +66,23 @@ export const getBatchQuotes = async (
 
   if (uncached.length === 0) return result;
 
-  // 2. Batch fetch all uncached symbols in one YH Finance call
+  // 2. Check localStorage for symbols not in memory (survives refresh)
+  const stillUncached: string[] = [];
+  for (const sym of uncached) {
+    const lsCached = cacheStorage.get<quoteType>(`quote_${sym}`, LS_TTL.quote);
+    if (lsCached) {
+      result[sym] = lsCached;
+      queryClient.setQueryData(["quote", sym], lsCached);
+    } else {
+      stillUncached.push(sym);
+    }
+  }
+
+  if (stillUncached.length === 0) return result;
+
+  // 3. Batch fetch remaining symbols in one YH Finance call
   try {
-    const symbolsParam = uncached.join(",");
+    const symbolsParam = stillUncached.join(",");
     const response = await axios.get(
       `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
       {
@@ -77,19 +100,20 @@ export const getBatchQuotes = async (
       }
     }
 
-    for (const sym of uncached) {
+    for (const sym of stillUncached) {
       const raw = bySymbol[sym] ?? bySymbol[sym.toUpperCase()];
       if (raw) {
         const parsed = parseQuote(raw, sym);
         result[sym] = parsed;
         queryClient.setQueryData(["quote", sym], parsed);
+        cacheStorage.set(`quote_${sym}`, parsed);
       } else {
         result[sym] = null;
       }
     }
   } catch (error) {
     console.error("getBatchQuotes YH error:", error);
-    for (const sym of uncached) {
+    for (const sym of stillUncached) {
       result[sym] = null;
     }
   }
@@ -208,6 +232,13 @@ export const getQuotePageData = async (
       symbol,
     ]) as QuotePageData;
     if (cachedQuote) return cachedQuote;
+
+    // Check localStorage (survives refresh)
+    const lsCached = cacheStorage.get<QuotePageData>(`quotePageData_${symbol}`, LS_TTL.quotePageData);
+    if (lsCached) {
+      queryClient.setQueryData(["quotePageData", symbol], lsCached);
+      return lsCached;
+    }
 
     // Fetch basic quote data via batch quotes endpoint (1 symbol)
     const response = await axios.get(
@@ -331,6 +362,7 @@ export const getQuotePageData = async (
       quoteFinancialData,
     };
     queryClient.setQueryData(["quotePageData", symbol], quotePageData);
+    cacheStorage.set(`quotePageData_${symbol}`, quotePageData);
     return quotePageData;
   } catch (error) {
     return null;
@@ -366,6 +398,13 @@ export const getMoversSymbols = async (
     if (cached && cached.length > 0) return cached;
   }
 
+  // Check localStorage (survives refresh)
+  const lsCached = cacheStorage.get<string[]>(`movers_${canonicalName}`, LS_TTL.movers);
+  if (lsCached && lsCached.length > 0) {
+    if (queryClient) queryClient.setQueryData(["movers", canonicalName], lsCached);
+    return lsCached;
+  }
+
   try {
     const response = await axios.get(`${YH_BASE}${ENDPOINTS.movers.path}`, {
       params: { ...ENDPOINTS.movers.params },
@@ -383,12 +422,14 @@ export const getMoversSymbols = async (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const catSymbols: string[] = catQuotes.map((q: any) => q.symbol);
         queryClient.setQueryData(["movers", cat.canonicalName], catSymbols);
+        cacheStorage.set(`movers_${cat.canonicalName}`, catSymbols);
         // Pre-cache individual quote data
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const q of catQuotes) {
           if (q.symbol) {
             const parsed = parseQuote(q, q.symbol);
             queryClient.setQueryData(["quote", q.symbol], parsed);
+            cacheStorage.set(`quote_${q.symbol}`, parsed);
           }
         }
       }
@@ -412,6 +453,13 @@ export const getMoversSymbols = async (
 export const getTrending = async (queryClient: QueryClient) => {
   const cachedData = queryClient.getQueryData(["trending"]);
   if (cachedData) return cachedData;
+
+  // Check localStorage (survives refresh)
+  const lsCached = cacheStorage.get("trending", LS_TTL.trending);
+  if (lsCached) {
+    queryClient.setQueryData(["trending"], lsCached);
+    return lsCached;
+  }
 
   try {
     const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
@@ -445,6 +493,7 @@ export const getTrending = async (queryClient: QueryClient) => {
       .filter((q: { price: number }) => q.price !== 0);
 
     queryClient.setQueryData(["trending"], trendingQuotes);
+    cacheStorage.set("trending", trendingQuotes);
     return trendingQuotes;
   } catch (error) {
     return [];
