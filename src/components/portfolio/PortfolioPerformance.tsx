@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Portfolio, Security } from "../../types/types";
 import {
   Data,
@@ -8,6 +8,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
+import { FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -29,11 +30,16 @@ interface SecurityDetail {
   dayChangePct: number;
 }
 
+type PortfolioSortField = "symbol" | "name" | "quantity" | "purchasePrice" | "purchaseDate" | "currentPrice" | "dayChange" | "totalGain" | "totalGainPct";
+type SortDir = "asc" | "desc";
+
 const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   portfolio,
 }) => {
   //const [symbols, setSymbols] = useState<string[]>([]);
   const [securityDetails, setSecurityDetails] = useState<SecurityDetail[]>([]);
+  const [sortField, setSortField] = useState<PortfolioSortField>("symbol");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [portfolioPerformance, setPortfolioPerformance] = useState({
     totalPriceChange: 0,
     totalPercentChange: 0,
@@ -43,6 +49,39 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     totalGainPct: 0,
   });
   const queryClient = useQueryClient();
+
+  const handleSort = (field: PortfolioSortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const sortedDetails = useMemo(() => {
+    const copy = [...securityDetails];
+    copy.sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      const diff = (aVal as number) - (bVal as number);
+      return sortDir === "asc" ? diff : -diff;
+    });
+    return copy;
+  }, [securityDetails, sortField, sortDir]);
+
+  const PSortIcon: React.FC<{ field: PortfolioSortField }> = ({ field }) => {
+    if (sortField !== field)
+      return <FaSort size={10} style={{ marginLeft: 4, opacity: 0.3 }} />;
+    return sortDir === "asc" ? (
+      <FaSortUp size={10} style={{ marginLeft: 4 }} />
+    ) : (
+      <FaSortDown size={10} style={{ marginLeft: 4 }} />
+    );
+  };
 
   const fetchQuotesForSymbols = async () => {
     const symbols = portfolio?.securities?.map((s: Security) => s.symbol);
@@ -209,19 +248,19 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
           <table className="security-details-table">
             <thead>
               <tr>
-                <th>Symbol</th>
-                <th>Name</th>
-                <th>Qty</th>
-                <th>Avg Cost</th>
-                <th>Purchase Date</th>
-                <th>Price</th>
-                <th>Day Chg</th>
-                <th>Total Gain</th>
-                <th>Total %</th>
+                <th className="sortable-th" onClick={() => handleSort("symbol")}>Symbol <PSortIcon field="symbol" /></th>
+                <th className="sortable-th" onClick={() => handleSort("name")}>Name <PSortIcon field="name" /></th>
+                <th className="sortable-th" onClick={() => handleSort("quantity")}>Qty <PSortIcon field="quantity" /></th>
+                <th className="sortable-th" onClick={() => handleSort("purchasePrice")}>Avg Cost <PSortIcon field="purchasePrice" /></th>
+                <th className="sortable-th" onClick={() => handleSort("purchaseDate")}>Purchase Date <PSortIcon field="purchaseDate" /></th>
+                <th className="sortable-th" onClick={() => handleSort("currentPrice")}>Price <PSortIcon field="currentPrice" /></th>
+                <th className="sortable-th" onClick={() => handleSort("dayChange")}>Day Chg <PSortIcon field="dayChange" /></th>
+                <th className="sortable-th" onClick={() => handleSort("totalGain")}>Total Gain <PSortIcon field="totalGain" /></th>
+                <th className="sortable-th" onClick={() => handleSort("totalGainPct")}>Total % <PSortIcon field="totalGainPct" /></th>
               </tr>
             </thead>
             <tbody>
-              {securityDetails.map((d) => (
+              {sortedDetails.map((d) => (
                 <tr key={d.symbol}>
                   <td className="security-symbol-cell">{d.symbol}</td>
                   <td>{d.name}</td>
