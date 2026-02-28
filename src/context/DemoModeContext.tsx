@@ -17,6 +17,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
 import axios from "axios";
+import { setDemoActive } from "../data/demo/demoState";
 
 interface DemoModeContextType {
   /** Whether the app is currently showing demo data */
@@ -81,6 +82,7 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Persist demo mode state
   useEffect(() => {
     saveDemoState(isDemoMode);
+    setDemoActive(isDemoMode);
   }, [isDemoMode]);
 
   const recordApiFailure = useCallback((status?: number) => {

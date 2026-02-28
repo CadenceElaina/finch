@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
 import Sidebar from "./Sidebar";
+import DemoBanner from "../DemoBanner";
 import "./Layout.css";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -17,6 +18,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className={`layout-container ${open ? "open" : ""}`}>
+      <DemoBanner />
       <div
         className={`overlay ${open ? "open" : ""}`}
         onClick={handleDrawerClose}
