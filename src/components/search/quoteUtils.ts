@@ -5,7 +5,6 @@ import {
   QuotePageFinancialData,
   QuotePageSidebarAboutData,
   QuotePageSidebarData,
-  previousClose,
   quoteType,
   utils,
 } from "./types";
@@ -154,39 +153,6 @@ const getStateFullName = (abbreviation: string): string | undefined => {
   return stateAbbreviations[abbreviation.toUpperCase()];
 };
 
-export const getPreviousClose = async (
-  queryClient: QueryClient,
-  symbol: string
-): Promise<previousClose | null> => {
-  try {
-    const cachedQuote = queryClient.getQueryData(["prevClose", symbol]);
-    if (cachedQuote) {
-      const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-      return newCachedQuote;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const response = await axios.get(
-      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
-      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
-    );
-
-    const q = response.data?.quoteResponse?.result?.[0];
-    if (!q) throw new Error("No quote data returned");
-
-    const quoteData: previousClose = {
-      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
-      previousClose: q.regularMarketPreviousClose ?? 0,
-      name: q.shortName ?? "",
-    };
-
-    queryClient.setQueryData(["prevClose", symbol], quoteData);
-    return quoteData;
-  } catch (error) {
-    return null;
-  }
-};
-
 export const getQuote = async (
   queryClient: QueryClient,
   symbol: string,
@@ -199,7 +165,6 @@ export const getQuote = async (
       return newCachedQuote;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
     const response = await axios.get(
       `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
       { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
@@ -243,8 +208,6 @@ export const getQuotePageData = async (
       symbol,
     ]) as QuotePageData;
     if (cachedQuote) return cachedQuote;
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Fetch basic quote data via batch quotes endpoint (1 symbol)
     const response = await axios.get(
@@ -303,6 +266,7 @@ export const getQuotePageData = async (
       website: "",
       headquarters: "",
       employees: "",
+      ceo: "",
     };
     let quoteFinancialData: QuotePageFinancialData = {
       annualRevenue: "",
@@ -325,6 +289,14 @@ export const getQuotePageData = async (
           profileRes.data?.quoteSummary?.result?.[0]?.assetProfile ??
           profileRes.data?.assetProfile;
         if (profile) {
+          // Extract CEO from companyOfficers array
+          const officers = profile.companyOfficers ?? [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const ceoEntry = officers.find((o: any) =>
+            (o.title ?? "").toLowerCase().includes("ceo") ||
+            (o.title ?? "").toLowerCase().includes("chief executive")
+          );
+
           quoteSidebarAboutData = {
             summary: profile.longBusinessSummary ?? "",
             website: profile.website ?? "",
@@ -332,6 +304,7 @@ export const getQuotePageData = async (
             employees: profile.fullTimeEmployees
               ? `${profile.fullTimeEmployees}`
               : "",
+            ceo: ceoEntry?.name ?? "",
           };
         }
 

@@ -426,14 +426,12 @@ const Quote: React.FC<QuoteProps> = () => {
                     <div className="quote-about-text">
                       {quoteSidebarAboutData?.summary}
                     </div>
-                    <div className="quote-about-row">
-                      <span>CEO</span>
-                      <span>Satya Nedella</span>
-                    </div>
-                    <div className="quote-about-row">
-                      <span>FOUNDED</span>
-                      <span>Apr 4, 1975</span>
-                    </div>
+                    {quoteSidebarAboutData?.ceo && (
+                      <div className="quote-about-row">
+                        <span>CEO</span>
+                        <span>{quoteSidebarAboutData.ceo}</span>
+                      </div>
+                    )}
                     {quoteSidebarAboutData &&
                       Object.entries(quoteSidebarAboutData)
                         .filter(([key]) => key !== "summary")

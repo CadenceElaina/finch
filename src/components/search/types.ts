@@ -43,6 +43,7 @@ export interface QuotePageSidebarAboutData {
   website: string;
   headquarters: string;
   employees: string;
+  ceo: string;
 }
 export interface QuotePageFinancialData {
   annualRevenue: string;
