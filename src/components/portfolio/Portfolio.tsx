@@ -8,7 +8,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { useAuth } from "../../context/AuthContext";
-import watchlistService from "../../services/watchlist";
+import { watchlistStorage } from "../../services/storage";
 import PortfolioContent from "./PortfolioContent";
 import WatchlistContent from "./WatchlistContent";
 import AddToWatchlistModal from "../modals/AddToWatchlist";
@@ -117,18 +117,13 @@ const Portfolio = () => {
     setAddToWatchlistModalIsOpen(false);
   };
 
-  const handleSaveWatchlist = async (watchlistName: string) => {
-    const newWatchlist = {
+  const handleSaveWatchlist = (watchlistName: string) => {
+    const response = watchlistStorage.create({
       title: watchlistName,
       author: user?.name,
-    };
-    const response = await watchlistService.create(newWatchlist);
-    appendWatchlist({
-      id: response.id,
-      title: response.title,
-      author: response.author,
     });
-    addNotification(`${newWatchlist.title} added!`, "success");
+    appendWatchlist(response);
+    addNotification(`${response.title} added!`, "success");
     onCloseWatchlist();
   };
 

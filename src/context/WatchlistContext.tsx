@@ -8,22 +8,22 @@ import React, {
   Dispatch,
   SetStateAction,
 } from "react";
-import watchlistService from "../services/watchlist";
+import { watchlistStorage } from "../services/storage";
 import { Watchlist, WatchlistSecurity } from "../types/types";
 
 interface WatchlistContextProps {
   watchlists: Watchlist[];
   setWatchlists: Dispatch<SetStateAction<Watchlist[]>>;
   appendWatchlist: (newWatchlist: Watchlist) => void;
-  removeWatchlist: (removedWatchlist: Watchlist) => Promise<void>;
+  removeWatchlist: (removedWatchlist: Watchlist) => void;
   addSecurityToWatchlist: (
     watchlistId: string,
     security: WatchlistSecurity
-  ) => Promise<void>;
+  ) => void;
   removeSecurityFromWatchlist: (
     watchlistId: string,
     security: WatchlistSecurity
-  ) => Promise<void>;
+  ) => void;
 }
 
 const WatchlistContext = createContext<WatchlistContextProps | undefined>(
@@ -36,17 +36,8 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 
   useEffect(() => {
-    const fetchWatchlists = async () => {
-      try {
-        const watchlistsData = await watchlistService.getAll();
-        setWatchlists(watchlistsData);
-      } catch (error) {
-        console.error("Error fetching watchlists:", error);
-      }
-    };
-
-    fetchWatchlists();
-  }, []); // Fetch watchlists on component mount
+    setWatchlists(watchlistStorage.getAll());
+  }, []);
 
   const updateWatchlistsState: Dispatch<SetStateAction<Watchlist[]>> = (
     updatedWatchlists
@@ -58,48 +49,37 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     updateWatchlistsState([...watchlists, newWatchlist]);
   };
 
-  const removeWatchlist = async (removedWatchlist: Watchlist) => {
-    try {
-      await watchlistService.remove(removedWatchlist.id);
-      updateWatchlistsState(
-        watchlists.filter((w) => w.id !== removedWatchlist.id)
-      );
-    } catch (error) {
-      console.error("Error removing watchlist:", error);
-      // Handle error as needed
-    }
+  const removeWatchlist = (removedWatchlist: Watchlist) => {
+    watchlistStorage.remove(removedWatchlist.id);
+    updateWatchlistsState(
+      watchlists.filter((w) => w.id !== removedWatchlist.id)
+    );
   };
 
-  const addSecurityToWatchlist = async (
+  const addSecurityToWatchlist = (
     watchlistId: string,
     security: WatchlistSecurity
   ) => {
-    try {
-      const updatedWatchlists = watchlists.map((watchlist) =>
+    watchlistStorage.addSecurity(watchlistId, security);
+    updateWatchlistsState(
+      watchlists.map((watchlist) =>
         watchlist.id === watchlistId
           ? {
               ...watchlist,
               securities: [...(watchlist.securities ?? []), security],
             }
           : watchlist
-      );
-      updateWatchlistsState(updatedWatchlists);
-
-      // Ensure the API call is awaited and handle any potential errors
-      await watchlistService.addToWatchlist(watchlistId, security);
-    } catch (error) {
-      console.error("Error adding security to watchlist:", error);
-      // Rollback the state update on error (optional, depends on your use case)
-      updateWatchlistsState(watchlists);
-    }
+      )
+    );
   };
 
-  const removeSecurityFromWatchlist = async (
+  const removeSecurityFromWatchlist = (
     watchlistId: string,
     security: WatchlistSecurity
   ) => {
-    try {
-      const updatedWatchlists = watchlists.map((watchlist) =>
+    watchlistStorage.removeSecurity(watchlistId, security.symbol);
+    updateWatchlistsState(
+      watchlists.map((watchlist) =>
         watchlist.id === watchlistId
           ? {
               ...watchlist,
@@ -108,16 +88,8 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
               ),
             }
           : watchlist
-      );
-      updateWatchlistsState(updatedWatchlists);
-
-      // Ensure the API call is awaited and handle any potential errors
-      await watchlistService.removeSecurityFromWatchlist(watchlistId, security);
-    } catch (error) {
-      console.error("Error removing security from watchlist:", error);
-      // Rollback the state update on error (optional, depends on your use case)
-      updateWatchlistsState(watchlists);
-    }
+      )
+    );
   };
 
   const contextValue = useMemo(

@@ -11,8 +11,7 @@ import "./Layout.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { Link, useNavigate } from "react-router-dom";
-import { portfolioStorage } from "../../services/storage";
-import watchlistService from "../../services/watchlist";
+import { portfolioStorage, watchlistStorage } from "../../services/storage";
 import NewPortfolioModal from "../modals/AddPortfolioModal";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 
@@ -90,17 +89,12 @@ const Sidebar: React.FC<SidebarProps> = () => {
     navigate(`/portfolio/${response.id}`);
   };
 
-  const handleSaveWatchlist = async (watchlistName: string) => {
-    const newWatchlist = {
+  const handleSaveWatchlist = (watchlistName: string) => {
+    const response = watchlistStorage.create({
       title: watchlistName,
       author: user?.name,
-    };
-    const response = await watchlistService.create(newWatchlist);
-    appendWatchlist({
-      id: response.id,
-      title: response.title,
-      author: response.author,
     });
+    appendWatchlist(response);
 
     closeModal();
   };

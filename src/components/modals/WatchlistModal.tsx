@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { WatchlistSecurity, Watchlist } from "../../types/types";
 import "./WatchlistModal.css";
-import watchlistService from "../../services/watchlist";
+import { watchlistStorage } from "../../services/storage";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -67,40 +67,28 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
 
     // Add securities to the selected watchlists only if not already present
     for (const { watchlistId, security } of securitiesToAdd) {
-      try {
-        await watchlistService.addToWatchlist(watchlistId, security);
-        addNotification(
-          `${security.symbol} added to ${
-            watchlists.find((w) => w.id === watchlistId)?.title
-          }!`,
-          "info"
-        );
-      } catch (error) {
-        console.error("Error adding security to watchlist:", error);
-      }
+      watchlistStorage.addSecurity(watchlistId, security);
+      addNotification(
+        `${security.symbol} added to ${
+          watchlists.find((w) => w.id === watchlistId)?.title
+        }!`,
+        "info"
+      );
     }
 
     // Remove securities from the selected watchlists
     for (const { watchlistId, security } of securitiesToRemove) {
-      try {
-        await watchlistService.removeSecurityFromWatchlist(
-          watchlistId,
-          security
-        );
-        addNotification(
-          `${security.symbol} removed from ${
-            watchlists.find((w) => w.id === watchlistId)?.title
-          }!`,
-          "info"
-        );
-      } catch (error) {
-        console.error("Error removing security from watchlist:", error);
-      }
+      watchlistStorage.removeSecurity(watchlistId, security.symbol);
+      addNotification(
+        `${security.symbol} removed from ${
+          watchlists.find((w) => w.id === watchlistId)?.title
+        }!`,
+        "info"
+      );
     }
 
-    // Fetch updated watchlists and update the UI
-    const updatedWatchlistsData = await watchlistService.getAll();
-    setWatchlists(updatedWatchlistsData);
+    // Refresh watchlists from localStorage
+    setWatchlists(watchlistStorage.getAll());
   };
 
   return (
@@ -128,8 +116,8 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
             </div>
           ))}
           <button
-            onClick={async () => {
-              await updateWatchlists();
+            onClick={() => {
+              updateWatchlists();
               onClose();
             }}
           >
