@@ -315,6 +315,23 @@
   letter-spacing: 0.03em;
 }
 
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable-th:hover {
+  color: var(--text-primary, #fff);
+}
+
+.clickable-cell {
+  cursor: pointer;
+}
+
+.clickable-cell:hover {
+  text-decoration: underline;
+}
+
 .security-details-table .security-symbol-cell {
   font-weight: 700;
 }

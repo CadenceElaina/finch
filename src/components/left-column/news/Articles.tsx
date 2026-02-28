@@ -86,12 +86,14 @@ const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
                   >
                     {article.title}
                   </div>
-                  <div
-                    className="related-symbol"
-                    onClick={() => handleSymbolClick(article.relatedSymbol)}
-                  >
-                    {article.relatedSymbol}
-                  </div>
+                  {article.relatedSymbol && (
+                    <div
+                      className="related-symbol"
+                      onClick={() => handleSymbolClick(article.relatedSymbol)}
+                    >
+                      {article.relatedSymbol}
+                    </div>
+                  )}
                 </div>
                 <div className="story-column-image">
                   <img
