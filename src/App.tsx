@@ -8,6 +8,7 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
+  Link,
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Portfolio from "./components/portfolio/Portfolio";
@@ -24,6 +25,17 @@ import MostActive from "./components/market-trends/MostActive";
 import Gainers from "./components/market-trends/Gainers";
 import Losers from "./components/market-trends/Losers";
 import Trending from "./components/market-trends/Trending";
+import Layout from "./components/layout/Layout";
+
+const NotFound = () => (
+  <Layout>
+    <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
+      <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>404</h1>
+      <p style={{ marginBottom: "1.5rem" }}>Page not found</p>
+      <Link to="/" style={{ color: "#1a73e8" }}>Go home</Link>
+    </div>
+  </Layout>
+);
 
 function App() {
   return (
@@ -46,6 +58,7 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/disclaimer" element={<Disclaimer />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
