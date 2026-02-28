@@ -216,7 +216,7 @@ const Quote: React.FC<QuoteProps> = () => {
                     )}
 
                     {quoteData?.percentChange !== undefined
-                      ? `${(quoteData.percentChange * 100).toFixed(2)}%`
+                      ? `${quoteData.percentChange.toFixed(2)}%`
                       : ""}
                   </div>
                   <div
@@ -332,7 +332,7 @@ const Quote: React.FC<QuoteProps> = () => {
                   )}
 
                   {quoteData?.percentChange !== undefined
-                    ? `${(quoteData.percentChange * 100).toFixed(2)}%`
+                    ? `${quoteData.percentChange.toFixed(2)}%`
                     : ""}
                 </div>
                 <div

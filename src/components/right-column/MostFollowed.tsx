@@ -77,7 +77,7 @@ const MostFollowed = () => {
             // Combine data from top5Securities and quote
             let fmtPC = "";
             if (quote?.percentChange) {
-              fmtPC = (quote.percentChange * 100).toFixed(2);
+              fmtPC = quote.percentChange.toFixed(2);
             }
             return {
               id: symbol + "^_^",

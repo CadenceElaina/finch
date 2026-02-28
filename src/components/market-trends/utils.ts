@@ -15,7 +15,7 @@ export const transformQuotesToData = (
   quotes: Record<string, quoteType | null>
 ): Data[] => {
   return Object.entries(quotes).map(([symbol, quote], i) => {
-    const percentChange = (quote?.percentChange || 0) * 100; // Convert to percentage
+    const percentChange = quote?.percentChange || 0;
     return {
       id: i + 1,
       symbol,
@@ -32,7 +32,7 @@ export const transformQuotesToDataWithQuantities = (
   portfolio: Portfolio
 ): Data[] => {
   return Object.entries(quotes).map(([symbol, quote], i) => {
-    const percentChange = (quote?.percentChange || 0) * 100; // Convert to percentage
+    const percentChange = quote?.percentChange || 0;
     let security: Security | undefined;
     if (portfolio && portfolio.securities) {
       security = portfolio?.securities.find(

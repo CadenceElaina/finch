@@ -82,7 +82,7 @@ const Watchlist = () => {
 
       let pc = 0;
       if (quoteData?.percentChange) {
-        pc = quoteData.percentChange * 100;
+        pc = quoteData.percentChange;
       }
 
       return {
@@ -150,7 +150,7 @@ const Watchlist = () => {
 
       let pc = 0;
       if (quoteData?.percentChange) {
-        pc = quoteData.percentChange * 100;
+        pc = quoteData.percentChange;
       }
       return {
         symbol,

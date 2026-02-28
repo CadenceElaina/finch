@@ -18,7 +18,7 @@ export const formatApiResponse = (
       };
     }
 
-    const percentChange = (quote.percentChange || 0) * 100; // Convert to percentage
+    const percentChange = quote.percentChange || 0;
     return {
       exchange,
       name: quote.name || "",

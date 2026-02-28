@@ -40,7 +40,8 @@ const Home: React.FC<HomeProps> = () => {
               <MostFollowed />
             </div>
           </div>
-          <MarketTrendsList />
+          {/* MarketTrendsList disabled — needs movers/trending API migration */}
+          {/* <MarketTrendsList /> */}
           <DiscoverMore />
           <Footer />
         </div>
