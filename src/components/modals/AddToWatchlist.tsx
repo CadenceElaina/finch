@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
+import { ENDPOINTS, yhFetch } from "../../config/api";
 import "./AddToPortfolioModal.css";
-
-const BASE = `https://${YH_API_HOST}`;
-const headers = () => ({
-  "X-RapidAPI-Key": YH_API_KEY,
-  "X-RapidAPI-Host": YH_API_HOST,
-});
 
 interface AddToWatchlistModalProps {
   isOpen: boolean;
@@ -37,9 +30,9 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
     setValidating(true);
     setError("");
     try {
-      const res = await axios.get(`${BASE}${ENDPOINTS.batchQuotes.path}`, {
-        params: { region: "US", symbols: sym },
-        headers: headers(),
+      const res = await yhFetch(ENDPOINTS.batchQuotes.path, {
+        region: "US",
+        symbols: sym,
       });
       const results = res.data?.quoteResponse?.result ?? [];
       if (results.length === 0 || !results[0]?.symbol) {

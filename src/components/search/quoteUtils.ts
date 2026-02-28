@@ -10,13 +10,8 @@ import {
 } from "./types";
 
 // YH Finance is the primary API for quotes
-import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
+import { ENDPOINTS, yhFetch } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
-const YH_BASE = `https://${YH_API_HOST}`;
-const yhHeaders = () => ({
-  "X-RapidAPI-Key": YH_API_KEY,
-  "X-RapidAPI-Host": YH_API_HOST,
-});
 
 // Cache TTLs for localStorage persistence (survive page refreshes)
 const LS_TTL = {
@@ -83,13 +78,10 @@ export const getBatchQuotes = async (
   // 3. Batch fetch remaining symbols in one YH Finance call
   try {
     const symbolsParam = stillUncached.join(",");
-    const response = await axios.get(
-      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
-      {
-        params: { region: "US", symbols: symbolsParam },
-        headers: yhHeaders(),
-      }
-    );
+    const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+      region: "US",
+      symbols: symbolsParam,
+    });
 
     const rawQuotes = response.data?.quoteResponse?.result ?? [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,10 +181,10 @@ export const getQuote = async (
       return newCachedQuote;
     }
 
-    const response = await axios.get(
-      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
-      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
-    );
+    const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+      region: "US",
+      symbols: symbol,
+    });
 
     const q = response.data?.quoteResponse?.result?.[0];
     if (!q) throw new Error("No quote data returned");
@@ -241,10 +233,10 @@ export const getQuotePageData = async (
     }
 
     // Fetch basic quote data via batch quotes endpoint (1 symbol)
-    const response = await axios.get(
-      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
-      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
-    );
+    const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+      region: "US",
+      symbols: symbol,
+    });
 
     const q = response.data?.quoteResponse?.result?.[0];
     if (!q) throw new Error("No quote data returned");
@@ -308,13 +300,10 @@ export const getQuotePageData = async (
 
     if (!isIndex) {
       try {
-        const profileRes = await axios.get(
-          `${YH_BASE}${ENDPOINTS.profile.path}`,
-          {
-            params: { symbol, region: "US" },
-            headers: yhHeaders(),
-          }
-        );
+        const profileRes = await yhFetch(ENDPOINTS.profile.path, {
+          symbol,
+          region: "US",
+        });
 
         const profile =
           profileRes.data?.quoteSummary?.result?.[0]?.assetProfile ??
@@ -406,9 +395,8 @@ export const getMoversSymbols = async (
   }
 
   try {
-    const response = await axios.get(`${YH_BASE}${ENDPOINTS.movers.path}`, {
-      params: { ...ENDPOINTS.movers.params },
-      headers: yhHeaders(),
+    const response = await yhFetch(ENDPOINTS.movers.path, {
+      ...ENDPOINTS.movers.params,
     });
 
     // Response shape: { finance: { result: [{ canonicalName, quotes: [...] }] } }
@@ -462,9 +450,8 @@ export const getTrending = async (queryClient: QueryClient) => {
   }
 
   try {
-    const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
-      params: { ...ENDPOINTS.trending.params },
-      headers: yhHeaders(),
+    const response = await yhFetch(ENDPOINTS.trending.path, {
+      ...ENDPOINTS.trending.params,
     });
 
     // Response shape: { finance: { result: [{ count, quotes: [{ symbol }] }] } }

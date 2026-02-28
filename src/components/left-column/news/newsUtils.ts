@@ -1,9 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import {
-  SA_BASE,
   SA_ENDPOINTS,
-  saHeaders,
+  saFetch,
 } from "../../../config/seekingAlphaApi";
 import { Article, NewsSegmentType } from "../../../types/types";
 
@@ -95,9 +93,10 @@ export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
   }
 
   try {
-    const response = await axios.get(`${SA_BASE}${SA_ENDPOINTS.newsList}`, {
-      params: { category: "market-news::all", size: 20, number: 1 },
-      headers: saHeaders(),
+    const response = await saFetch(SA_ENDPOINTS.newsList, {
+      category: "market-news::all",
+      size: 20,
+      number: 1,
     });
 
     const items = response.data?.data ?? [];
@@ -122,12 +121,9 @@ export const getSymbolsNews = async (symbol: string): Promise<Article[]> => {
   if (!symbol) return [];
 
   try {
-    const response = await axios.get(
-      `${SA_BASE}${SA_ENDPOINTS.newsBySymbol}`,
-      {
-        params: { id: symbol.toLowerCase(), size: 10, number: 1 },
-        headers: saHeaders(),
-      }
+    const response = await saFetch(
+      SA_ENDPOINTS.newsBySymbol,
+      { id: symbol.toLowerCase(), size: 10, number: 1 },
     );
 
     const items = response.data?.data ?? [];

@@ -1,16 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./search.css";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { quoteType, suggestionType, utils } from "./types";
 import { useNavigate } from "react-router-dom";
-import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
-
-const BASE = `https://${YH_API_HOST}`;
-const headers = () => ({
-  "X-RapidAPI-Key": YH_API_KEY,
-  "X-RapidAPI-Host": YH_API_HOST,
-});
+import { ENDPOINTS, yhFetch } from "../../config/api";
 
 const Search = () => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -43,10 +36,10 @@ const Search = () => {
     }
 
     try {
-      const response = await axios.get(
-        `${BASE}${ENDPOINTS.search.path}`,
-        { params: { q: searchInput, region: "US" }, headers: headers() }
-      );
+      const response = await yhFetch(ENDPOINTS.search.path, {
+        q: searchInput,
+        region: "US",
+      });
 
       const results = response.data?.quotes ?? response.data?.body ?? [];
       const matches: suggestionType[] = results
@@ -85,10 +78,10 @@ const Search = () => {
           const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
           return [newCachedQuote];
         }
-        const response = await axios.get(
-          `${BASE}${ENDPOINTS.batchQuotes.path}`,
-          { params: { region: "US", symbols: searchInput }, headers: headers() }
-        );
+        const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+          region: "US",
+          symbols: searchInput,
+        });
 
         const q = response.data?.quoteResponse?.result?.[0];
         if (!q) throw new Error("Incomplete or missing data in the API response");
@@ -117,10 +110,10 @@ const Search = () => {
         const symbolsStr = matchesSymbols.join(",");
         const quotePromises = [async () => {
           try {
-            const response = await axios.get(
-              `${BASE}${ENDPOINTS.batchQuotes.path}`,
-              { params: { region: "US", symbols: symbolsStr }, headers: headers() }
-            );
+            const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+              region: "US",
+              symbols: symbolsStr,
+            });
             const data = response.data?.quoteResponse?.result ?? [];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (Array.isArray(data) ? data : [data]).map((q: any) => ({
