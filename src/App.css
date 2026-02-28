@@ -1,7 +1,11 @@
+html {
+  background-color: #040507;
+}
 body {
   /*   background-color: #262626; */
   color: #ffffff;
   font-family: "Google Sans", Roboto, Arial, sans-serif;
+  background-color: #040507;
   background: linear-gradient(
     180deg,
     #142033 25%,
@@ -9,6 +13,7 @@ body {
     #070b0e 75%,
     #040507 100%
   );
+  background-attachment: fixed;
   /*   background: linear-gradient(
     180deg,
     #142033 20%,

@@ -55,6 +55,7 @@ const Watchlist = () => {
       string,
       {
         symbol: string;
+        name?: string;
         price: number;
         percentChange: number;
         priceChange: number;
@@ -105,23 +106,25 @@ const Watchlist = () => {
     const fetchQuotes = async () => {
       try {
         setIsLoading(true);
-        await Promise.all(
-          portfolios.map(async (portfolio) => {
-            await fetchPortfolioQuotes(portfolio.title);
-          })
-        );
-        // Fetch watchlist quotes
+        // Fetch portfolio quotes
+        if (portfolios.length > 0) {
+          await Promise.all(
+            portfolios.map(async (portfolio) => {
+              await fetchPortfolioQuotes(portfolio.title);
+            })
+          );
+        }
+        // Fetch watchlist quotes (also fires from the portfolioQuotes effect,
+        // but we need an initial call for watchlist-only users)
         await fetchWatchlistQuotes();
       } catch (error) {
         console.error("Error fetching quotes:", error);
       } finally {
-        // Set loading to false once data is fetched (successful or not)
         setIsLoading(false);
       }
     };
-    // Execute the fetchQuotes function
     fetchQuotes();
-  }, [portfolios]);
+  }, [portfolios, watchlists]);
 
   const fetchWatchlistQuotes = async () => {
     const symbols: string[] = [];
@@ -143,45 +146,39 @@ const Watchlist = () => {
     const symbolsToFetch = uniqueSymbols.filter(
       (symbol) => !symbolsInPortfolios.includes(symbol)
     );
+
+    if (symbolsToFetch.length === 0) {
+      setWatchlistQuotes({});
+      return;
+    }
+
     const batchResult = await getBatchQuotes(queryClient, symbolsToFetch);
 
-    const quotes = symbolsToFetch.map((symbol) => {
+    const quotesMap: Record<
+      string,
+      { symbol: string; name?: string; price: number; percentChange: number; priceChange: number }[]
+    > = {};
+
+    symbolsToFetch.forEach((symbol) => {
       const quoteData = batchResult[symbol] ?? null;
-
-      let pc = 0;
-      if (quoteData?.percentChange) {
-        pc = quoteData.percentChange;
-      }
-      return {
-        symbol,
-        name: quoteData?.name,
-        price: quoteData?.price ?? 0,
-        percentChange: pc ?? 0,
-        priceChange: quoteData?.priceChange ?? 0,
-      };
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const quotesMap: Record<string, any[]> = {};
-    quotes.forEach((quote) => {
-      if (quote) {
-        const { symbol, ...rest } = quote;
-        if (!quotesMap[symbol]) {
-          quotesMap[symbol] = [];
-        }
-        quotesMap[symbol].push(rest);
-      }
+      quotesMap[symbol] = [
+        {
+          symbol,
+          name: quoteData?.name ?? "",
+          price: quoteData?.price ?? 0,
+          percentChange: quoteData?.percentChange ?? 0,
+          priceChange: quoteData?.priceChange ?? 0,
+        },
+      ];
     });
 
     setWatchlistQuotes(quotesMap);
   };
 
   useEffect(() => {
-    // Check if portfolioQuotes has been fetched
-    if (Object.keys(portfolioQuotes).length > 0) {
-      // Fetch watchlist quotes
-      fetchWatchlistQuotes();
-    }
+    // Fetch watchlist quotes even if portfolioQuotes is empty
+    // (user may have only watchlists, no portfolios)
+    fetchWatchlistQuotes();
   }, [portfolioQuotes]);
 
   const watchlistConfig: RowConfig = {
@@ -189,51 +186,70 @@ const Watchlist = () => {
     removeIcon: true,
   };
   useEffect(() => {
-    // Check if portfolioQuotes and watchlistQuotes have been fetched
-    if (
-      Object.keys(portfolioQuotes).length > 0 &&
-      Object.keys(watchlistQuotes).length > 0
-    ) {
-      // Convert watchlistQuotes to the desired format
-      const formattedWatchlistQuotes: {
-        symbol: string;
-        price: number;
-        percentChange: number;
-        priceChange: number;
-        quantity: number;
-      }[] = Object.entries(watchlistQuotes).flatMap(([_watchlistId, quotes]) =>
+    // Build combined list when either portfolio or watchlist quotes exist
+    const hasPortfolioQuotes = Object.keys(portfolioQuotes).length > 0;
+    const hasWatchlistQuotes = Object.keys(watchlistQuotes).length > 0;
+
+    if (!hasPortfolioQuotes && !hasWatchlistQuotes) {
+      setWatchlistsAndPortfoliosQuotes([]);
+      return;
+    }
+
+    // Convert watchlistQuotes to flat array — use the map key as symbol
+    const formattedWatchlistQuotes = Object.entries(watchlistQuotes).flatMap(
+      ([sym, quotes]) =>
         quotes.map((quote) => ({
-          symbol: quote.symbol,
+          symbol: sym,
+          name: quote.name ?? "",
           price: quote.price,
           percentChange: quote.percentChange,
           priceChange: quote.priceChange,
-          quantity: quote.quantity || 0,
+          quantity: 0,
         }))
-      );
-      // Combine portfolioQuotes and formattedWatchlistQuotes into a single array
-      const allQuotes = Object.values(portfolioQuotes)
-        .flat()
-        .filter((q): q is NonNullable<typeof q> => q !== undefined)
-        .concat(formattedWatchlistQuotes);
+    );
 
-      // Format percentChange to two decimal places
-      const formattedQuotes = allQuotes.map((quote) => ({
-        ...quote,
-        percentChange: Number((quote?.percentChange || 0).toFixed(2)),
-      }));
+    // Combine portfolioQuotes and watchlistQuotes into a single array
+    const allQuotes = Object.values(portfolioQuotes)
+      .flat()
+      .filter((q): q is NonNullable<typeof q> => q !== undefined)
+      .concat(formattedWatchlistQuotes);
 
-      // Sort the array based on percentChange in descending order
-      const sortedQuotes = formattedQuotes.sort(
-        (a, b) => b.percentChange - a.percentChange
-      );
-      // Take the top 5 securities or as many as available
-      const topQuotesCount = Math.min(sortedQuotes.length, 5);
-      const topQuotes = sortedQuotes.slice(0, topQuotesCount);
+    // Deduplicate by symbol (keep first occurrence — portfolio entry wins)
+    const seen = new Set<string>();
+    const deduped = allQuotes.filter((q) => {
+      const key = q.symbol?.toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-      // Update state with the top quotes
-      setWatchlistsAndPortfoliosQuotes(topQuotes);
-    }
+    // Format percentChange to two decimal places
+    const formattedQuotes = deduped.map((quote) => ({
+      ...quote,
+      percentChange: Number((quote?.percentChange || 0).toFixed(2)),
+    }));
+
+    // Sort the array based on absolute percentChange descending (biggest movers)
+    const sortedQuotes = formattedQuotes.sort(
+      (a, b) => Math.abs(b.percentChange) - Math.abs(a.percentChange)
+    );
+    // Take the top 5 securities or as many as available
+    const topQuotesCount = Math.min(sortedQuotes.length, 5);
+    const topQuotes = sortedQuotes.slice(0, topQuotesCount);
+
+    // Update state with the top quotes
+    setWatchlistsAndPortfoliosQuotes(topQuotes);
   }, [portfolioQuotes, watchlistQuotes]);
+
+  // Check if user has any securities at all
+  const hasAnySecurities =
+    portfolios.some((p) => p.securities && p.securities.length > 0) ||
+    watchlists.some((w) => w.securities && w.securities.length > 0);
+
+  // Don't render the section if there are no securities
+  if (!hasAnySecurities && !isLoading) {
+    return null;
+  }
 
   return (
     <>
@@ -261,14 +277,14 @@ const Watchlist = () => {
               height={300}
               sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
             />
-          ) : (
+          ) : watchlistsAndPortfoliosQuotes.length > 0 ? (
             <Table
               data={watchlistsAndPortfoliosQuotes || []}
               config={watchlistConfig}
               full={true}
               icon={true}
             />
-          )}
+          ) : null}
         </div>
     </>
   );

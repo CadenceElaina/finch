@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { FaList, FaChartLine, FaPlus, FaAngleRight, FaTimes } from "react-icons/fa";
+import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import NewPortfolioModal from "../modals/AddPortfolioModal";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { watchlistStorage, portfolioStorage } from "../../services/storage";
 import PortfolioContent from "./PortfolioContent";
 import WatchlistContent from "./WatchlistContent";
+import WatchlistPerformance from "./WatchlistPerformance";
 import AddToWatchlistModal from "../modals/AddToWatchlist";
 import {
   WatchlistSecurity,
@@ -36,17 +37,34 @@ const Portfolio = () => {
     useState<boolean>(false);
   const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
     useState<boolean>(false);
-  const { portfolios, removePortfolio, addSecurityToPortfolio, appendPortfolio, removeSecurityFromPortfolio } =
+  const { portfolios, removePortfolio, addSecurityToPortfolio, appendPortfolio } =
     usePortfolios();
-  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, setWatchlists, removeSecurityFromWatchlist } =
+  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, removeSecurityFromWatchlist } =
     useWatchlists();
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const addToWatchlistDisabled = watchlists.length >= 3;
   const addPortfolioDisabled = portfolios.length >= 3;
   const firstWatchlist = watchlists[0];
   const firstPortfolio = portfolios[0];
+
+  // Detect list type from URL or ID match
+  useEffect(() => {
+    if (!id) return;
+    // If URL starts with /watchlist, force watchlist mode
+    if (location.pathname.startsWith("/watchlist")) {
+      setActiveListType("watchlists");
+      return;
+    }
+    // Auto-detect: check if ID matches a watchlist
+    if (watchlists.some((w) => w.id === id)) {
+      setActiveListType("watchlists");
+    } else if (portfolios.some((p) => p.id === id)) {
+      setActiveListType("portfolios");
+    }
+  }, [id, location.pathname, portfolios, watchlists]);
 
   useEffect(() => {
     // Find the portfolio with the matching id and set activePortfolio
@@ -110,7 +128,7 @@ const Portfolio = () => {
         if (activeListType === "portfolios" && activePortfolio) {
           portfolioStorage.rename(activePortfolio.id, newName.trim());
           // Refresh portfolios state from storage
-          const updated = portfolioStorage.getAll();
+          portfolioStorage.getAll();
           // We need to call removePortfolio + appendPortfolio to refresh, or just reload
           // Simpler: directly set via navigate to trigger re-render
           window.location.reload();
@@ -367,25 +385,15 @@ const Portfolio = () => {
               showDropdown={showDropdown}
               openAddToWatchlistModal={openAddToWatchlistModal}
             />
-            <div className="securities-list">
-              {activeWatchlist?.securities?.map((s) => (
-                <div key={s.symbol} className="security-row">
-                  <span className="security-symbol">{s.symbol.toUpperCase()}</span>
-                  <button
-                    className="security-remove-btn"
-                    title={`Remove ${s.symbol}`}
-                    onClick={() => {
-                      if (activeWatchlist) {
-                        removeSecurityFromWatchlist(activeWatchlist.id, s);
-                        addNotification(`${s.symbol} removed`, "success");
-                      }
-                    }}
-                  >
-                    <FaTimes size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {activeWatchlist && (
+              <WatchlistPerformance
+                watchlist={activeWatchlist}
+                onRemoveSecurity={(s) => {
+                  removeSecurityFromWatchlist(activeWatchlist.id, s);
+                  addNotification(`${s.symbol} removed`, "success");
+                }}
+              />
+            )}
           </div>
         )}
       </div>

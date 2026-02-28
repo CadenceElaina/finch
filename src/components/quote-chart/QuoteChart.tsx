@@ -24,15 +24,6 @@ type ChartData = {
   formattedXAxis: string;
 };
 
-interface HistoryItem {
-  date: string;
-  date_utc: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
 
 /** Map UI period strings to API interval + limit params */
 function periodToParams(period: string): { interval: string; limit: number } {
