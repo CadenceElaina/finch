@@ -8,7 +8,7 @@ interface PortfolioChartProps {
 const PortfolioChart: React.FC<PortfolioChartProps> = ({ data }) => {
   const chartData = [
     ["Date", "Value"],
-    ...data.map((entry) => [entry.date, entry.value]),
+    ...data.map((entry) => [entry.date, Number(entry.value)]),
   ];
   const options = {
     title: ``,

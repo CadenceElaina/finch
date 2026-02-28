@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, useParams, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import QuoteChart from "../../components/quote-chart/QuoteChart";
 import "./Quote.css";
@@ -28,12 +28,13 @@ const Quote: React.FC<QuoteProps> = () => {
   const [marketStatus, setMarketStatus] = useState<string>("Closed");
   const queryClient = useQueryClient();
   const location = useLocation();
+  const { quote: urlParam } = useParams<{ quote: string }>();
   const { state } = location;
 
-  // Safe access to state with fallbacks
+  // Derive symbol from navigation state, falling back to URL param for direct navigation
   const isIndex = state?.[0] ?? false;
-  const symbol = state?.[1] ? `${state[1]}` : "";
-  const symbolState = state?.[1] || "";
+  const symbol = state?.[1] ? `${state[1]}` : (urlParam ?? "");
+  const symbolState = state?.[1] || (urlParam ?? "");
 
   let symbolForChart = "";
   if (isIndex === true) {

@@ -15,14 +15,13 @@ export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [newsData, setNewsData] = useState<Article[]>([]);
   const queryClient = useQueryClient();
 
-  // TODO: re-enable after verifying quote calls work
-  // useEffect(() => {
-  //   const fetchNewsData = async () => {
-  //     const data = await getNews(queryClient);
-  //     setNewsData(data);
-  //   };
-  //   fetchNewsData();
-  // }, [queryClient]);
+  useEffect(() => {
+    const fetchNewsData = async () => {
+      const data = await getNews(queryClient);
+      setNewsData(data);
+    };
+    fetchNewsData();
+  }, [queryClient]);
 
   return (
     <NewsContext.Provider value={{ newsData }}>{children}</NewsContext.Provider>

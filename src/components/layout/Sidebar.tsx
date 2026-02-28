@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
     {
       icon: BsListUl,
       label: "watchlist",
-      href: "/portfolio",
+      href: "/watchlist",
       auth: true,
     },
     {
@@ -139,8 +139,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </div>
         </li>
         {portfolios.map((p) => (
-            <Link to={"/portfolio"}>
-              <li key={p.id} className="sidebar-item">
+            <Link to={`/portfolio/${p.id}`} key={p.id}>
+              <li className="sidebar-item">
                 <div className="sidebar-button-icon">
                   <MdOutlineInsertChart size={24} />
                 </div>
@@ -175,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         <div className="divider"></div>
         {bottomItems.map((item) => (
           <SidebarItem
-            key={item.href}
+            key={item.label}
             auth={true}
             href={item.href}
             icon={item.icon}

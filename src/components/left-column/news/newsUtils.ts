@@ -1,30 +1,126 @@
 import { QueryClient } from "@tanstack/react-query";
-// News will be migrated to Seeking Alpha API in a future step.
-// For now these functions return empty arrays to avoid build errors.
+import axios from "axios";
+import {
+  SA_BASE,
+  SA_ENDPOINTS,
+  saHeaders,
+} from "../../../config/seekingAlphaApi";
+import { Article, NewsSegmentType } from "../../../types/types";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _calculateTimeDifference = (pubDate: string): string => {
+/**
+ * Calculate a human-readable time difference string.
+ */
+const calculateTimeDifference = (pubDate: string): string => {
   const currentDate = new Date();
   const publishedDate = new Date(pubDate);
   const timeDifference = currentDate.getTime() - publishedDate.getTime();
-  const hoursDifference = Math.floor(timeDifference / (1000 * 60 * 60));
+  const minutesDifference = Math.floor(timeDifference / (1000 * 60));
 
+  if (minutesDifference < 60) {
+    return `${minutesDifference}m ago`;
+  }
+  const hoursDifference = Math.floor(minutesDifference / 60);
   if (hoursDifference < 24) {
-    return `${hoursDifference} hours ago`;
-  } else {
-    const days = Math.floor(hoursDifference / 24);
-    const remainingHours = hoursDifference % 24;
-    return `${days} day${days > 1 ? "s" : ""} ${remainingHours} hours ago`;
+    return `${hoursDifference}h ago`;
+  }
+  const days = Math.floor(hoursDifference / 24);
+  const remainingHours = hoursDifference % 24;
+  return `${days}d ${remainingHours}h ago`;
+};
+
+/**
+ * Map a Seeking Alpha news category string to our NewsSegmentType.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapSegment = (themes: any): NewsSegmentType[] => {
+  // SA articles can have themes like "Financial", "Market News", "World", etc.
+  // We bucket them into our three segments.
+  if (!themes || !Array.isArray(themes)) return ["Top"];
+
+  const segments: NewsSegmentType[] = ["Top"]; // every article shows in Top
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const themeNames = themes.map((t: any) =>
+    (typeof t === "string" ? t : t?.name ?? "").toLowerCase()
+  );
+
+  if (themeNames.some((n: string) => n.includes("world") || n.includes("global") || n.includes("international"))) {
+    segments.push("World");
+  }
+  if (themeNames.some((n: string) => n.includes("us") || n.includes("domestic") || n.includes("local"))) {
+    segments.push("Local");
+  }
+  return segments;
+};
+
+/**
+ * Transform a Seeking Alpha news API item into our Article shape.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const transformSaArticle = (item: any): Article => {
+  const attrs = item.attributes ?? item;
+  return {
+    id: String(item.id ?? ""),
+    title: attrs.title ?? "",
+    link: attrs.getUrl ?? attrs.uri ?? (attrs.links?.self ? `https://seekingalpha.com${attrs.links.self}` : "#"),
+    source: "Seeking Alpha",
+    time: attrs.publishOn ? calculateTimeDifference(attrs.publishOn) : "",
+    relatedSymbol: "",  // SA general news doesn't always have a symbol
+    img: attrs.gettyImageUrl ?? attrs.imageUrl ?? "",
+    segment: mapSegment(attrs.themes),
+  };
+};
+
+/**
+ * Fetch general market news from Seeking Alpha.
+ * Cached in react-query for 10 minutes.
+ */
+export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
+  const cached = queryClient.getQueryData<Article[]>(["saNews"]);
+  if (cached && cached.length > 0) return cached;
+
+  try {
+    const response = await axios.get(`${SA_BASE}${SA_ENDPOINTS.newsList}`, {
+      params: { category: "market-news::all", size: 20, number: 1 },
+      headers: saHeaders(),
+    });
+
+    const items = response.data?.data ?? [];
+    const articles: Article[] = items.map(transformSaArticle);
+
+    queryClient.setQueryData(["saNews"], articles);
+    return articles;
+  } catch (error) {
+    console.error("Failed to fetch SA news:", error);
+    return [];
   }
 };
 
-// TODO: Migrate to Seeking Alpha news API
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getSymbolsNews = async (_symbol: string) => {
-  return [];
-};
+/**
+ * Fetch news for a specific symbol from Seeking Alpha.
+ */
+export const getSymbolsNews = async (symbol: string): Promise<Article[]> => {
+  if (!symbol) return [];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getNews = async (_queryClient: QueryClient) => {
-  return [];
+  try {
+    const response = await axios.get(
+      `${SA_BASE}${SA_ENDPOINTS.newsBySymbol}`,
+      {
+        params: { id: symbol.toLowerCase(), size: 10, number: 1 },
+        headers: saHeaders(),
+      }
+    );
+
+    const items = response.data?.data ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const articles: Article[] = items.map((item: any) => {
+      const a = transformSaArticle(item);
+      a.relatedSymbol = symbol.toUpperCase();
+      return a;
+    });
+
+    return articles;
+  } catch (error) {
+    console.error(`Failed to fetch SA news for ${symbol}:`, error);
+    return [];
+  }
 };

@@ -128,10 +128,10 @@ const Portfolio = () => {
 
   const handleListClick = (type: string) => {
     setActiveListType(`${type}`);
-    if (type === "watchlists") {
+    if (type === "watchlists" && firstWatchlist) {
       navigate(`/portfolio/${firstWatchlist.id}`);
     }
-    if (type === "portfolios") {
+    if (type === "portfolios" && firstPortfolio) {
       navigate(`/portfolio/${firstPortfolio.id}`);
     }
   };

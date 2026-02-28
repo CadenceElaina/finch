@@ -378,20 +378,25 @@ export interface Symbols {
 }
 
 export const getMoversSymbols = async (title: string): Promise<string[]> => {
-  // Map UI title strings to API type param
-  let type = "MOST_ACTIVE";
-  if (title === "active") type = "MOST_ACTIVE";
-  else if (title === "losers") type = "LOSERS";
-  else type = "GAINERS";
+  // Map UI title strings to the canonicalName returned by /market/v2/get-movers
+  let canonicalName = "MOST_ACTIVES";
+  if (title === "active") canonicalName = "MOST_ACTIVES";
+  else if (title === "losers") canonicalName = "DAY_LOSERS";
+  else canonicalName = "DAY_GAINERS";
 
   try {
-    const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
-      params: { type },
+    const response = await axios.get(`${YH_BASE}${ENDPOINTS.movers.path}`, {
+      params: { ...ENDPOINTS.movers.params },
       headers: yhHeaders(),
     });
 
-    // Response may be { body: [...] } or a flat array
-    const quotes = response.data?.body ?? response.data ?? [];
+    // Response shape: { finance: { result: [{ canonicalName, quotes: [...] }] } }
+    const results = response.data?.finance?.result ?? [];
+    const category = results.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r: any) => r.canonicalName === canonicalName
+    );
+    const quotes = category?.quotes ?? [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const symbols: string[] = quotes.slice(0, 5).map((q: any) => q.symbol);
     return symbols;
@@ -406,19 +411,31 @@ export const getTrending = async (queryClient: QueryClient) => {
 
   try {
     const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
-      params: { type: "MOST_WATCHED" },
+      params: { ...ENDPOINTS.trending.params },
       headers: yhHeaders(),
     });
 
-    const quotes = response.data?.body ?? response.data ?? [];
+    // Response shape: { finance: { result: [{ count, quotes: [{ symbol }] }] } }
+    const results = response.data?.finance?.result ?? [];
+    const rawQuotes = results[0]?.quotes ?? [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const trendingQuotes = quotes.slice(0, 10).map((q: any) => ({
-      symbol: q.symbol,
-      name: q.shortName ?? q.longName ?? "",
-      price: q.regularMarketPrice ?? 0,
-      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
-      percentChange: (q.regularMarketChangePercent ?? 0).toFixed(2),
-    }));
+    const symbols = rawQuotes.slice(0, 10).map((q: any) => q.symbol);
+
+    if (symbols.length === 0) return [];
+
+    // Trending endpoint only returns symbols — fetch full quote data
+    const quotesMap = await getBatchQuotes(queryClient, symbols);
+    const trendingQuotes = symbols.map((sym: string, idx: number) => {
+      const q = quotesMap[sym];
+      return {
+        id: idx + 1,
+        symbol: sym,
+        name: q?.shortName ?? q?.longName ?? "",
+        price: q?.regularMarketPrice ?? 0,
+        priceChange: (q?.regularMarketChange ?? 0).toFixed(2),
+        percentChange: (q?.regularMarketChangePercent ?? 0).toFixed(2),
+      };
+    });
 
     queryClient.setQueryData(["trending"], trendingQuotes);
     return trendingQuotes;
