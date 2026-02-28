@@ -4,7 +4,7 @@ import { FaChartBar } from "react-icons/fa";
 import "./Portfolio.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import portfolioService from "../../../services/portfolios";
+import { portfolioStorage } from "../../../services/storage";
 import NewPortfolioModal from "../../modals/AddPortfolioModal";
 import { usePortfolios } from "../../../context/PortfoliosContext";
 import { useNotification } from "../../../context/NotificationContext";
@@ -28,19 +28,13 @@ const AddPortfolio = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
-  const handleSavePortfolio = async (portfolioName: string) => {
-    // Handle saving the portfolio data
-    const newPortfolio = {
+  const handleSavePortfolio = (portfolioName: string) => {
+    const response = portfolioStorage.create({
       title: portfolioName,
       author: user?.name,
-    };
-    const response = await portfolioService.create(newPortfolio);
-    appendPortfolio({
-      id: response.id,
-      title: response.title,
-      author: response.author,
     });
-    addNotification(`${newPortfolio.title} added!`, "success");
+    appendPortfolio(response);
+    addNotification(`${response.title} added!`, "success");
     closeModal();
     navigate(`/portfolio/${response.id}`);
   };

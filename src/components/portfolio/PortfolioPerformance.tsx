@@ -9,7 +9,7 @@ import {
 } from "../market-trends/utils";
 import { getQuote } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
-import portfolioService from "../../services/portfolios";
+import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
 import "./Portfolio.css";
 
@@ -126,7 +126,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
     // Check if the day is not Saturday (6) or Sunday (0)
     if (!isCurrentDatePresent && dayOfWeek !== 0 && dayOfWeek !== 6) {
-      await portfolioService.updatePortfolioValue(portfolio.id, {
+      portfolioStorage.updateValue(portfolio.id, {
         date: formattedDate,
         value: Number(totalValue.toFixed(2)),
       });

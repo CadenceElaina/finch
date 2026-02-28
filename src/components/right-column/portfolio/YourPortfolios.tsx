@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { FaChartBar } from "react-icons/fa";
 import { usePortfolios } from "../../../context/PortfoliosContext";
 import CustomButton from "../../CustomButton";
-import portfolioService from "../../../services/portfolios";
+import { portfolioStorage } from "../../../services/storage";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import NewPortfolioModal from "../../modals/AddPortfolioModal";
@@ -110,18 +110,12 @@ const YourPortfolios = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
-  const handleSavePortfolio = async (portfolioName: string) => {
-    // Handle saving the portfolio data (you can implement this part)
-    const newPortfolio = {
+  const handleSavePortfolio = (portfolioName: string) => {
+    const response = portfolioStorage.create({
       title: portfolioName,
       author: user?.name,
-    };
-    const response = await portfolioService.create(newPortfolio);
-    appendPortfolio({
-      id: response.id,
-      title: response.title,
-      author: response.author,
     });
+    appendPortfolio(response);
 
     closeModal();
     navigate(`/portfolio/${response.id}`);
