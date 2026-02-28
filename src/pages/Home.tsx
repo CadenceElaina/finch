@@ -7,7 +7,6 @@ import Watchlist from "../components/left-column/Watchlist";
 import AddPortfolio from "../components/right-column/portfolio/AddPortfolio";
 import MarketTrends from "../components/right-column/MarketTrends";
 import MostFollowed from "../components/right-column/MostFollowed";
-import MarketTrendsList from "../components/MarketTrendsList";
 import DiscoverMore from "../components/slider/DiscoverMore";
 import Footer from "../components/Footer";
 import { usePortfolios } from "../context/PortfoliosContext";

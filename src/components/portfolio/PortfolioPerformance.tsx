@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Portfolio, Security } from "../../types/types";
-import Table from "../table/Table";
-import { RowConfig } from "../table/types";
-import { quoteType } from "../search/types";
 import {
   Data,
   transformQuotesToDataWithQuantities,
@@ -17,32 +14,35 @@ interface PortfolioPerformanceProps {
   portfolio: Portfolio;
 }
 
+interface SecurityDetail {
+  symbol: string;
+  name: string;
+  quantity: number;
+  purchasePrice: number;
+  purchaseDate: string;
+  currentPrice: number;
+  costBasis: number;
+  currentValue: number;
+  totalGain: number;
+  totalGainPct: number;
+  dayChange: number;
+  dayChangePct: number;
+}
+
 const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   portfolio,
 }) => {
   //const [symbols, setSymbols] = useState<string[]>([]);
-  const [quotes, setQuotes] = useState<Data[]>();
-  /*   const [chartData, setChartData] = useState([
-    ["Date", "Value of portfolio"],
-    ["Dec 21, 2023", 0],
-  ]); */
+  const [securityDetails, setSecurityDetails] = useState<SecurityDetail[]>([]);
   const [portfolioPerformance, setPortfolioPerformance] = useState({
     totalPriceChange: 0,
     totalPercentChange: 0,
+    totalCostBasis: 0,
+    totalCurrentValue: 0,
+    totalGain: 0,
+    totalGainPct: 0,
   });
   const queryClient = useQueryClient();
-
-  const portfolioConfig: RowConfig = {
-    fields: [
-      "symbol",
-      "name",
-      "price",
-      "quantity",
-      "priceChange",
-      "percentChange",
-    ],
-    addIcon: true,
-  };
 
   const fetchQuotesForSymbols = async () => {
     const symbols = portfolio?.securities?.map((s: Security) => s.symbol);
@@ -54,6 +54,30 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       symbolQuoteMap,
       portfolio
     );
+    const details: SecurityDetail[] = (portfolio.securities ?? []).map((sec) => {
+      const q = symbolQuoteMap[sec.symbol];
+      const currentPrice = q?.price ?? 0;
+      const costBasis = sec.purchasePrice * sec.quantity;
+      const currentValue = currentPrice * sec.quantity;
+      const totalGain = currentValue - costBasis;
+      const totalGainPct = costBasis > 0 ? (totalGain / costBasis) * 100 : 0;
+      return {
+        symbol: sec.symbol.toUpperCase(),
+        name: q?.name ?? "",
+        quantity: sec.quantity,
+        purchasePrice: sec.purchasePrice,
+        purchaseDate: sec.purchaseDate,
+        currentPrice,
+        costBasis,
+        currentValue,
+        totalGain,
+        totalGainPct,
+        dayChange: (q?.priceChange ?? 0) * sec.quantity,
+        dayChangePct: q?.percentChange ?? 0,
+      };
+    });
+    setSecurityDetails(details);
+
     const convertToNumber = (str: string) => parseFloat(str);
     // Calculate total price change and total percent change
     const totalPriceChange = transformedData.reduce(
@@ -76,14 +100,23 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       overallPercentChange.toFixed(2)
     );
 
-    setQuotes(transformedData);
     const totalValue = transformedData.reduce(
       (value, security) => (value += security.price * (security.quantity ?? 0)),
       0
     );
+
+    const totalCostBasis = details.reduce((s, d) => s + d.costBasis, 0);
+    const totalCurrentValue = details.reduce((s, d) => s + d.currentValue, 0);
+    const totalGain = totalCurrentValue - totalCostBasis;
+    const totalGainPct = totalCostBasis > 0 ? (totalGain / totalCostBasis) * 100 : 0;
+
     setPortfolioPerformance({
       totalPriceChange: formattedTotalPriceChange,
       totalPercentChange: formattedOverallPercentChange,
+      totalCostBasis,
+      totalCurrentValue,
+      totalGain,
+      totalGainPct,
     });
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString("en-US", {
@@ -103,8 +136,6 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         value: Number(totalValue.toFixed(2)),
       });
     }
-
-    /*     setChartData([formattedDate, formattedTotalPriceChange]) */
   };
 
   useEffect(() => {
@@ -130,6 +161,11 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   const updatedPortfolioValue = convertPortfolioValueToNumbers(
     portfolio?.portfolioValue || []
   );
+
+  const gainClass = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
+  const gainLabel = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
+  const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return (
     <div className="portfolio-performance-container">
       <div className="top-row">
@@ -144,61 +180,70 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         <div className="portfolio-highlights">
           <div role="heading">Portfolio highlights</div>
           <div className="portfolio-day-total-change">
-            <div
-              className={`portfolio-day-${
-                portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange < 0 ? "loss" : ""
-              }`}
-            >
-              Day{" "}
-              {portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"}
-              <div
-                className={`portfolio-day-change-${
-                  portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"
-                }`}
-              >
-                <div>{portfolioPerformance.totalPriceChange}</div>
-                <div>{portfolioPerformance.totalPercentChange}</div>
+            <div className={`portfolio-day-${gainClass(portfolioPerformance.totalPriceChange)}`}>
+              Day {gainLabel(portfolioPerformance.totalPriceChange)}
+              <div className={`portfolio-day-change-${gainClass(portfolioPerformance.totalPriceChange)}`}>
+                <div>${fmt(Math.abs(portfolioPerformance.totalPriceChange))}</div>
+                <div>{portfolioPerformance.totalPercentChange}%</div>
               </div>
             </div>
-            <div
-              className={`total-${
-                portfolioPerformance.totalPriceChange > 0
-                  ? "gain"
-                  : portfolioPerformance.totalPriceChange === 0
-                  ? ""
-                  : "loss"
-              }`}
-            >
-              Total{" "}
-              {portfolioPerformance.totalPriceChange > 0
-                ? "gain"
-                : portfolioPerformance.totalPriceChange === 0
-                ? ""
-                : "loss"}
-              <div
-                className={`portfolio-total-change-${
-                  portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"
-                }`}
-              >
-                <div>{portfolioPerformance.totalPriceChange}</div>
-                <div>{portfolioPerformance.totalPercentChange}</div>
+            <div className={`total-${gainClass(portfolioPerformance.totalGain)}`}>
+              Total {gainLabel(portfolioPerformance.totalGain)}
+              <div className={`portfolio-total-change-${gainClass(portfolioPerformance.totalGain)}`}>
+                <div>${fmt(Math.abs(portfolioPerformance.totalGain))}</div>
+                <div>{portfolioPerformance.totalGainPct.toFixed(2)}%</div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="bottom-row">
-        <div className="portfolio-performance-list">
-          {portfolio && portfolio.securities && quotes && (
-            <Table
-              data={quotes}
-              config={portfolioConfig}
-              full={true}
-              icon={false}
-            />
+          {portfolioPerformance.totalCostBasis > 0 && (
+            <div className="portfolio-summary-row" style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary, #aaa)" }}>
+              <div>Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</div>
+              <div>Current value: ${fmt(portfolioPerformance.totalCurrentValue)}</div>
+            </div>
           )}
         </div>
       </div>
+      {/* Detailed securities table */}
+      {securityDetails.length > 0 && (
+        <div className="bottom-row">
+          <table className="security-details-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Qty</th>
+                <th>Avg Cost</th>
+                <th>Purchase Date</th>
+                <th>Price</th>
+                <th>Day Chg</th>
+                <th>Total Gain</th>
+                <th>Total %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {securityDetails.map((d) => (
+                <tr key={d.symbol}>
+                  <td className="security-symbol-cell">{d.symbol}</td>
+                  <td>{d.name}</td>
+                  <td>{d.quantity}</td>
+                  <td>${fmt(d.purchasePrice)}</td>
+                  <td>{d.purchaseDate || "—"}</td>
+                  <td>${fmt(d.currentPrice)}</td>
+                  <td className={gainClass(d.dayChange)}>
+                    {d.dayChange >= 0 ? "+" : ""}${fmt(d.dayChange)} ({d.dayChangePct.toFixed(2)}%)
+                  </td>
+                  <td className={gainClass(d.totalGain)}>
+                    {d.totalGain >= 0 ? "+" : ""}${fmt(d.totalGain)}
+                  </td>
+                  <td className={gainClass(d.totalGainPct)}>
+                    {d.totalGainPct >= 0 ? "+" : ""}{d.totalGainPct.toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

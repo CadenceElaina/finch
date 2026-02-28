@@ -290,3 +290,43 @@
 .security-remove-btn:hover {
   color: #e53935;
 }
+
+/* Security details table (portfolio) */
+.security-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.security-details-table th,
+.security-details-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.security-details-table th {
+  color: var(--text-secondary, #aaa);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.security-details-table .security-symbol-cell {
+  font-weight: 700;
+}
+
+.security-details-table .gain {
+  color: #00c853;
+}
+
+.security-details-table .loss {
+  color: #e53935;
+}
+
+.portfolio-summary-row div {
+  margin-bottom: 2px;
+}

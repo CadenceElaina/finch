@@ -50,7 +50,7 @@ const Table: React.FC<TableProps> = ({
     <ul className={`custom-list${full ? "-full" : ""}`}>
       {data.map((item, i) => (
         <li
-          key={item.id}
+          key={item.id ?? `${item.symbol}-${i}`}
           className={`list-item${
             config?.name === "most-followed" ? " mostfollowed" : ""
           } ${config?.name === "market-trends" ? "market-trends" : ""}`}
