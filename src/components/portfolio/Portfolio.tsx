@@ -70,17 +70,13 @@ const Portfolio = () => {
     // Find the portfolio with the matching id and set activePortfolio
     if (activeListType === "portfolios") {
       const matchingPortfolio = portfolios.find((p) => p.id === id);
-      if (matchingPortfolio) {
-        setActivePortfolio(matchingPortfolio);
-        setActiveTab(matchingPortfolio.title);
-      }
+      setActivePortfolio(matchingPortfolio);
+      setActiveTab(matchingPortfolio?.title ?? "");
     }
     if (activeListType === "watchlists") {
       const matchingWatchlist = watchlists.find((w) => w.id === id);
-      if (matchingWatchlist) {
-        setActiveWatchlist(matchingWatchlist);
-        setActiveTab(matchingWatchlist.title);
-      }
+      setActiveWatchlist(matchingWatchlist);
+      setActiveTab(matchingWatchlist?.title ?? "");
     }
   }, [activeListType, id, portfolios, watchlists]);
 
@@ -180,6 +176,8 @@ const Portfolio = () => {
     appendWatchlist(response);
     addNotification(`${response.title} added!`, "success");
     onCloseWatchlist();
+    setActiveListType("watchlists");
+    navigate(`/watchlist/${response.id}`);
   };
 
   const handleSaveNewPortfolio = (portfolioName: string) => {

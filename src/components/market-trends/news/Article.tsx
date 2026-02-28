@@ -13,7 +13,9 @@ const Article: React.FC<articleProps> = ({ articles }) => {
                 <div className="time">{article.time}</div>
               </div>
               <div className="title">{article.title}</div>
-              <div className="related-symbol">{article.relatedSymbol}</div>
+              {article.relatedSymbol && (
+                <div className="related-symbol">{article.relatedSymbol}</div>
+              )}
             </div>
             <div className="story-column-image">
               <img

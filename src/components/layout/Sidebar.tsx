@@ -14,7 +14,7 @@ import { portfolioStorage, watchlistStorage } from "../../services/storage";
 import NewPortfolioModal from "../modals/AddPortfolioModal";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 
-const Sidebar: React.FC<SidebarProps> = () => {
+const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const { portfolios, appendPortfolio } = usePortfolios();
   const { watchlists, appendWatchlist } = useWatchlists();
@@ -127,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </div>
         </li>
         {portfolios.map((p) => (
-            <Link to={`/portfolio/${p.id}`} key={p.id}>
+            <Link to={`/portfolio/${p.id}`} key={p.id} onClick={onClose}>
               <li className="sidebar-item">
                 <div className="sidebar-button-icon">
                   <MdOutlineInsertChart size={24} />
@@ -151,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </div>
         </li>
         {watchlists.map((w) => (
-            <Link to={`/watchlist/${w.id}`} key={w.id}>
+            <Link to={`/watchlist/${w.id}`} key={w.id} onClick={onClose}>
               <li className="sidebar-item">
                 <div className="sidebar-button-icon">
                   <BsListUl size={24} />
