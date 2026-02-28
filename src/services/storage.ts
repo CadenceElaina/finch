@@ -161,3 +161,63 @@ export const preferencesStorage = {
     return updated;
   },
 };
+
+// ── Generic TTL Cache ────────────────────────────────────
+// Persists any JSON-serializable data in localStorage with
+// a time-to-live. Used for API responses so they survive
+// page refreshes without burning API calls.
+
+const CACHE_PREFIX = "finch_cache_";
+
+export const cacheStorage = {
+  /**
+   * Read a cached value. Returns null if missing or expired.
+   */
+  get<T>(key: string, ttlMs: number): T | null {
+    try {
+      const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
+      if (!raw) return null;
+      const { data, ts } = JSON.parse(raw) as { data: T; ts: number };
+      if (Date.now() - ts > ttlMs) {
+        localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+        return null;
+      }
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Write a value to cache with the current timestamp.
+   */
+  set<T>(key: string, data: T): void {
+    try {
+      localStorage.setItem(
+        `${CACHE_PREFIX}${key}`,
+        JSON.stringify({ data, ts: Date.now() })
+      );
+    } catch {
+      // localStorage full or unavailable — silently ignore
+    }
+  },
+
+  /**
+   * Remove a specific cache entry.
+   */
+  remove(key: string): void {
+    localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+  },
+
+  /**
+   * Clear all finch cache entries (not portfolios/watchlists/preferences).
+   */
+  clearAll(): void {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(CACHE_PREFIX)) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+  },
+};
