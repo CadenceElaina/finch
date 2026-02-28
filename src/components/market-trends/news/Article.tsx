@@ -4,9 +4,8 @@ import { articleProps } from "../../../types/types";
 const Article: React.FC<articleProps> = ({ articles }) => {
   return (
     <div>
-      Article
-      {articles.map((article) => (
-        <div key={article.id} className="story-container">
+      {articles.map((article, idx) => (
+        <div key={article.id ?? `article-${idx}`} className="story-container">
           <div className="story-row">
             <div className="story-column">
               <div className="story-source-time">

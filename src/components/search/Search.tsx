@@ -222,12 +222,12 @@ const Search = () => {
   }, [dropdownRef, inputRef]);
 
   useEffect(() => {
-    // Update the search input and dropdown state when returning from a quote page
+    // Restore search input if returning from a quote page, but don't auto-open dropdown
     const savedState = JSON.parse(localStorage.getItem("searchState") || "{}");
     const savedSearchInput = savedState.searchInput || "";
-    const savedShowDropdown = savedState.showDropdown || false;
     setSearchInput(savedSearchInput);
-    setShowDropdown(savedShowDropdown);
+    setShowDropdown(false);
+    localStorage.removeItem("searchState");
   }, []);
 
   const handleInputClick = () => {
@@ -271,10 +271,10 @@ const Search = () => {
 
   const handleClickQuote = (quote: string) => {
     const newState = [false, quote];
-    localStorage.setItem(
-      "searchState",
-      JSON.stringify({ searchInput, showDropdown })
-    );
+    // Clear search state so dropdown doesn't persist on navigation
+    localStorage.removeItem("searchState");
+    setShowDropdown(false);
+    setSearchInput("");
     //quote
     navigate(`quote/${quote}`, { state: newState });
   };

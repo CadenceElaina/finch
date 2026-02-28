@@ -377,7 +377,10 @@ export interface Symbols {
   symbols: string;
 }
 
-export const getMoversSymbols = async (title: string): Promise<string[]> => {
+export const getMoversSymbols = async (
+  title: string,
+  queryClient?: QueryClient
+): Promise<string[]> => {
   // Map UI title strings to the canonicalName returned by /market/v2/get-movers
   let canonicalName = "MOST_ACTIVES";
   if (title === "active") canonicalName = "MOST_ACTIVES";
@@ -397,8 +400,22 @@ export const getMoversSymbols = async (title: string): Promise<string[]> => {
       (r: any) => r.canonicalName === canonicalName
     );
     const quotes = category?.quotes ?? [];
+    const topQuotes = quotes.slice(0, 5);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const symbols: string[] = quotes.slice(0, 5).map((q: any) => q.symbol);
+    const symbols: string[] = topQuotes.map((q: any) => q.symbol);
+
+    // Cache the full quote data so getBatchQuotes won't need a second API call
+    if (queryClient) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const q of topQuotes) {
+        if (q.symbol) {
+          const parsed = parseQuote(q, q.symbol);
+          queryClient.setQueryData(["quote", q.symbol], parsed);
+        }
+      }
+    }
+
     return symbols;
   } catch (error) {
     return [];
@@ -425,17 +442,20 @@ export const getTrending = async (queryClient: QueryClient) => {
 
     // Trending endpoint only returns symbols — fetch full quote data
     const quotesMap = await getBatchQuotes(queryClient, symbols);
-    const trendingQuotes = symbols.map((sym: string, idx: number) => {
-      const q = quotesMap[sym];
-      return {
-        id: idx + 1,
-        symbol: sym,
-        name: q?.shortName ?? q?.longName ?? "",
-        price: q?.regularMarketPrice ?? 0,
-        priceChange: (q?.regularMarketChange ?? 0).toFixed(2),
-        percentChange: (q?.regularMarketChangePercent ?? 0).toFixed(2),
-      };
-    });
+    const trendingQuotes = symbols
+      .map((sym: string, idx: number) => {
+        const q = quotesMap[sym];
+        return {
+          id: idx + 1,
+          symbol: sym,
+          name: q?.name ?? "",
+          price: q?.price ?? 0,
+          priceChange: Number((q?.priceChange ?? 0)).toFixed(2),
+          percentChange: Number((q?.percentChange ?? 0)).toFixed(2),
+        };
+      })
+      // Filter out symbols with no data (price=0 means API didn't return data)
+      .filter((q: { price: number }) => q.price !== 0);
 
     queryClient.setQueryData(["trending"], trendingQuotes);
     return trendingQuotes;
