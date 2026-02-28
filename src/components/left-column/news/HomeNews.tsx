@@ -14,7 +14,6 @@ const News = () => {
   const handleButtonClick = (segment: newsSegmentType) => {
     setCurrNewsSegment(segment);
   };
-  //console.log(newsData);
   return (
     <div>
       <div role="heading" className="news-heading">

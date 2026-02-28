@@ -66,7 +66,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
     const userPortfolios = portfolios.filter(
       (portfolio) => portfolio.author === user?.name
     );
-    // console.log(userPortfolios);
     return userPortfolios.length < 3;
   };
   const canCreateNewWatchlist = () => {
@@ -74,7 +73,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
     const userWatchlists = watchlists.filter(
       (watchlist) => watchlist.author === user?.name
     );
-    // console.log(userPortfolios);
     return userWatchlists.length < 3;
   };
   const closeModal = () => {

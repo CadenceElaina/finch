@@ -67,16 +67,13 @@ const MostFollowed = () => {
           followers: symbolFollowers[symbol],
         };
       });
-    //   console.log(newTop5Securities);
     const fetchQuotes = async () => {
       try {
         setIsLoading(true);
-        // console.log("fetching quotes for top5 followed ");
         // Fetch quotes for each symbol in top5Securities
         const updatedTop5Securities = await Promise.all(
           newTop5Securities.map(async (security) => {
             const { symbol } = security;
-            //   console.log(security.followers);
             const quote = await getQuote(queryClient, symbol);
 
             // Combine data from top5Securities and quote
@@ -95,8 +92,6 @@ const MostFollowed = () => {
             };
           })
         );
-        // console.log(updatedTop5Securities);
-        //  console.log(top5Quotes);
         if (isMounted) {
           setTop5Securities(updatedTop5Securities);
         }
@@ -145,7 +140,6 @@ const MostFollowed = () => {
     priceChange: Number(security.priceChange) || 0,
     percentChange: Number(security.percentChange) || 0,
   }));
-  // console.log(convertedTop5Securities);
 
   return (
     <div className="most-followed-container" ref={containerRef}>

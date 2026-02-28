@@ -66,7 +66,6 @@ const YourPortfolios = () => {
         // If not in the cache, make an API call
         const quoteData = await getQuote(queryClient, symbol);
 
-        //console.log(`perecnt change of ${symbol}, ${quoteData?.percentChange}`);
         // Update the cache
         setQuoteCache((prevCache) => ({
           ...prevCache,
@@ -133,7 +132,6 @@ const YourPortfolios = () => {
     const userPortfolios = portfolios.filter(
       (portfolio) => portfolio.author === user?.name
     );
-    // console.log(userPortfolios);
     return userPortfolios.length < 3;
   };
 
@@ -141,9 +139,7 @@ const YourPortfolios = () => {
     <div className="tooltip">You may not have more than 3 portfolios</div>
   );
 
-  /*   console.log(portfolios); */
   const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
-  /*   console.log(usersPortfolios.length); */
   const totalPortfolioValue = usersPortfolios.reduce((acc, portfolio) => {
     const securities = portfolioQuotes[portfolio.title] || [];
     const portfolioValue = securities.reduce((valueAcc, security) => {

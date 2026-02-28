@@ -44,7 +44,6 @@ const Table: React.FC<TableProps> = ({
   const { watchlists } = useWatchlists();
   const { user } = useAuth();
   const navigate = useNavigate();
-  /*   console.log(data, config); */
   const handleClick = (symbol: string) => {
     const newState = [false, symbol];
     navigate(`/quote/${symbol}`, { state: newState });

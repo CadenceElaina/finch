@@ -48,7 +48,6 @@ const QuoteArticles: React.FC<articleProps> = ({ articles, symbol }) => {
   const handleSymbolClick = (symbol: string) => {
     navigate(`/quote/${symbol}`);
   };
-  // console.log(articles, filteredArticles);
   return (
     <div>
       <div role="heading" className="quote-news-heading">

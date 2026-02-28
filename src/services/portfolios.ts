@@ -22,7 +22,6 @@ const create = async (newObject: NewPortfolio) => {
   const storedUserString = localStorage.getItem("loggedFinanceappUser") || "{}";
   const storedUserData = JSON.parse(storedUserString);
   const token = storedUserData.token || "";
-  /* console.log(token); */
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,

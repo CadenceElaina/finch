@@ -130,7 +130,6 @@ const QuoteChart: React.FC<{
 
       // Include the day in the set if it doesn't exist
       uniqueDaysSet.add(day);
-      //console.log(entry.time);
       return {
         time: entry.time,
         close: entry.close,
@@ -183,7 +182,6 @@ const QuoteChart: React.FC<{
           />
           <Tooltip
             content={({ payload }) => {
-              /*   console.log(payload); */
               if (!payload || payload.length === 0 || !payload[0].payload) {
                 return null;
               }

@@ -32,7 +32,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
       .map((watchlist) => watchlist.id)
   );
   const { setWatchlists } = useWatchlists();
-  // console.log(selectedWatchlists);
   const updateWatchlists = async () => {
     const securitiesToAdd: {
       watchlistId: string;

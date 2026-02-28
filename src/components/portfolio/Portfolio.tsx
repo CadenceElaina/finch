@@ -71,7 +71,6 @@ const Portfolio = () => {
   };
 
   const handleDropdownToggle = () => {
-    /*     console.log(showDropdown); */
     setShowDropdown(!showDropdown);
   };
 

@@ -62,9 +62,7 @@ const isString = (text: unknown): text is string => {
 };
 
 const parseString = (value: unknown): string => {
-  /*   console.log("ran", value); */
   if (!value || !isString(value)) {
-    /*     console.log(value, typeof value); */
     throw new Error(`Incorrect or missing string`);
   }
   return value;
@@ -76,7 +74,6 @@ const removeNumbersSpacesBeforeCapitalized = (inputString: string): string => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const cleanseData = (matches: any) => {
-  /*    console.log(matches); */
   const sugg: suggestionType[] = matches.map(
     (match: suggestionType) => match as suggestionType
   );
@@ -94,7 +91,6 @@ const cleanseData = (matches: any) => {
       "4. region" in s &&
       "8. currency" in s
     ) {
-      /*       console.log(s["2. name"]); */
 
       const symbol: string = parseString(s["1. symbol"]);
       const name: string = parseString(s["2. name"]);
@@ -113,7 +109,6 @@ const cleanseData = (matches: any) => {
     }
   }
 
-  /*     console.log(cleansedData); */
   return cleansedData;
 };
 

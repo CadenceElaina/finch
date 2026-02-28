@@ -25,10 +25,8 @@ const Search = () => {
   queryClient.setQueryDefaults(["quote"], { gcTime: 1000 * 60 * 15 });
 
   const getAutocompleteBestMatches = async (): Promise<suggestionType[]> => {
-    //console.log("autocomplete ran");
     // Try to get cached data
     if (searchInput.length <= 1) {
-      //console.log("autocomplete returned empty array");
       return [];
     }
     const cachedData = queryClient.getQueryData(["matches", searchInput]);
@@ -36,7 +34,6 @@ const Search = () => {
     if (cachedData) {
       // If cached data is available, return it
       const checkedCachedData = utils.checkCachedSuggestionType(cachedData);
-      //console.log("returned cached data:", checkedCachedData);
       return checkedCachedData;
     }
 
@@ -58,7 +55,6 @@ const Search = () => {
       const response = await axios.request(options);
       const temp = response.data.bestMatches;
       const matches = temp.slice(0, 5);
-      //console.log(response.data.bestMatches);
 
       // Update the query cache with the new data
       queryClient.setQueryData(["matches", searchInput], matches);
@@ -78,9 +74,7 @@ const Search = () => {
   });
 
   const getQuote = async (): Promise<quoteType[]> => {
-    //console.log("getQuote API call", fetchDataClicked);
     if (fetchDataClicked) {
-      //console.log("fetchedData button clicked");
       const options = {
         method: "GET",
         url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
@@ -117,26 +111,17 @@ const Search = () => {
         throw new Error("Failed to fetch quote data");
       }
     } else {
-      //console.log("reached else");
       // if we do not click the button we should fetch data for each item in bestMatchesQuery.data to display in the dropdown
       await queryClient.refetchQueries({ queryKey: ["matches", searchInput] });
       const bestMatches =
         queryClient.getQueryData<suggestionType[]>(["matches", searchInput]) ??
         [];
-      //console.log("matches refetched: ", bestMatches);
       if (bestMatches !== undefined) {
-        /*  console.log(
-          "fetching data for each best match",
-          bestMatches,
-          bestMatches?.length
-        ); */
         const matchesRegions = utils.getRegions(bestMatches);
         const matchesSymbols = utils.getSymbols(bestMatches);
         // Map through each symbol in cachedQuotes and make an API call for each
-        //console.log("matchesSymbols:", matchesSymbols);
         const quotePromises = matchesSymbols.map(async (symbol, index) => {
           const region = matchesRegions[index];
-          //console.log("region", region);
           if (region !== "United States") {
             return {
               symbol: "",
@@ -171,7 +156,6 @@ const Search = () => {
               percentChange:
                 response.data.price.regularMarketChangePercent.raw.toFixed(2),
             };
-            //console.log("quote data: ", quoteData);
             return quoteData;
           } catch (error) {
             console.error(error);
@@ -188,7 +172,6 @@ const Search = () => {
 
         // Wait for all API calls to complete
         const quotes = await Promise.all(quotePromises);
-        //console.log("quotes", quotes);
         // Filter out potential null and empty values
         const validNonEmptyQuotes = quotes.filter(
           (quote) =>
@@ -201,12 +184,10 @@ const Search = () => {
         );
         const validQuotesType =
           utils.checkCachedQuotesType(validNonEmptyQuotes);
-        //console.log("validQuotesTypes: ", validQuotesType);
         return validQuotesType;
       }
 
       try {
-        //console.log("did not ");
         return [
           {
             symbol: "",
@@ -277,7 +258,6 @@ const Search = () => {
   useEffect(() => {
     // Update the search input and dropdown state when returning from a quote page
     const savedState = JSON.parse(localStorage.getItem("searchState") || "{}");
-    //console.log(savedState);
     const savedSearchInput = savedState.searchInput || "";
     const savedShowDropdown = savedState.showDropdown || false;
     setSearchInput(savedSearchInput);
@@ -292,21 +272,7 @@ const Search = () => {
     setIsTyping(true);
     setSearchInput(e.target.value.toLowerCase());
   };
-  /*   console.log(
-    "isTyping:",
-    isTyping,
-    "\nsearch input:",
-    searchInput,
-    "\nfetch button: ",
-    fetchDataClicked,
-    "\nbestMatchesQuery.data:",
-    bestMatchesQuery.data,
-    "\nquoteQuery.data:",
-    quoteQuery.data,
-    "\nquoteQuery",
-    quoteQuery
-  );
- */
+
   const handleClick = () => {
     if (searchInput.trim() !== "") {
       setSearchedQuote(searchInput);
@@ -324,13 +290,10 @@ const Search = () => {
 
   //If enter is pressed while search-input is focused we get quote for current input
   const handleKeyDown = (e: { key: string }) => {
-    // console.log("User pressed: ", e.key);
-    // console.log(message);
     if (e.key === "Enter") {
       setSearchedQuote(searchInput);
       setFetchDataClicked(true);
       setShowDropdown(true);
-      // console.log(searchText)
       const cachedQuote = queryClient.getQueryData(["quote", searchedQuote]);
 
       if (!cachedQuote && quoteQuery.isStale) {
@@ -346,7 +309,6 @@ const Search = () => {
       "searchState",
       JSON.stringify({ searchInput, showDropdown })
     );
-    //console.log("local", localStorage);
     //quote
     navigate(`quote/${quote}`, { state: newState });
   };

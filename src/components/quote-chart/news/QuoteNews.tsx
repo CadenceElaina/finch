@@ -38,7 +38,6 @@ const QuoteNews = () => {
   if (isError) {
     return <div>Error loading news data.</div>;
   }
-  //console.log(newsData);
 
   return (
     <div className="quote-news-container">

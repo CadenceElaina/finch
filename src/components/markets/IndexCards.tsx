@@ -16,7 +16,6 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange }) => {
           if (symbol.charAt(0) === "^") {
             symbol = symbol.replace("^", "");
           }
-          /*           console.log("Current Exchange:", currExchange); */
           // Check if the current exchange is Exchange.Currencies
           if (currExchange === Exchange.Currencies) {
             return (

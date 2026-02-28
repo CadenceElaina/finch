@@ -151,10 +151,8 @@ const Watchlist = () => {
         });
       }
     });
-    //  console.log(symbols);
     // Remove duplicate symbols
     const uniqueSymbols = [...new Set(symbols)];
-    // console.log("uniqueSymbols", uniqueSymbols);
     // Check if the symbol is already in the portfolioQuotes
     const symbolsInPortfolios = Object.values(portfolioQuotes)
       .flat()
@@ -185,8 +183,6 @@ const Watchlist = () => {
       if (quoteData?.percentChange) {
         pc = quoteData.percentChange * 100;
       }
-      //  console.log(pc);
-      //  console.log(symbol);
       return {
         symbol,
         name: quoteData?.name,
