@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Table from "./table/Table";
 import { RowConfig } from "./table/types";
 import { ImFire } from "react-icons/im";
@@ -50,12 +50,10 @@ const MarketTrendsList = () => {
 
       if (cachedQuote) {
         const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        console.log("quoteUtils.ts - got cached quote:", cachedQuote);
         return newCachedQuote;
       }
 
       // If not in the cache, make an API call
-      console.log("quoteUtils.ts - new api request -", symbol);
       const quoteData = await getQuote(queryClient, symbol);
       await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
       // Update the cache
@@ -106,9 +104,10 @@ const MarketTrendsList = () => {
       setLoading(false);
     }
   }, [currTrend]);
-  console.log(transformQuotesToData(mostActiveQuotes)); //
+
   return (
     <>
+      {" "}
       <div role="heading" className="home-market-trends-heading">
         Market trends
       </div>

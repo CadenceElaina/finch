@@ -60,7 +60,6 @@ export default function SignIn() {
         "success"
       );
       navigate("/");
-      console.log(user);
     } catch (exception) {
       addNotification("Error registering!", "error");
     }
@@ -73,7 +72,7 @@ export default function SignIn() {
             <div className="sign-in-logo">
               {" "}
               <FaUncharted size={24} />
-              <Link to={"/"}>Finhub</Link>
+              <Link to={"/"}>Finch</Link>
             </div>
             <div className="header-container">
               <h1>Create an account</h1>

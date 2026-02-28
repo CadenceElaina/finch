@@ -16,13 +16,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       navigate("/");
     } else if (!auth) {
       if (onClick) {
-        console.log("runs our onclick");
         onClick();
       } else {
         navigate("/login");
       }
     } else if (href) {
-      console.log(href);
       navigate(`../${href}`);
     }
   }, [onClick, auth, href, navigate]);

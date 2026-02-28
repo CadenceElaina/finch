@@ -12,31 +12,21 @@ import watchlistService from "../../services/watchlist";
 import PortfolioContent from "./PortfolioContent";
 import WatchlistContent from "./WatchlistContent";
 import AddToWatchlistModal from "../modals/AddToWatchlist";
-import { WatchlistSecurity, Watchlist } from "../../types/types";
+import {
+  WatchlistSecurity,
+  Watchlist,
+  Security,
+  Portfolio as PortfolioType,
+} from "../../types/types";
 import { useNotification } from "../../context/NotificationContext";
 import Notification from "../Notification";
-
-interface Security {
-  symbol: string;
-  quantity: number;
-  purchaseDate: string;
-  purchasePrice: number;
-}
-
-interface Portfolio {
-  id: string;
-  title: string;
-  author: string | undefined;
-  securities?: Security[];
-  portfolioValue?: [{ date: string; value: number }];
-}
 
 const Portfolio = () => {
   const { addNotification } = useNotification();
   const [activeTab, setActiveTab] = useState<string>("");
   const [activeListType, setActiveListType] = useState<string>("portfolios");
   const [activeWatchlist, setActiveWatchlist] = useState<Watchlist>();
-  const [activePortfolio, setActivePortfolio] = useState<Portfolio>();
+  const [activePortfolio, setActivePortfolio] = useState<PortfolioType>();
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [addToPortfolioModalIsOpen, setAddToPortfolioModalIsOpen] =
     useState<boolean>(false);
@@ -134,7 +124,6 @@ const Portfolio = () => {
       author: user?.name,
     };
     const response = await watchlistService.create(newWatchlist);
-    console.log(response);
     appendWatchlist({
       id: response.id,
       title: response.title,
@@ -157,12 +146,7 @@ const Portfolio = () => {
       navigate(`/portfolio/${firstPortfolio.id}`);
     }
   };
-  /*   console.log(activeWatchlist);
-  console.log(watchlists, watchlists.length, activeTab); */
-  //console.log(addToPortfolioModalIsOpen);
-  // console.log(activePortfolio);
-  /*   console.log("Portfolios:", portfolios); */
-  /*  console.log(portfolios, activeTab, activePortfolio); */
+
   const Tooltip = () => (
     <div className="tooltip-lists">You may not have more than 3 watchlists</div>
   );
@@ -185,10 +169,6 @@ const Portfolio = () => {
             if (activeListType === "portfolios") {
               addToList(newSecurity);
             }
-            console.log("Symbol:", symbol);
-            console.log("Quantity:", quantity);
-            console.log("Purchase Date:", purchaseDate);
-            console.log("Purchase Price:", purchasePrice);
           }}
         />
       )}
@@ -202,8 +182,6 @@ const Portfolio = () => {
               symbol,
             };
             if (activeListType === "watchlists") {
-              console.log(newSecurity);
-              console.log("adding security to watchlist");
               addToWatchlist(newSecurity);
             }
           }}
@@ -352,6 +330,7 @@ const Portfolio = () => {
         {activeListType === "watchlists" && (
           <div className="main-container">
             <WatchlistContent
+              watchlistName={activeTab}
               handleDropdownOptionClick={(option: string) =>
                 handleDropdownOptionClick(option)
               }

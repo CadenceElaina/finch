@@ -1,7 +1,7 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Exchange, IndexCard } from "./types";
 import IndexCards from "./IndexCards";
-import "./Markets.css";
+import "./markets.css";
 import { Link } from "react-router-dom";
 import { useNews } from "../../context/NewsContext";
 import { getQuote } from "../search/quoteUtils";
@@ -60,12 +60,9 @@ const Markets = () => {
 
       if (cachedQuote) {
         const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        console.log("quoteUtils.ts - got cached quote:", cachedQuote);
         return newCachedQuote;
       }
 
-      // If not in the cache, make an API call
-      console.log("quoteUtils.ts - new api request -", symbol);
       const quoteData = await getQuote(queryClient, symbol);
       await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
       // Update the cache
@@ -95,11 +92,8 @@ const Markets = () => {
       updateIndexQuotesData(formattedDataForContext);
     };
 
-    fetchData(); // Fetch and format data
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData();
   }, [currExchange]);
-
-  console.log(symbolQuotes);
 
   return (
     <>

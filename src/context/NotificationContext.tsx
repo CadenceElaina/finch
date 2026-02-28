@@ -24,14 +24,6 @@ interface NotificationContextType extends NotificationContextState {
   removeNotification: (id: number) => void;
 }
 
-interface NotificationContextType {
-  addNotification: (
-    message: string,
-    type: "success" | "error" | "info"
-  ) => void;
-  removeNotification: (id: number) => void;
-}
-
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
 );

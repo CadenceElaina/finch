@@ -8,7 +8,7 @@ const Footer = () => {
         <li>
           <div className="footer-item">
             <FaUncharted size={24} />
-            <span>Finhub</span>
+            <span>Finch</span>
           </div>
         </li>
         <li>

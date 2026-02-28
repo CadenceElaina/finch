@@ -9,10 +9,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import { useAuth } from "../../context/AuthContext";
 import { Skeleton, Typography } from "@mui/material";
+import { PortfolioSymbols } from "../../types/types";
 
-interface PortfolioSymbols {
-  [portfolioTitle: string]: { [symbol: string]: number };
-}
 const Watchlist = () => {
   const { portfolios } = usePortfolios();
   const { watchlists } = useWatchlists();
@@ -28,6 +26,7 @@ const Watchlist = () => {
     const symbolsWithQuantities =
       portfolio.securities?.reduce((acc, security) => {
         acc[security.symbol] = security.quantity;
+
         return acc;
       }, {} as { [symbol: string]: number }) || {};
 
@@ -75,7 +74,6 @@ const Watchlist = () => {
         const cachedQuote = quoteCache[symbol];
 
         if (cachedQuote) {
-          console.log("got cached quote Watchlist.tsx ", cachedQuote);
           return {
             symbol,
             name: cachedQuote?.name,
@@ -88,7 +86,6 @@ const Watchlist = () => {
           // If not in the cache, make an API call
           const quoteData = await getQuote(queryClient, symbol);
 
-          console.log("new api call fetchPortfolioQuotes - Watchlist.tsx");
           // Update the cache
           setQuoteCache((prevCache) => ({
             ...prevCache,
@@ -99,7 +96,6 @@ const Watchlist = () => {
           if (quoteData?.percentChange) {
             pc = quoteData.percentChange * 100;
           }
-          console.log(pc);
 
           return {
             symbol,
@@ -167,15 +163,12 @@ const Watchlist = () => {
     const symbolsToFetch = uniqueSymbols.filter(
       (symbol) => !symbolsInPortfolios.includes(symbol)
     );
-    // Check if the symbol is already in the cache
-    console.log("symbolsinPortfolios", symbolsInPortfolios);
     const quotesPromises = symbolsToFetch.map(async (symbol) => {
       const cachedQuote = queryClient.getQueryData(["quote", symbol]) as
         | quoteType
         | undefined;
 
       if (cachedQuote) {
-        console.log("cachedqQuote", cachedQuote);
         return {
           symbol,
           name: cachedQuote.name,
@@ -188,7 +181,6 @@ const Watchlist = () => {
       // If not in the cache, make an API call
       const quoteData = await getQuote(queryClient, symbol);
 
-      console.log("made api call fetchWatchlistQuotes");
       let pc = 0;
       if (quoteData?.percentChange) {
         pc = quoteData.percentChange * 100;
@@ -219,7 +211,6 @@ const Watchlist = () => {
     });
 
     setWatchlistQuotes(quotesMap);
-    console.log(quotesMap);
   };
 
   useEffect(() => {
@@ -247,16 +238,19 @@ const Watchlist = () => {
         percentChange: number;
         priceChange: number;
         quantity: number;
-      }[] = Object.entries(watchlistQuotes).flatMap(([symbol, quotes]) =>
+      }[] = Object.entries(watchlistQuotes).flatMap(([_watchlistId, quotes]) =>
         quotes.map((quote) => ({
-          symbol,
-          ...quote,
+          symbol: quote.symbol,
+          price: quote.price,
+          percentChange: quote.percentChange,
+          priceChange: quote.priceChange,
           quantity: quote.quantity || 0,
         }))
       );
       // Combine portfolioQuotes and formattedWatchlistQuotes into a single array
       const allQuotes = Object.values(portfolioQuotes)
         .flat()
+        .filter((q): q is NonNullable<typeof q> => q !== undefined)
         .concat(formattedWatchlistQuotes);
 
       // Format percentChange to two decimal places
@@ -269,7 +263,6 @@ const Watchlist = () => {
       const sortedQuotes = formattedQuotes.sort(
         (a, b) => b.percentChange - a.percentChange
       );
-      console.log(sortedQuotes);
       // Take the top 5 securities or as many as available
       const topQuotesCount = Math.min(sortedQuotes.length, 5);
       const topQuotes = sortedQuotes.slice(0, topQuotesCount);
@@ -278,14 +271,6 @@ const Watchlist = () => {
       setWatchlistsAndPortfoliosQuotes(topQuotes);
     }
   }, [portfolioQuotes, watchlistQuotes]);
-  console.log(
-    /*     watchlists,
-    "ports",
-    portfolios, */
-    portfolioQuotes,
-    watchlistQuotes,
-    watchlistsAndPortfoliosQuotes
-  );
 
   return (
     <>

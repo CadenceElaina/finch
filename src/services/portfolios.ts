@@ -1,16 +1,12 @@
 import axios from "axios";
+import { Security } from "../types/types";
+
 const baseUrl = "/api/portfolios";
 let token: string | null = null;
 
-interface newPortfolio {
+interface NewPortfolio {
   title: string;
   user?: string;
-}
-interface Security {
-  symbol: string;
-  quantity: number;
-  purchaseDate: string;
-  purchasePrice: number;
 }
 
 const setToken = (newToken: string) => {
@@ -22,7 +18,7 @@ const getAll = async () => {
   return response.data;
 };
 
-const create = async (newObject: newPortfolio) => {
+const create = async (newObject: NewPortfolio) => {
   const storedUserString = localStorage.getItem("loggedFinanceappUser") || "{}";
   const storedUserData = JSON.parse(storedUserString);
   const token = storedUserData.token || "";

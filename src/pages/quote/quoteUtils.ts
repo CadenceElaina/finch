@@ -1,6 +1,4 @@
 export const isHoliday = (date: Date) => {
-  // List of holidays
-  console.log(date);
   const holidays = [
     new Date(2024, 0, 1), // New Year’s Day
     new Date(2024, 0, 15), // Martin Luther King, Jr. Day
@@ -13,8 +11,6 @@ export const isHoliday = (date: Date) => {
     new Date(2024, 10, 28), // Thanksgiving Day
     new Date(2024, 11, 25), // Christmas Day
   ];
-  console.log(holidays[0] === date);
-  // Check if the current date is a holiday
   const currentDate = new Date(
     date.getFullYear(),
     date.getMonth(),

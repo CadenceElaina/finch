@@ -84,7 +84,7 @@ const cleanseData = (matches: any) => {
 
   for (const s of sugg) {
     if (!s || typeof s !== "object") {
-      console.log("Incorrect or missing data");
+      continue;
     }
 
     if (
@@ -140,12 +140,10 @@ const checkCachedQuoteType = (cachedQuote: unknown): quoteType => {
 };
 
 const getSymbols = (data: suggestionType[]): string[] => {
-  console.log(data.map((item) => item.symbol));
   return data.map((item) => item.symbol);
 };
 
 const getRegions = (data: suggestionType[]): string[] => {
-  console.log(data.map((item) => item.region));
   return data.map((item) => item.region);
 };
 
@@ -176,20 +174,12 @@ const isSuggestionType = (obj: unknown): obj is suggestionType => {
 };
 
 const checkCachedSuggestionType = (cachedData: unknown): suggestionType[] => {
-  console.log("");
-  console.log(cachedData);
   if (Array.isArray(cachedData)) {
-    // If it's an array, check each element
     const filteredArray = cachedData.filter((item) => isSuggestionType(item));
-    console.log(filteredArray);
     return filteredArray;
   } else if (isSuggestionType(cachedData)) {
-    // If it's a single object, return it in an array
-    console.log(cachedData, "\n", [cachedData]);
     return [cachedData];
   } else {
-    // Return an empty array if cachedData is not of type SuggestionType
-    console.log("returned empty array checkCachedSuggestionType", cachedData);
     return [];
   }
 };

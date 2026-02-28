@@ -37,29 +37,16 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     const fetchWatchlists = async () => {
-      const watchlistsData = await watchlistService.getAll();
-      setWatchlists(watchlistsData);
-    };
-
-    fetchWatchlists();
-  }, []); // Fetch watchlists on component mount
-
-  useEffect(() => {
-    // Handle watchlist updates here
-    // You may want to fetch watchlists again when watchlists state changes
-    // This ensures that the UI reflects the latest data
-    const fetchWatchlistsOnUpdate = async () => {
       try {
         const watchlistsData = await watchlistService.getAll();
         setWatchlists(watchlistsData);
       } catch (error) {
         console.error("Error fetching watchlists:", error);
-        // Handle error as needed
       }
     };
 
-    fetchWatchlistsOnUpdate();
-  }, []);
+    fetchWatchlists();
+  }, []); // Fetch watchlists on component mount
 
   const updateWatchlistsState: Dispatch<SetStateAction<Watchlist[]>> = (
     updatedWatchlists

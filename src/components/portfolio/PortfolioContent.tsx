@@ -3,7 +3,7 @@ import { FaEllipsisV, FaPlus } from "react-icons/fa";
 import "./Portfolio.css";
 import PortfolioPerformance from "./PortfolioPerformance";
 import { usePortfolios } from "../../context/PortfoliosContext";
-import Portfolio from "./Portfolio";
+import { Portfolio } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 
 interface PortfolioContentProps {
@@ -62,7 +62,7 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
                 )}
               </div>
             </div>
-            <PortfolioPerformance portfolio={portfolio} />
+            {portfolio && <PortfolioPerformance portfolio={portfolio} />}
           </div>
           <button className="add-investment" onClick={openAddToPortfolioModal}>
             <FaPlus size={18} />

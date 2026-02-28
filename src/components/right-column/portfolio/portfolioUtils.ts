@@ -1,16 +1,5 @@
-import Portfolio from "../../portfolio/Portfolio";
+import { Portfolio, PortfolioSymbols } from "../../../types/types";
 
-interface PortfolioSymbols {
-  [portfolioTitle: string]: { [symbol: string]: number };
-}
-
-/* interface Security {
-  symbol: string;
-  quantity: number;
-  price: number;
-  percentChange: number;
-}
- */
 export const generatePortfolioSymbols = (
   portfolios: Portfolio[]
 ): PortfolioSymbols => {

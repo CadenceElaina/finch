@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./Search.css";
+import "./search.css";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import cleanseData, { quoteType, suggestionType, utils } from "./types";
@@ -95,12 +95,9 @@ const Search = () => {
         const cachedQuote = queryClient.getQueryData(["quote", searchInput]);
         if (cachedQuote) {
           const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-          console.log("used cached q", cachedQuote);
           return [newCachedQuote];
         }
         const response = await axios.request(options);
-        console.log("getQuote API call");
-        //console.log("Response Headers:", response.headers);
         if (!response.data.quoteType || !response.data.price) {
           throw new Error("Incomplete or missing data in the API response");
         }
@@ -114,7 +111,6 @@ const Search = () => {
           percentChange:
             response.data.price.regularMarketChangePercent.raw.toFixed(2),
         };
-        console.log(quoteData);
         return [quoteData];
       } catch (error) {
         console.error(error);

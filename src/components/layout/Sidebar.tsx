@@ -88,7 +88,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
       author: user?.name,
     };
     const response = await portfolioService.create(newPortfolio);
-    console.log(response);
     // appendPortfolio to our context state
     appendPortfolio({
       id: response.id,
@@ -106,7 +105,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
       author: user?.name,
     };
     const response = await watchlistService.create(newWatchlist);
-    console.log(response);
     appendWatchlist({
       id: response.id,
       title: response.title,
@@ -127,7 +125,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
       setAddWatchlistModalIsOpen(true);
     }
   };
-  console.log(portfolios, watchlists);
   const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
   const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
   const exceedsWatchlistLimit = watchlists.length >= 3;
@@ -149,7 +146,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
       <span className="logo-side">
         {" "}
         <FaUncharted size={24} />
-        <span>Finhub</span>
+        <span>Finch</span>
       </span>
       <div className="sidebar-items">
         {topItems.map((item) => (

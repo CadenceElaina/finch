@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaChartBar } from "react-icons/fa";
 import { usePortfolios } from "../../../context/PortfoliosContext";
 import CustomButton from "../../CustomButton";
@@ -12,10 +12,7 @@ import { Skeleton } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { quoteType } from "../../search/types";
 import { getQuote } from "../../search/quoteUtils";
-
-interface PortfolioSymbols {
-  [portfolioTitle: string]: { [symbol: string]: number };
-}
+import { PortfolioSymbols } from "../../../types/types";
 
 const YourPortfolios = () => {
   const { portfolios, appendPortfolio } = usePortfolios();
@@ -25,7 +22,6 @@ const YourPortfolios = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const portfolioSymbols: PortfolioSymbols = {};
-  console.log(user);
   // Populate the object with symbols and quantities
   portfolios.forEach((portfolio) => {
     const symbolsWithQuantities =
@@ -97,16 +93,13 @@ const YourPortfolios = () => {
   useEffect(() => {
     // Fetch quotes for each portfolio
     if (user && usersPortfolios.length > 0) {
-      console.log("useEffect triggered YourPortfolios.tsx");
       portfolios.forEach((portfolio) => {
-        console.log(`Fetching quotes for portfolio: ${portfolio.title}`);
         fetchPortfolioQuotes(portfolio.title);
         setIsLoading(false);
       });
     }
   }, [portfolios]);
 
-  console.log(portfolioQuotes);
   const openModal = () => {
     if (!auth) {
       navigate("/login");
@@ -125,8 +118,6 @@ const YourPortfolios = () => {
       author: user?.name,
     };
     const response = await portfolioService.create(newPortfolio);
-    console.log(response);
-    // appendPortfolio to our context state
     appendPortfolio({
       id: response.id,
       title: response.title,

@@ -8,13 +8,16 @@ export interface User {
   portfolios?: Portfolio[];
 }
 
-export interface credentials {
+export interface Credentials {
   username: string;
   password: string;
 }
-export interface UserCredentials extends credentials {
+export interface UserCredentials extends Credentials {
   name: string;
 }
+
+export type credentials = Credentials;
+
 export type SnackbarType = "info" | "success" | "error" | "warning";
 export interface Security {
   selected?: boolean;
@@ -49,6 +52,7 @@ export interface Portfolio {
   title: string;
   author: string | undefined;
   securities?: Security[];
+  portfolioValue?: Array<{ date: string; value: number }>;
 }
 export interface Watchlist {
   id: string;
@@ -65,14 +69,14 @@ export interface Watchlists {
   user?: User;
 }
 // News
-export enum newsSegmentEnum {
-  top = "Top",
-  local = "Local",
-  world = "World",
+export enum NewsSegmentEnum {
+  Top = "Top",
+  Local = "Local",
+  World = "World",
 }
 
-export type newsSegmentType = "Top" | "Local" | "World";
-export interface article {
+export type NewsSegmentType = "Top" | "Local" | "World";
+export interface Article {
   id?: string;
   link: string;
   source: string;
@@ -80,11 +84,21 @@ export interface article {
   title: string;
   relatedSymbol: string;
   img?: string;
-  segment?: newsSegmentType | newsSegmentType[];
+  segment?: NewsSegmentType | NewsSegmentType[];
 }
 
-export interface articleProps {
-  articles: article[];
-  currNewsSegment?: newsSegmentType;
+export interface ArticleProps {
+  articles: Article[];
+  currNewsSegment?: NewsSegmentType;
   symbol?: string;
+}
+
+export const newsSegmentEnum = NewsSegmentEnum;
+export type newsSegmentType = NewsSegmentType;
+export type article = Article;
+export type articleProps = ArticleProps;
+
+// Portfolio utilities
+export interface PortfolioSymbols {
+  [portfolioTitle: string]: { [symbol: string]: number };
 }

@@ -34,7 +34,6 @@ const QuoteChart: React.FC<{
   symbol: string;
   previousClosePrice: string;
 }> = ({ interval, symbol, previousClosePrice }) => {
-  console.log(interval, symbol);
   queryClient.setQueryDefaults(["chartData"], { gcTime: 1000 * 60 * 30 });
   const period = interval;
 
@@ -51,7 +50,6 @@ const QuoteChart: React.FC<{
     // Check the cache first
     const cachedChartData = queryClient.getQueryData(chartQueryKey);
     if (cachedChartData) {
-      console.log("Using cached chart data for", chartQueryKey);
       return { chartData: cachedChartData };
     }
     // If not in the cache, make the API call
@@ -69,17 +67,18 @@ const QuoteChart: React.FC<{
     };
 
     try {
-      console.log("new api call QuoteChart.tsx");
       const response = await axios.request(options);
-      console.log(response);
 
-      const chartData = Object.entries(response.data.attributes).map(
+      const attributesEntries = Object.entries(response.data.attributes) as [
+        string,
+        Values
+      ][];
+      const chartData = attributesEntries.map(
         ([timestamp, values]: [string, Values]) => {
           const time = new Date(timestamp);
           // Format time for tooltip and x-axis
           const formattedTime = formatTime(time, interval);
           const formattedXAxis = formatXAxis(time, interval);
-          /*console.log(formattedTime, formattedXAxis); */
           return {
             time: formattedTime,
             close: values.close,
@@ -87,18 +86,9 @@ const QuoteChart: React.FC<{
           };
         }
       );
-      console.log("chartData: ", chartData);
       // Cache the chart data
       queryClient.setQueryData(chartQueryKey, chartData);
 
-      if (interval === "1D") {
-        const previousCloseNumber = parseFloat(previousCloseWithoutSymbol);
-        if (previousCloseNumber) {
-          console.log("Previous Close:", previousCloseNumber);
-          const finalClose = chartData[chartData.length - 1].close;
-          console.log("Final Close:", finalClose);
-        }
-      }
       return { chartData };
     } catch (error) {
       console.error(error);
@@ -113,7 +103,7 @@ const QuoteChart: React.FC<{
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error fetching data</div>;
-  if (!data.chartData) return <div>No chart data available</div>;
+  if (!data?.chartData) return <div>No chart data available</div>;
 
   const uniqueDaysSet = new Set();
   const uniqueYearsSet = new Set();
@@ -153,18 +143,23 @@ const QuoteChart: React.FC<{
 
   let lineStrokeColor = "#8884d8"; // Default color
 
-  if (interval === "1D" && previousCloseNumber !== undefined) {
-    const finalClose = chartData[chartData.length - 1].close;
-    // Compare final close with previous close and set line color accordingly
-    lineStrokeColor = finalClose > previousCloseNumber ? "green" : "red";
-  } else if (interval !== "1D") {
-    const initialPrice = chartData[0].close;
-    const finalClose = chartData[chartData.length - 1].close;
-    lineStrokeColor = finalClose > initialPrice ? "green" : "red";
+  if (chartData.length > 0) {
+    if (interval === "1D" && previousCloseNumber !== undefined) {
+      const finalClose = chartData[chartData.length - 1]?.close;
+      // Compare final close with previous close and set line color accordingly
+      if (finalClose !== undefined) {
+        lineStrokeColor = finalClose > previousCloseNumber ? "green" : "red";
+      }
+    } else if (interval !== "1D") {
+      const initialPrice = chartData[0]?.close;
+      const finalClose = chartData[chartData.length - 1]?.close;
+      if (initialPrice !== undefined && finalClose !== undefined) {
+        lineStrokeColor = finalClose > initialPrice ? "green" : "red";
+      }
+    }
   }
   const areaFill =
     lineStrokeColor === "red" ? "rgba(255, 0, 0, 0.2)" : "rgba(0, 255, 0, 0.2)";
-  // console.log(areaFill);
   return (
     <div className="chart-quote">
       <ResponsiveContainer width="100%" height={528}>
@@ -219,7 +214,8 @@ const QuoteChart: React.FC<{
           />
           {interval === "1D" &&
             previousCloseNumber !== undefined &&
-            previousCloseNumber !== 0 && (
+            previousCloseNumber !== 0 &&
+            chartData.length > 0 && (
               <>
                 {/* Horizontal Dotted Line */}
                 <ReferenceLine
@@ -231,7 +227,7 @@ const QuoteChart: React.FC<{
 
                 {/* Reference Dot with Label */}
                 <ReferenceDot
-                  x={chartData[chartData.length - 1].formattedXAxis} // X-coordinate of the dot (last data point)
+                  x={chartData[chartData.length - 1]?.formattedXAxis} // X-coordinate of the dot (last data point)
                   y={previousCloseNumber} // Y-coordinate of the dot (previous close price)
                   r={0} // Radius of the dot
                   fill="white" // Dot color

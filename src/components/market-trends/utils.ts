@@ -1,5 +1,6 @@
-import Portfolio from "../portfolio/Portfolio";
+import { Portfolio, Security } from "../../types/types";
 import { quoteType } from "../search/types";
+
 export type Data = {
   id: number;
   symbol: string;
@@ -32,9 +33,11 @@ export const transformQuotesToDataWithQuantities = (
 ): Data[] => {
   return Object.entries(quotes).map(([symbol, quote], i) => {
     const percentChange = (quote?.percentChange || 0) * 100; // Convert to percentage
-    let security;
+    let security: Security | undefined;
     if (portfolio && portfolio.securities) {
-      security = portfolio?.securities.find((s) => s.symbol === symbol);
+      security = portfolio?.securities.find(
+        (s: Security) => s.symbol === symbol
+      );
     }
     const quantity = security?.quantity || 0;
 

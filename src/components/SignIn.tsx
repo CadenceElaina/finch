@@ -17,10 +17,6 @@ export default function SignIn() {
   }) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      username: data.get("username"),
-      password: data.get("password"),
-    });
 
     try {
       const cred = {
@@ -43,7 +39,6 @@ export default function SignIn() {
       signIn(user);
       portfolioService.setToken(user.token);
       watchlistService.setToken(user.token);
-      console.log(user);
       addNotification(`${username} successfully signed in!`, "success");
       navigate("/");
     } catch (exception) {
@@ -59,7 +54,7 @@ export default function SignIn() {
             <div className="sign-in-logo">
               {" "}
               <FaUncharted size={24} />
-              <Link to={"/"}>Finhub</Link>
+              <Link to={"/"}>Finch</Link>
             </div>
             <div className="header-container">
               <h1>Sign in</h1>

@@ -1,5 +1,5 @@
 import CustomButton from "../CustomButton";
-import "./Right.css";
+import "./right.css";
 import { useNavigate } from "react-router-dom";
 import { MdOutlineStackedLineChart } from "react-icons/md";
 import { ImFire } from "react-icons/im";

@@ -29,12 +29,14 @@ const Quote: React.FC<QuoteProps> = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { state } = location;
-  console.log(state, state[1], state[0]);
-  const symbol = state[1] ? `${state[1]}` : "";
 
-  const symbolState = state[1] || "";
+  // Safe access to state with fallbacks
+  const isIndex = state?.[0] ?? false;
+  const symbol = state?.[1] ? `${state[1]}` : "";
+  const symbolState = state?.[1] || "";
+
   let symbolForChart = "";
-  if (state[0] === true) {
+  if (isIndex === true) {
     switch (symbolState) {
       case "^DJI":
         symbolForChart = "DJI";
@@ -79,11 +81,10 @@ const Quote: React.FC<QuoteProps> = () => {
         symbolForChart = "BAT-USD";
         break;
       default:
-        console.log("quote.tsx default switch value");
         symbolForChart = "";
     }
   }
-  console.log(symbol);
+
   // State to track the selected time interval
   const [selectedInterval, setSelectedInterval] = useState("1D");
   const [isAboutOpen, setIsAboutOpen] = useState(true);
@@ -120,7 +121,6 @@ const Quote: React.FC<QuoteProps> = () => {
       const afterHoursEndInMinutes = 18 * 60 + 30; // 6:30 PM
 
       // Compare the current time with trading hours
-      console.log(now);
       if (isHoliday(now)) {
         setMarketStatus("Closed - Holiday");
       } else {
@@ -154,7 +154,7 @@ const Quote: React.FC<QuoteProps> = () => {
   const quoteSidebarData = quotePageData?.quoteSidebarData;
   const quoteSidebarAboutData = quotePageData?.quoteSidebarAboutData;
   const quoteFinancialData = quotePageData?.quoteFinancialData;
-  const keyMappings = {
+  const keyMappings: Record<string, string> = {
     previousClose: "PREVIOUS CLOSE",
     dayRange: "DAY RANGE",
     fiftyTwoWeekHigh: "52 WEEK HIGH",
@@ -164,17 +164,10 @@ const Quote: React.FC<QuoteProps> = () => {
     dividendYield: "DIVIDEND YIELD",
     primaryExchange: "EXCHANGE",
   };
-  console.log(
-    quoteData,
-    quoteSidebarData,
-    quoteSidebarAboutData,
-    quoteFinancialData
-  );
 
   // If it's a direct link from an index card, update the symbol from the state
-  if (state && state[0] === true) {
+  if (isIndex === true) {
     // ... (rest of the component remains unchanged)
-    console.log(quoteData);
     return (
       <div>
         <Layout>

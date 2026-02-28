@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Table from "../table/Table";
-import "./Right.css";
+import "./right.css";
 import { Data, RowConfig } from "../table/types";
 import { useAuth } from "../../context/AuthContext";
 import { useWatchlists } from "../../context/WatchlistContext";
@@ -21,7 +21,7 @@ const MostFollowed = () => {
     left: number;
     top: number;
   }>({ left: 0, top: 0 });
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedSecurity, setSelectedSecurity] = useState<string>();
   const mostFollowedConfig: RowConfig = {
     fields: ["symbol", "name", "percentChange"],
@@ -36,10 +36,9 @@ const MostFollowed = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
-  //console.log(watchlists);
+
   useEffect(() => {
     const isMounted = true;
-    console.log("useEffect mostfollowed runs");
     // Count the occurrences of each symbol and calculate the total followers for each security in watchlists
     const symbolFollowers: { [symbol: string]: number } = {};
 
@@ -51,7 +50,7 @@ const MostFollowed = () => {
         }
       );
     });
-    console.log(symbolFollowers);
+
     // Sort symbols based on their total followers in descending order
     const sortedSymbols = Object.entries(symbolFollowers).sort(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -118,7 +117,6 @@ const MostFollowed = () => {
 
     if (containerElement) {
       const { x, y, width, height } = containerElement.getBoundingClientRect();
-      console.log("X:", x, "Y:", y);
 
       // Pass the position information to the WatchlistModal
       setModalPosition({ left: x + width, top: y + height });
@@ -126,23 +124,18 @@ const MostFollowed = () => {
   }, [watchlists]);
 
   const onIconClick = (symbol: string) => {
-    //  console.log(user);
-    //  console.log(symbol);
     if (!user) {
-      console.log("user is not signed in");
       navigate("/login");
+      return;
     }
     let s = "";
     if (typeof symbol === "string") {
       s = symbol.toLowerCase();
     }
-    // console.log(s);
     setSelectedSecurity(s);
     setShowModal(true);
   };
 
-  // console.log(user);
-  // console.log(watchlists, top5Securities);
   const convertedTop5Securities: Data[] = top5Securities.map((security) => ({
     id: security.symbol,
     symbol: security.symbol,
@@ -157,7 +150,7 @@ const MostFollowed = () => {
   return (
     <div className="most-followed-container" ref={containerRef}>
       <div role="heading" className="most-followed-heading">
-        Most followed on Finhub
+        Most followed on Finch
       </div>
       <div>
         <Table

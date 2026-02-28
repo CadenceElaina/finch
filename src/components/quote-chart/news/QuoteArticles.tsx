@@ -5,8 +5,6 @@ import "../../left-column/news/news.css";
 import { Skeleton } from "@mui/material";
 
 const QuoteArticles: React.FC<articleProps> = ({ articles, symbol }) => {
-  /*   const [isLoading, setIsLoading] = useState(true); */
-  console.log(articles);
   let filteredArticles = articles
     .filter((article) => article.relatedSymbol === symbol)
     .slice(0, 10); // Limit to 10 articles;

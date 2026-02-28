@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useWatchlists } from "../../context/WatchlistContext";
 
 interface WatchlistContentProps {
+  watchlistName?: string;
   handleDropdownToggle: () => void;
   handleDropdownOptionClick: (option: string) => void;
   showDropdown: boolean;
@@ -12,6 +13,7 @@ interface WatchlistContentProps {
 }
 
 const WatchlistContent: React.FC<WatchlistContentProps> = ({
+  watchlistName,
   handleDropdownToggle,
   handleDropdownOptionClick,
   showDropdown,
@@ -26,7 +28,7 @@ const WatchlistContent: React.FC<WatchlistContentProps> = ({
         <>
           <div className="chart">
             <div className="chart-header">
-              <span className="portfolio-title">Watchlist title</span>
+              <span className="portfolio-title">{watchlistName ?? "Watchlist"}</span>
 
               <div className="settings-dropdown">
                 <button className="settings" onClick={handleDropdownToggle}>
@@ -36,15 +38,9 @@ const WatchlistContent: React.FC<WatchlistContentProps> = ({
                   <div className="dropdown-content">
                     <div
                       className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("Option 1")}
+                      onClick={() => handleDropdownOptionClick("rename")}
                     >
-                      Option 1
-                    </div>
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("Option 2")}
-                    >
-                      Option 2
+                      Rename
                     </div>
                     <div
                       className="dropdown-option"

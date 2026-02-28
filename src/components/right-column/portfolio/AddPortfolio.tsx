@@ -35,8 +35,6 @@ const AddPortfolio = () => {
       author: user?.name,
     };
     const response = await portfolioService.create(newPortfolio);
-    console.log(response);
-    // appendPortfolio to our context state
     appendPortfolio({
       id: response.id,
       title: response.title,

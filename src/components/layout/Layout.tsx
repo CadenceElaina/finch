@@ -67,7 +67,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <span className="logo">
             {" "}
             <FaUncharted size={24} />
-            <Link to={"/"}>Finhub</Link>
+            <Link to={"/"}>Finch</Link>
           </span>
         </div>
 
@@ -106,12 +106,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <FaChevronLeft />
               </button>
             </div>
-            <Sidebar
-              isOpen={false}
-              onClose={function (): void {
-                throw new Error("Function not implemented.");
-              }}
-            />
+            <Sidebar isOpen={open} onClose={handleDrawerClose} />
           </div>
         )}
 

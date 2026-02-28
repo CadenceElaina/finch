@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNews } from "../components/left-column/news/newsUtils";
-/* import Articles from "../components/left-column/news/Articles";
-import Article from "../components/market-trends/news/Article"; */
-import { article } from "../types/types";
+import { Article } from "../types/types";
 
 interface NewsContextProps {
-  newsData: article[];
+  newsData: Article[];
 }
 
 const NewsContext = createContext<NewsContextProps | undefined>(undefined);
@@ -14,7 +12,7 @@ const NewsContext = createContext<NewsContextProps | undefined>(undefined);
 export const NewsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [newsData, setNewsData] = useState<article[]>([]);
+  const [newsData, setNewsData] = useState<Article[]>([]);
   const queryClient = useQueryClient();
 
   useEffect(() => {

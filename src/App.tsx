@@ -27,7 +27,7 @@ import { useAuth } from "./context/AuthContext";
 /* import { refreshToken } from "./services/refreshToken"; */
 import { useEffect, useRef, useState } from "react";
 import SessionTimeoutModal from "./components/modals/SessionTimeoutModal";
-import ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 import refreshTokenService from "./services/refreshToken";
 import MarketIndexes from "./components/market-trends/MarketIndexes";
 import MostActive from "./components/market-trends/MostActive";
@@ -58,9 +58,8 @@ function App() {
       setSessionTimeoutModalOpen(true);
     }, 30 * 60 * 1000); // Reset to 30 minutes
   };
-  console.log(sessionTimeoutRef, isSessionTimeoutModalOpen);
+
   const handleSessionResponse = async (isStillThere: boolean) => {
-    console.log("Handling session response. Is still there:", isStillThere);
     setSessionTimeoutModalOpen(false);
 
     if (isStillThere) {
@@ -71,9 +70,7 @@ function App() {
         const token = storedUserData.token || "";
 
         // Call the refreshToken service with the user's token
-        console.log("selected yes, old token", token);
         const newData = await refreshTokenService(token);
-        console.log("new token: ", newData);
 
         // Assuming you have a function like updateUserToken in your auth context
         updateUserToken(newData.token);
@@ -113,7 +110,7 @@ function App() {
         </Routes>
       </Router>
       {isSessionTimeoutModalOpen &&
-        ReactDOM.createPortal(
+        createPortal(
           <SessionTimeoutModal
             onConfirm={() => handleSessionResponse(true)}
             onCancel={() => handleSessionResponse(false)}

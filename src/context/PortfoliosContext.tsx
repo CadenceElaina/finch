@@ -33,8 +33,12 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     const fetchPortfolios = async () => {
-      const portfoliosData = await portfolioService.getAll();
-      setPortfolios(portfoliosData);
+      try {
+        const portfoliosData = await portfolioService.getAll();
+        setPortfolios(portfoliosData);
+      } catch (error) {
+        console.error("Error fetching portfolios:", error);
+      }
     };
 
     fetchPortfolios();

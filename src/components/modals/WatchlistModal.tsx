@@ -24,7 +24,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
   const { addNotification } = useNotification();
   const { user } = useAuth();
   const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
-  console.log(usersWatchlists);
   const [selectedWatchlists, setSelectedWatchlists] = useState<string[]>(
     usersWatchlists
       .filter((watchlist) =>
@@ -50,10 +49,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
         (s) => s.symbol === selectedSecurity
       );
 
-      console.log(
-        `Watchlist: ${watchlist.title}, isInSelected: ${isInSelected}, isInWatchlist: ${isInWatchlist}`
-      );
-
       if (!isInSelected && isInWatchlist) {
         securitiesToRemove.push({
           watchlistId: watchlist.id,
@@ -71,9 +66,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
       }
     }
 
-    console.log("Securities to add:", securitiesToAdd);
-    console.log("Securities to remove:", securitiesToRemove);
-
     // Add securities to the selected watchlists only if not already present
     for (const { watchlistId, security } of securitiesToAdd) {
       try {
@@ -83,11 +75,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
             watchlists.find((w) => w.id === watchlistId)?.title
           }!`,
           "info"
-        );
-        console.log(
-          `Added ${security.symbol} to ${
-            watchlists.find((w) => w.id === watchlistId)?.title
-          }`
         );
       } catch (error) {
         console.error("Error adding security to watchlist:", error);
@@ -106,11 +93,6 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
             watchlists.find((w) => w.id === watchlistId)?.title
           }!`,
           "info"
-        );
-        console.log(
-          `Removed ${security.symbol} from ${
-            watchlists.find((w) => w.id === watchlistId)?.title
-          }`
         );
       } catch (error) {
         console.error("Error removing security from watchlist:", error);

@@ -14,17 +14,13 @@ const AddPortfolioModal: React.FC<AddPortfolioProps> = ({
 }) => {
   const [portfolioName, setPortfolioName] = useState<string>("");
   const [isSaveDisabled, setIsSaveDisabled] = useState<boolean>(true);
-  const [isVisible, setIsVisible] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPortfolioName(e.target.value);
-    setIsSaveDisabled(portfolioName.trim() === ""); // Disable Save if the input is empty or contains only spaces
+    setIsSaveDisabled(e.target.value.trim() === "");
   };
 
   const handleClose = () => {
-    /*  console.log("Before closing - isVisible:", isVisible); */
-    setIsVisible(false);
-    /*     console.log("After closing - isVisible:", isVisible); */
     onCancel();
   };
 
@@ -35,11 +31,11 @@ const AddPortfolioModal: React.FC<AddPortfolioProps> = ({
   return (
     <>
       <ModalBackdrop
-        visible={isVisible}
+        visible={true}
         onClick={handleClose}
         onBackdropClick={handleClose}
       />
-      <div className={`new-portfolio-modal ${isVisible ? "visible" : ""}`}>
+      <div className="new-portfolio-modal visible">
         <div className="modal-header">
           <h3>Create a new portfolio</h3>
         </div>

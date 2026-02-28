@@ -55,8 +55,6 @@ const removeSecurityFromWatchlist = async (
       Authorization: token,
     },
   };
-  console.log(id);
-  console.log(token);
   try {
     const response = await axios.delete(
       `${baseUrl}/${id}/securities/${security.symbol}`,
@@ -65,8 +63,6 @@ const removeSecurityFromWatchlist = async (
 
     return response.data;
   } catch (error) {
-    // Handle error appropriately
-    console.error("Error removing security:", error);
     throw error;
   }
 };
@@ -74,7 +70,6 @@ const remove = async (id: string) => {
   const config = {
     headers: { Authorization: token },
   };
-  console.log("DELETE Request Config:", config);
   const response = await axios.delete(`${baseUrl}/${id}`, config);
   return response.data;
 };

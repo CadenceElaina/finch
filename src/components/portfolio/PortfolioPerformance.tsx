@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Portfolio from "./Portfolio";
+import { Portfolio, Security } from "../../types/types";
 import Table from "../table/Table";
 import { RowConfig } from "../table/types";
 import { quoteType, utils } from "../search/types";
@@ -43,22 +43,19 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     ],
     addIcon: true,
   };
-  console.log(portfolio);
 
   const fetchQuotesForSymbols = async () => {
-    const symbols = portfolio?.securities?.map((s) => s.symbol);
+    const symbols = portfolio?.securities?.map((s: Security) => s.symbol);
     const quotePromises = symbols?.map(async (symbol: string) => {
       // Check the cache first
       const cachedQuote = queryClient.getQueryData(["quote", symbol]);
 
       if (cachedQuote) {
         const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        console.log("quoteUtils.ts - got cached quote:", cachedQuote);
         return newCachedQuote;
       }
 
       // If not in the cache, make an API call
-      console.log("quoteUtils.ts - new api request -", symbol);
       const quoteData = await getQuote(queryClient, symbol);
       await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
       // Update the cache
@@ -78,7 +75,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     const quotes = await Promise.all(quotePromises ?? promisesPlaceholder);
 
     const symbolQuoteMap: Record<string, quoteType | null> = {};
-    symbols?.forEach((symbol, index) => {
+    symbols?.forEach((symbol: string, index: number) => {
       symbolQuoteMap[symbol] = quotes[index];
     });
     const transformedData: Data[] = transformQuotesToDataWithQuantities(
@@ -106,7 +103,6 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     const formattedOverallPercentChange = Number(
       overallPercentChange.toFixed(2)
     );
-    console.log("transformedData", transformedData);
 
     setQuotes(transformedData);
     const totalValue = transformedData.reduce(
@@ -130,37 +126,33 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
     // Check if the day is not Saturday (6) or Sunday (0)
     if (!isCurrentDatePresent && dayOfWeek !== 0 && dayOfWeek !== 6) {
-      const response = await portfolioService.updatePortfolioValue(
-        portfolio.id,
-        {
-          date: formattedDate,
-          value: Number(totalValue.toFixed(2)),
-        }
-      );
-      console.log("response", response); // Access response.data
+      await portfolioService.updatePortfolioValue(portfolio.id, {
+        date: formattedDate,
+        value: Number(totalValue.toFixed(2)),
+      });
     }
 
     /*     setChartData([formattedDate, formattedTotalPriceChange]) */
   };
 
   useEffect(() => {
-    const symbols = portfolio?.securities?.map((s) => s.symbol);
+    const symbols = portfolio?.securities?.map((s: Security) => s.symbol);
     if (symbols && symbols.length > 0) {
       fetchQuotesForSymbols();
     }
   }, [portfolio, queryClient]);
 
-  console.log(quotes, portfolioPerformance);
-  const p = {
-    priceChange: -1.0,
-    totalPriceChange: -2.2,
-  };
-  /*   console.log(portfolio?.title, portfolio.portfolioValue); */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const convertPortfolioValueToNumbers = (portfolioValue: any[]) => {
-    return portfolioValue.map((entry) => ({
+  interface PortfolioValueEntry {
+    date: string;
+    value: number | string;
+  }
+  const convertPortfolioValueToNumbers = (
+    portfolioValue: PortfolioValueEntry[]
+  ) => {
+    return portfolioValue.map((entry: PortfolioValueEntry) => ({
       date: entry.date,
-      value: parseFloat(entry.value),
+      value:
+        typeof entry.value === "string" ? parseFloat(entry.value) : entry.value,
     }));
   };
   const updatedPortfolioValue = convertPortfolioValueToNumbers(
@@ -182,14 +174,14 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
           <div className="portfolio-day-total-change">
             <div
               className={`portfolio-day-${
-                p.priceChange > 0 ? "gain" : p.priceChange < 0 ? "loss" : ""
+                portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange < 0 ? "loss" : ""
               }`}
             >
               Day{" "}
-              {p.priceChange > 0 ? "gain" : p.priceChange === 0 ? "" : "loss"}
+              {portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"}
               <div
                 className={`portfolio-day-change-${
-                  p.priceChange > 0 ? "gain" : p.priceChange === 0 ? "" : "loss"
+                  portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"
                 }`}
               >
                 <div>{portfolioPerformance.totalPriceChange}</div>
@@ -198,22 +190,22 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             </div>
             <div
               className={`total-${
-                p.totalPriceChange > 0
+                portfolioPerformance.totalPriceChange > 0
                   ? "gain"
-                  : p.totalPriceChange === 0
+                  : portfolioPerformance.totalPriceChange === 0
                   ? ""
                   : "loss"
               }`}
             >
               Total{" "}
-              {p.totalPriceChange > 0
+              {portfolioPerformance.totalPriceChange > 0
                 ? "gain"
-                : p.totalPriceChange === 0
+                : portfolioPerformance.totalPriceChange === 0
                 ? ""
                 : "loss"}
               <div
                 className={`portfolio-total-change-${
-                  p.priceChange > 0 ? "gain" : p.priceChange === 0 ? "" : "loss"
+                  portfolioPerformance.totalPriceChange > 0 ? "gain" : portfolioPerformance.totalPriceChange === 0 ? "" : "loss"
                 }`}
               >
                 <div>{portfolioPerformance.totalPriceChange}</div>

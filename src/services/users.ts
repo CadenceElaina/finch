@@ -8,8 +8,6 @@ const createUser = async (userData: UserCredentials) => {
     const response = await axios.post(baseUrl, userData);
     return response.data;
   } catch (error) {
-    // Handle error appropriately
-    console.error("Error creating user:", error);
     throw error;
   }
 };
