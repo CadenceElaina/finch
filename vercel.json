@@ -7,6 +7,10 @@
     {
       "source": "/api/yh-finance",
       "destination": "/api/yh-finance"
+    },
+    {
+      "source": "/api/seeking-alpha",
+      "destination": "/api/seeking-alpha"
     }
   ]
 }
