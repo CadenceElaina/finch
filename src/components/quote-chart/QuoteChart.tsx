@@ -124,6 +124,8 @@ const QuoteChart: React.FC<{
   const { data, isLoading, isError } = useQuery({
     queryKey: ["chartData", symbol, period],
     queryFn: () => fetchChartData(symbol, period),
+    staleTime: ENDPOINTS.history.cache.stale,
+    gcTime: ENDPOINTS.history.cache.gc,
   });
 
   if (isLoading) return <div>Loading...</div>;

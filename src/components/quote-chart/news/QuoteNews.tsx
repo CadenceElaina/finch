@@ -5,6 +5,8 @@ import { getSymbolsNews } from "../../left-column/news/newsUtils"; // Replace wi
 import { useLocation } from "react-router-dom";
 import "./QuoteNews.css";
 
+import { CACHE_POLICY } from "../../../config/api";
+
 const QuoteNews = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -17,8 +19,10 @@ const QuoteNews = () => {
     isError,
   } = useQuery({
     queryKey: ["symbolNews", symbol],
-    queryFn: () => getSymbolsNews(symbol), // Pass the symbol directly
-    enabled: Boolean(symbol), // Only fetch data when symbol is available
+    queryFn: () => getSymbolsNews(symbol),
+    enabled: Boolean(symbol),
+    staleTime: CACHE_POLICY.newsRefreshInterval,
+    gcTime: CACHE_POLICY.newsRefreshInterval * 2,
   });
 
   useEffect(() => {
