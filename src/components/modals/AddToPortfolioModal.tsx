@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { IoMdAddCircleOutline } from "react-icons/io";
 import axios from "axios";
 import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
 import "./AddToPortfolioModal.css";
@@ -21,7 +20,7 @@ interface AddToPortfolioModalProps {
     purchaseDate: string,
     purchasePrice: number
   ) => void;
-}//
+}
 
 const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
   isOpen,
@@ -30,12 +29,13 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
   onSave,
 }) => {
   const [symbol, setSymbol] = useState("");
-  const [showSymbolInput, setShowSymbolInput] = useState(true);
   const [quantity, setQuantity] = useState(0);
   const [purchaseDate, setPurchaseDate] = useState("");
   const [purchasePrice, setPurchasePrice] = useState(0);
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState("");
+  const [validated, setValidated] = useState(false);
+  const [resolvedName, setResolvedName] = useState("");
 
   const validateSymbol = async (raw: string): Promise<boolean> => {
     const sym = raw.trim().toUpperCase();
@@ -57,6 +57,8 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
         return false;
       }
       setSymbol(sym);
+      setResolvedName(results[0]?.shortName ?? results[0]?.longName ?? sym);
+      setValidated(true);
       setValidating(false);
       return true;
     } catch {
@@ -66,24 +68,25 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
     }
   };
 
-  const addSymbol = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSymbol(e.target.value);
+    setError("");
+    setValidated(false);
+    setResolvedName("");
+  };
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const ok = await validateSymbol(symbol);
-      if (ok) setShowSymbolInput(false);
+      await validateSymbol(symbol);
     }
   };
 
-  const handleAddToList = async () => {
-    const ok = await validateSymbol(symbol);
-    if (ok) setShowSymbolInput(false);
-  };
-
-  const onCancel = () => {
-    onClose();
-  };
-
-  const onSaveClick = () => {
-    onSave(symbol, quantity, purchaseDate, purchasePrice);
+  const onSaveClick = async () => {
+    if (!validated) {
+      const ok = await validateSymbol(symbol);
+      if (!ok) return;
+    }
+    onSave(symbol.trim().toUpperCase(), quantity, purchaseDate, purchasePrice);
     onClose();
   };
 
@@ -91,59 +94,64 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
     <div className={`addToPortfolio-container ${isOpen ? "open" : ""}`}>
       <div className="addToPortfolio-content">
         <div role="heading">Add to {listName}</div>
-        {showSymbolInput ? (
-          <div className="addToPortfolio-input">
-            <input
-              placeholder="Type an investment symbol"
-              value={symbol}
-              onChange={(e) => { setSymbol(e.target.value); setError(""); }}
-              onKeyDown={addSymbol}
-            />
-            <button className="addToPortfolio-button" onClick={handleAddToList} disabled={validating}>
-              {validating ? "..." : <IoMdAddCircleOutline size={24} />}
-            </button>
-            {error && <div style={{ color: "red", fontSize: "0.85rem", marginTop: 4 }}>{error}</div>}
+        <div className="addToPortfolio-input">
+          <input
+            placeholder="Enter a ticker symbol (e.g. AAPL)"
+            value={symbol}
+            onChange={handleSymbolChange}
+            onKeyDown={handleKeyDown}
+            onBlur={() => { if (symbol.trim() && !validated) validateSymbol(symbol); }}
+          />
+        </div>
+        {validating && (
+          <div style={{ color: "var(--text-secondary, #999)", fontSize: "0.85rem", marginTop: 4 }}>
+            Validating...
           </div>
-        ) : (
-          <>
-            <div>
-              <div className="addToPortfolio-row">
-                <span>Symbol:</span>
-                <span>{symbol}</span>
-              </div>
-              <div className="addToPortfolio-row">
-                <span>Quantity:</span>
-                <input
-                  type="number"
-                  value={quantity || ""}
-                  onChange={(e) => setQuantity(Number(e.target.value) || 0)}
-                  min={0}
-                />
-              </div>
-              <div className="addToPortfolio-row">
-                <span>Purchase Date:</span>
-                <input
-                  type="date"
-                  value={purchaseDate}
-                  onChange={(e) => setPurchaseDate(e.target.value)}
-                />
-              </div>
-              <div className="addToPortfolio-row">
-                <span>Purchase Price:</span>
-                <input
-                  type="number"
-                  value={purchasePrice || ""}
-                  onChange={(e) => setPurchasePrice(Number(e.target.value) || 0)}
-                  min={0}
-                  step="0.01"
-                />
-              </div>
+        )}
+        {error && (
+          <div style={{ color: "#e53935", fontSize: "0.85rem", marginTop: 4 }}>{error}</div>
+        )}
+        {validated && resolvedName && (
+          <div style={{ color: "#00c853", fontSize: "0.85rem", marginTop: 4 }}>
+            {symbol.toUpperCase()} — {resolvedName}
+          </div>
+        )}
+        {validated && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <div className="addToPortfolio-row">
+              <span>Quantity:</span>
+              <input
+                type="number"
+                value={quantity || ""}
+                onChange={(e) => setQuantity(Number(e.target.value) || 0)}
+                min={0}
+              />
             </div>
-          </>
+            <div className="addToPortfolio-row">
+              <span>Purchase Date:</span>
+              <input
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+              />
+            </div>
+            <div className="addToPortfolio-row">
+              <span>Purchase Price:</span>
+              <input
+                type="number"
+                value={purchasePrice || ""}
+                onChange={(e) => setPurchasePrice(Number(e.target.value) || 0)}
+                min={0}
+                step="0.01"
+              />
+            </div>
+          </div>
         )}
         <div className="addToPortfolio-buttons">
-          <button onClick={onCancel}>Cancel</button>
-          <button onClick={onSaveClick}>Save</button>
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={onSaveClick} disabled={validating || (!validated && !symbol.trim())}>
+            Save
+          </button>
         </div>
       </div>
     </div>
