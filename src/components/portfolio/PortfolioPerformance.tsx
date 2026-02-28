@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Portfolio, Security } from "../../types/types";
 import Table from "../table/Table";
 import { RowConfig } from "../table/types";
-import { quoteType, utils } from "../search/types";
+import { quoteType } from "../search/types";
 import {
   Data,
   transformQuotesToDataWithQuantities,
 } from "../market-trends/utils";
-import { getQuote } from "../search/quoteUtils";
+import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
@@ -46,38 +46,10 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
 
   const fetchQuotesForSymbols = async () => {
     const symbols = portfolio?.securities?.map((s: Security) => s.symbol);
-    const quotePromises = symbols?.map(async (symbol: string) => {
-      // Check the cache first
-      const cachedQuote = queryClient.getQueryData(["quote", symbol]);
-
-      if (cachedQuote) {
-        const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        return newCachedQuote;
-      }
-
-      // If not in the cache, make an API call
-      const quoteData = await getQuote(queryClient, symbol);
-      await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
-      // Update the cache
-      queryClient.setQueryData(["quote", symbol], quoteData);
-
-      return quoteData;
-    });
-    const promisesPlaceholder = [
-      {
-        symbol: "",
-        name: "",
-        price: 0,
-        priceChange: 0,
-        percentChange: 0,
-      },
-    ];
-    const quotes = await Promise.all(quotePromises ?? promisesPlaceholder);
-
-    const symbolQuoteMap: Record<string, quoteType | null> = {};
-    symbols?.forEach((symbol: string, index: number) => {
-      symbolQuoteMap[symbol] = quotes[index];
-    });
+    if (!symbols || symbols.length === 0) {
+      return;
+    }
+    const symbolQuoteMap = await getBatchQuotes(queryClient, symbols);
     const transformedData: Data[] = transformQuotesToDataWithQuantities(
       symbolQuoteMap,
       portfolio

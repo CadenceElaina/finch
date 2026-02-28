@@ -7,8 +7,8 @@ import CustomButton from "./CustomButton";
 import { Link } from "react-router-dom";
 import { MdArrowForwardIos } from "react-icons/md";
 import { useQueryClient } from "@tanstack/react-query";
-import { getMoversSymbols, getQuote, getTrending } from "./search/quoteUtils";
-import { quoteType, utils } from "./search/types";
+import { getMoversSymbols, getBatchQuotes, getTrending } from "./search/quoteUtils";
+import { quoteType } from "./search/types";
 import { transformQuotesToData } from "./market-trends/utils";
 import { Skeleton } from "@mui/material";
 
@@ -44,30 +44,7 @@ const MarketTrendsList = () => {
 
   const fetchQuotesForSymbols = async () => {
     setLoading(true);
-    const quotePromises = symbols.map(async (symbol) => {
-      // Check the cache first
-      const cachedQuote = queryClient.getQueryData(["quote", symbol]);
-
-      if (cachedQuote) {
-        const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        return newCachedQuote;
-      }
-
-      // If not in the cache, make an API call
-      const quoteData = await getQuote(queryClient, symbol);
-      await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
-      // Update the cache
-      queryClient.setQueryData(["quote", symbol], quoteData);
-
-      return quoteData;
-    });
-
-    const quotes = await Promise.all(quotePromises);
-
-    const symbolQuoteMap: Record<string, quoteType | null> = {};
-    symbols.forEach((symbol, index) => {
-      symbolQuoteMap[symbol] = quotes[index];
-    });
+    const symbolQuoteMap = await getBatchQuotes(queryClient, symbols);
     setLoading(false);
     setMostActiveQuotes(symbolQuoteMap);
   };

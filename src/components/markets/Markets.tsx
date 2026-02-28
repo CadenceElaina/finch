@@ -4,8 +4,8 @@ import IndexCards from "./IndexCards";
 import "./markets.css";
 import { Link } from "react-router-dom";
 import { useNews } from "../../context/NewsContext";
-import { getQuote } from "../search/quoteUtils";
-import { quoteType, utils } from "../search/types";
+import { getBatchQuotes } from "../search/quoteUtils";
+import { quoteType } from "../search/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatApiResponse } from "./marketsUtils";
 import { transformQuotesToData } from "../market-trends/utils";
@@ -54,30 +54,11 @@ const Markets = () => {
         symbols = symbolsUS;
     }
     //
-    const quotePromises = symbols.map(async (symbol) => {
-      // Check the cache first
-      const cachedQuote = queryClient.getQueryData(["quote", symbol]);
-
-      if (cachedQuote) {
-        const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-        return newCachedQuote;
-      }
-
-      const quoteData = await getQuote(queryClient, symbol);
-      await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
-      // Update the cache
-      queryClient.setQueryData(["quote", symbol], quoteData);
-
-      return quoteData;
-    });
-
-    const quotes = await Promise.all(quotePromises);
+    const batchResult = await getBatchQuotes(queryClient, symbols);
 
     const symbolQuoteMap: Record<string, quoteType | null> = {};
-    symbols.forEach((symbol, index) => {
-      if (quotes[index] !== null) {
-        symbolQuoteMap[symbol] = quotes[index] as quoteType;
-      }
+    symbols.forEach((symbol) => {
+      symbolQuoteMap[symbol] = batchResult[symbol] ?? null;
     });
 
     return symbolQuoteMap;

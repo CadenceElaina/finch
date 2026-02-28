@@ -3,7 +3,7 @@ import Table from "../table/Table";
 import "../../App.css";
 import { Data, RowConfig } from "../table/types";
 import { useWatchlists } from "../../context/WatchlistContext";
-import { /* fetchQuoteWithRetry */ getQuote } from "../search/quoteUtils";
+import { /* fetchQuoteWithRetry */ getBatchQuotes } from "../search/quoteUtils";
 import { quoteType } from "../search/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortfolios } from "../../context/PortfoliosContext";
@@ -64,49 +64,36 @@ const Watchlist = () => {
   >({});
   const fetchPortfolioQuotes = async (portfolioTitle: string) => {
     const symbolsWithQuantities = portfolioSymbols[portfolioTitle];
+    const allSymbols = Object.keys(symbolsWithQuantities);
 
-    const quotePromises = Object.entries(symbolsWithQuantities).map(
-      async ([symbol, quantity]) => {
-        // Check the cache first
-        const cachedQuote = quoteCache[symbol];
+    const batchResult = await getBatchQuotes(queryClient, allSymbols);
 
-        if (cachedQuote) {
-          return {
-            symbol,
-            name: cachedQuote?.name,
-            price: cachedQuote?.price || 0,
-            percentChange: cachedQuote?.percentChange || 0,
-            priceChange: cachedQuote?.priceChange || 0,
-            quantity,
-          };
-        } else {
-          // If not in the cache, make an API call
-          const quoteData = await getQuote(queryClient, symbol);
+    const quotes = allSymbols.map((symbol) => {
+      const quoteData = batchResult[symbol] ?? quoteCache[symbol];
+      const quantity = symbolsWithQuantities[symbol];
 
-          // Update the cache
-          setQuoteCache((prevCache) => ({
-            ...prevCache,
-            [symbol]: quoteData,
-          }));
-
-          let pc = 0;
-          if (quoteData?.percentChange) {
-            pc = quoteData.percentChange * 100;
-          }
-
-          return {
-            symbol,
-            name: quoteData?.name,
-            price: quoteData?.price || 0,
-            percentChange: pc || 0,
-            priceChange: quoteCache[symbol]?.priceChange || 0,
-            quantity,
-          };
-        }
+      // Update the cache
+      if (quoteData && !quoteCache[symbol]) {
+        setQuoteCache((prevCache) => ({
+          ...prevCache,
+          [symbol]: quoteData,
+        }));
       }
-    );
 
-    const quotes = await Promise.all(quotePromises);
+      let pc = 0;
+      if (quoteData?.percentChange) {
+        pc = quoteData.percentChange * 100;
+      }
+
+      return {
+        symbol,
+        name: quoteData?.name,
+        price: quoteData?.price || 0,
+        percentChange: pc || 0,
+        priceChange: quoteData?.priceChange || 0,
+        quantity,
+      };
+    });
 
     setPortfolioQuotes((prevQuotes) => ({
       ...prevQuotes,
@@ -156,23 +143,10 @@ const Watchlist = () => {
     const symbolsToFetch = uniqueSymbols.filter(
       (symbol) => !symbolsInPortfolios.includes(symbol)
     );
-    const quotesPromises = symbolsToFetch.map(async (symbol) => {
-      const cachedQuote = queryClient.getQueryData(["quote", symbol]) as
-        | quoteType
-        | undefined;
+    const batchResult = await getBatchQuotes(queryClient, symbolsToFetch);
 
-      if (cachedQuote) {
-        return {
-          symbol,
-          name: cachedQuote.name,
-          price: cachedQuote.price ?? 0,
-          percentChange: cachedQuote.percentChange ?? 0,
-          priceChange: cachedQuote.priceChange ?? 0,
-        };
-      }
-
-      // If not in the cache, make an API call
-      const quoteData = await getQuote(queryClient, symbol);
+    const quotes = symbolsToFetch.map((symbol) => {
+      const quoteData = batchResult[symbol] ?? null;
 
       let pc = 0;
       if (quoteData?.percentChange) {
@@ -186,8 +160,6 @@ const Watchlist = () => {
         priceChange: quoteData?.priceChange ?? 0,
       };
     });
-
-    const quotes = await Promise.all(quotesPromises);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const quotesMap: Record<string, any[]> = {};

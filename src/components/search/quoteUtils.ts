@@ -18,6 +18,81 @@ const headers = () => ({
   "X-RapidAPI-Host": YH_API_HOST,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseQuote(q: any, fallbackSymbol?: string): quoteType {
+  return {
+    symbol: (q.symbol ?? fallbackSymbol ?? "").toLowerCase(),
+    price: q.regularMarketPrice ?? 0,
+    name: q.shortName ?? q.longName ?? "",
+    priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+    percentChange: q.regularMarketChangePercent ?? 0,
+  };
+}
+
+/**
+ * Fetch quotes for multiple symbols in a single API call.
+ * Returns a map of symbol → quoteType (lower-cased keys).
+ * Symbols already in the React Query cache are returned from cache
+ * and excluded from the network request.
+ */
+export const getBatchQuotes = async (
+  queryClient: QueryClient,
+  symbols: string[]
+): Promise<Record<string, quoteType | null>> => {
+  const result: Record<string, quoteType | null> = {};
+  const uncached: string[] = [];
+
+  // 1. Drain cache first
+  for (const sym of symbols) {
+    const cached = queryClient.getQueryData(["quote", sym]);
+    if (cached) {
+      result[sym] = utils.checkCachedQuoteType(cached);
+    } else {
+      uncached.push(sym);
+    }
+  }
+
+  if (uncached.length === 0) return result;
+
+  // 2. Batch fetch all uncached symbols in one call
+  try {
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.batchQuotes.path}`,
+      {
+        params: { ticker: uncached.join(","), type: "STOCKS" },
+        headers: headers(),
+      }
+    );
+
+    const body = response.data?.body ?? response.data ?? [];
+    const quotes: quoteType[] = (Array.isArray(body) ? body : [body]).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (q: any) => parseQuote(q)
+    );
+
+    // Index response by symbol (lower-cased)
+    const bySymbol: Record<string, quoteType> = {};
+    for (const q of quotes) {
+      bySymbol[q.symbol] = q;
+    }
+
+    for (const sym of uncached) {
+      const match = bySymbol[sym.toLowerCase()] ?? null;
+      result[sym] = match;
+      if (match) {
+        queryClient.setQueryData(["quote", sym], match);
+      }
+    }
+  } catch (error) {
+    // If batch fails, fill uncached with null
+    for (const sym of uncached) {
+      result[sym] = null;
+    }
+  }
+
+  return result;
+};
+
 const stateAbbreviations: { [key: string]: string } = {
   AL: "Alabama",
   AK: "Alaska",

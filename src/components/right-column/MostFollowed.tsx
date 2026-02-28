@@ -10,7 +10,7 @@ import {
 } from "../../types/types";
 import WatchlistModal from "../modals/WatchlistModal";
 import { useQueryClient } from "@tanstack/react-query";
-import { getQuote } from "../search/quoteUtils";
+import { getBatchQuotes } from "../search/quoteUtils";
 
 const MostFollowed = () => {
   const [showModal, setShowModal] = useState(false);
@@ -66,11 +66,13 @@ const MostFollowed = () => {
     const fetchQuotes = async () => {
       try {
         setIsLoading(true);
+        const symbolList = newTop5Securities.map((s) => s.symbol);
+        const batchResult = await getBatchQuotes(queryClient, symbolList);
+
         // Fetch quotes for each symbol in top5Securities
-        const updatedTop5Securities = await Promise.all(
-          newTop5Securities.map(async (security) => {
+        const updatedTop5Securities = newTop5Securities.map((security) => {
             const { symbol } = security;
-            const quote = await getQuote(queryClient, symbol);
+            const quote = batchResult[symbol] ?? null;
 
             // Combine data from top5Securities and quote
             let fmtPC = "";
@@ -86,8 +88,7 @@ const MostFollowed = () => {
               priceChange: quote?.priceChange || 0,
               percentChange: Number(fmtPC) || 0,
             };
-          })
-        );
+          });
         if (isMounted) {
           setTop5Securities(updatedTop5Securities);
         }

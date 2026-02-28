@@ -10,7 +10,7 @@ import { Skeleton } from "@mui/material";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { quoteType } from "../../search/types";
-import { getQuote } from "../../search/quoteUtils";
+import { getBatchQuotes } from "../../search/quoteUtils";
 import { PortfolioSymbols } from "../../../types/types";
 
 const YourPortfolios = () => {
@@ -47,38 +47,29 @@ const YourPortfolios = () => {
   >({});
   const fetchPortfolioQuotes = async (portfolioTitle: string) => {
     const symbolsWithQuantities = portfolioSymbols[portfolioTitle];
+    const allSymbols = Object.keys(symbolsWithQuantities);
 
-    const quotePromises = Object.entries(symbolsWithQuantities).map(
-      async ([symbol, quantity]) => {
-        // Check the cache first
-        if (quoteCache[symbol]) {
-          return {
-            symbol,
-            price: quoteCache[symbol]?.price || 0,
-            percentChange: quoteCache[symbol]?.percentChange || 0,
-            quantity,
-          };
-        }
+    const batchResult = await getBatchQuotes(queryClient, allSymbols);
 
-        // If not in the cache, make an API call
-        const quoteData = await getQuote(queryClient, symbol);
+    const quotes = allSymbols.map((symbol) => {
+      const quoteData = batchResult[symbol] ?? quoteCache[symbol];
+      const quantity = symbolsWithQuantities[symbol];
 
-        // Update the cache
+      // Update the cache
+      if (quoteData && !quoteCache[symbol]) {
         setQuoteCache((prevCache) => ({
           ...prevCache,
           [symbol]: quoteData,
         }));
-
-        return {
-          symbol,
-          price: quoteData?.price || 0,
-          percentChange: quoteData?.percentChange || 0,
-          quantity,
-        };
       }
-    );
 
-    const quotes = await Promise.all(quotePromises);
+      return {
+        symbol,
+        price: quoteData?.price || 0,
+        percentChange: quoteData?.percentChange || 0,
+        quantity,
+      };
+    });
 
     setPortfolioQuotes((prevQuotes) => ({
       ...prevQuotes,
