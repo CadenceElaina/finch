@@ -2,10 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import "./search.css";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import cleanseData, { quoteType, suggestionType, utils } from "./types";
+import { quoteType, suggestionType, utils } from "./types";
 import { useNavigate } from "react-router-dom";
-import { AV_KEY, AV_URL, YH_KEY, YH_URL } from "../../constants";
-/* import { Navigate, useNavigate } from "react-router-dom"; */
+import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
+
+const BASE = `https://${YH_API_HOST}/api`;
+const headers = () => ({
+  "X-RapidAPI-Key": YH_API_KEY,
+  "X-RapidAPI-Host": YH_API_HOST,
+});
 
 const Search = () => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -37,29 +42,28 @@ const Search = () => {
       return checkedCachedData;
     }
 
-    const options = {
-      method: "GET",
-      url: "https://alpha-vantage.p.rapidapi.com/query",
-      params: {
-        function: "SYMBOL_SEARCH",
-        keywords: searchInput,
-        datatype: "json",
-      },
-      headers: {
-        "X-RapidAPI-Key": `${AV_KEY}`,
-        "X-RapidAPI-Host": `${AV_URL}`,
-      },
-    };
-
     try {
-      const response = await axios.request(options);
-      const temp = response.data.bestMatches;
-      const matches = temp.slice(0, 5);
+      const response = await axios.get(
+        `${BASE}${ENDPOINTS.search.path}`,
+        { params: { search: searchInput }, headers: headers() }
+      );
+
+      const results = response.data?.body ?? [];
+      const matches: suggestionType[] = results
+        .slice(0, 5)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((item: any) => ({
+          symbol: item.symbol ?? "",
+          name: item.name ?? "",
+          type: item.typeDisp ?? item.type ?? "",
+          region: item.exchDisp ?? item.exch ?? "",
+          currency: "USD",
+        }));
 
       // Update the query cache with the new data
       queryClient.setQueryData(["matches", searchInput], matches);
 
-      return cleanseData(matches);
+      return matches;
     } catch (error) {
       console.error(error);
       return [];
@@ -75,35 +79,26 @@ const Search = () => {
 
   const getQuote = async (): Promise<quoteType[]> => {
     if (fetchDataClicked) {
-      const options = {
-        method: "GET",
-        url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
-        params: { symbol: `${searchInput}`, region: "US" },
-        headers: {
-          "X-RapidAPI-Key": `${YH_KEY}`,
-          "X-RapidAPI-Host": `${YH_URL}`,
-        },
-      };
-
       try {
         const cachedQuote = queryClient.getQueryData(["quote", searchInput]);
         if (cachedQuote) {
           const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
           return [newCachedQuote];
         }
-        const response = await axios.request(options);
-        if (!response.data.quoteType || !response.data.price) {
-          throw new Error("Incomplete or missing data in the API response");
-        }
+        const response = await axios.get(
+          `${BASE}${ENDPOINTS.singleQuote.path}`,
+          { params: { ticker: searchInput, type: "STOCKS" }, headers: headers() }
+        );
 
-        const temp = response.data.quoteType.symbol;
-        const quoteData = {
-          symbol: temp.toLowerCase(),
-          price: response.data.price.regularMarketPrice.raw,
-          name: response.data.price.shortName,
-          priceChange: response.data.price.regularMarketChange.fmt,
-          percentChange:
-            response.data.price.regularMarketChangePercent.raw.toFixed(2),
+        const q = response.data?.[0];
+        if (!q) throw new Error("Incomplete or missing data in the API response");
+
+        const quoteData: quoteType = {
+          symbol: (q.symbol ?? searchInput).toLowerCase(),
+          price: q.regularMarketPrice ?? 0,
+          name: q.shortName ?? "",
+          priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+          percentChange: q.regularMarketChangePercent ?? 0,
         };
         return [quoteData];
       } catch (error) {
@@ -117,61 +112,32 @@ const Search = () => {
         queryClient.getQueryData<suggestionType[]>(["matches", searchInput]) ??
         [];
       if (bestMatches !== undefined) {
-        const matchesRegions = utils.getRegions(bestMatches);
         const matchesSymbols = utils.getSymbols(bestMatches);
-        // Map through each symbol in cachedQuotes and make an API call for each
-        const quotePromises = matchesSymbols.map(async (symbol, index) => {
-          const region = matchesRegions[index];
-          if (region !== "United States") {
-            return {
-              symbol: "",
-              name: "",
-              price: 0,
-              priceChange: 0,
-              percentChange: 0,
-            };
-          }
-
-          const symbolOptions = {
-            method: "GET",
-            url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
-            params: { symbol, region },
-            headers: {
-              "X-RapidAPI-Key": `${YH_KEY}`,
-              "X-RapidAPI-Host": `${YH_URL}`,
-            },
-          };
-
+        // Batch fetch quotes for all matched symbols in one call
+        const tickerStr = matchesSymbols.join(",");
+        const quotePromises = [async () => {
           try {
-            const response = await axios.request(symbolOptions);
-
-            if (!response.data.quoteType) {
-              throw new Error("Incomplete or missing data in the API response");
-            }
-            const quoteData = {
-              symbol: response.data.quoteType.symbol.toLowerCase(),
-              price: response.data.price.regularMarketPrice.raw,
-              name: response.data.price.shortName,
-              priceChange: response.data.price.regularMarketChange.fmt,
-              percentChange:
-                response.data.price.regularMarketChangePercent.raw.toFixed(2),
-            };
-            return quoteData;
-          } catch (error) {
-            console.error(error);
-            // Handle the error for a specific symbol if needed
-            return {
-              symbol: "",
-              name: "",
-              price: 0,
-              priceChange: 0,
-              percentChange: 0,
-            };
+            const response = await axios.get(
+              `${BASE}${ENDPOINTS.batchQuotes.path}`,
+              { params: { ticker: tickerStr, type: "STOCKS" }, headers: headers() }
+            );
+            const data = response.data?.body ?? response.data ?? [];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (Array.isArray(data) ? data : [data]).map((q: any) => ({
+              symbol: (q.symbol ?? "").toLowerCase(),
+              price: q.regularMarketPrice ?? 0,
+              name: q.shortName ?? "",
+              priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+              percentChange: q.regularMarketChangePercent ?? 0,
+            }));
+          } catch {
+            return [];
           }
-        });
+        }];
 
-        // Wait for all API calls to complete
-        const quotes = await Promise.all(quotePromises);
+        // Wait for batch call to complete
+        const batchResults = await Promise.all(quotePromises.map(fn => fn()));
+        const quotes = batchResults.flat();
         // Filter out potential null and empty values
         const validNonEmptyQuotes = quotes.filter(
           (quote) =>

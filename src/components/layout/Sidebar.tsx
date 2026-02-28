@@ -118,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         {topItems.map((item) => (
           <SidebarItem
             key={item.href}
-            auth={auth}
+            auth={true}
             href={item.href}
             icon={item.icon}
             label={item.label}
@@ -176,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         {bottomItems.map((item) => (
           <SidebarItem
             key={item.href}
-            auth={auth}
+            auth={true}
             href={item.href}
             icon={item.icon}
             label={item.label}

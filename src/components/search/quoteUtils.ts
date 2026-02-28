@@ -9,15 +9,14 @@ import {
   quoteType,
   utils,
 } from "./types";
-import {
-  YH_KEY,
-  YH_URL,
-  /*   YH_KEY1,
-  YH_KEY2,
-  YH_URL1, */
-  YH_URL2,
-  /*   YH_KEY3, */
-} from "../../constants";
+import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
+
+const BASE = `https://${YH_API_HOST}/api`;
+
+const headers = () => ({
+  "X-RapidAPI-Key": YH_API_KEY,
+  "X-RapidAPI-Host": YH_API_HOST,
+});
 
 const stateAbbreviations: { [key: string]: string } = {
   AL: "Alabama",
@@ -79,81 +78,62 @@ export const getPreviousClose = async (
   queryClient: QueryClient,
   symbol: string
 ): Promise<previousClose | null> => {
-  const options = {
-    method: "GET",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
-    params: { symbol, region: "US" },
-    headers: {
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-  };
-
   try {
     const cachedQuote = queryClient.getQueryData(["prevClose", symbol]);
-
     if (cachedQuote) {
       const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
       return newCachedQuote;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 500));
-    const response = await axios.request(options);
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.singleQuote.path}`,
+      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+    );
 
-    if (!response.data.quoteType || !response.data.price) {
-      throw new Error("Incomplete or missing data in the API response");
-    }
+    const q = response.data?.[0];
+    if (!q) throw new Error("No quote data returned");
 
-    const temp = response.data.quoteType.symbol;
     const quoteData: previousClose = {
-      symbol: temp.toLowerCase(),
-      previousClose: response.data.price.regularMarketPreviousClose.raw ?? "",
-      name: response.data.price.shortName ?? "",
+      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
+      previousClose: q.regularMarketPreviousClose ?? 0,
+      name: q.shortName ?? "",
     };
-    //
-    // Cache the quote data
+
     queryClient.setQueryData(["prevClose", symbol], quoteData);
     return quoteData;
   } catch (error) {
     return null;
   }
 };
+
 export const getQuote = async (
   queryClient: QueryClient,
   symbol: string,
   retryCount: number = 0
 ): Promise<quoteType | null> => {
-  const options = {
-    method: "GET",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
-    params: { symbol, region: "US" },
-    headers: {
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-  };
   try {
     const cachedQuote = queryClient.getQueryData(["quote", symbol]);
-
     if (cachedQuote) {
       const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
       return newCachedQuote;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 500));
-    const response = await axios.request(options);
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.singleQuote.path}`,
+      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+    );
 
-    if (!response.data.quoteType || !response.data.price) {
-      throw new Error("Incomplete or missing data in the API response");
-    }
+    const q = response.data?.[0];
+    if (!q) throw new Error("No quote data returned");
 
-    const temp = response.data.quoteType.symbol;
     const quoteData: quoteType = {
-      symbol: temp.toLowerCase(),
-      price: response.data.price.regularMarketPrice.raw ?? "",
-      name: response.data.price.shortName ?? "",
-      priceChange: response.data.price.regularMarketChange.fmt ?? "",
-      percentChange: response.data.price.regularMarketChangePercent.raw ?? "",
+      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
+      price: q.regularMarketPrice ?? 0,
+      name: q.shortName ?? "",
+      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+      percentChange: q.regularMarketChangePercent ?? 0,
     };
 
     queryClient.setQueryData(["quote", symbol], quoteData);
@@ -168,7 +148,6 @@ export const getQuote = async (
       await new Promise((resolve) => setTimeout(resolve, delay));
       return getQuote(queryClient, symbol, retryCount + 1);
     }
-
     return null;
   }
 };
@@ -178,117 +157,119 @@ export const getQuotePageData = async (
   symbol: string,
   isIndex?: boolean
 ): Promise<QuotePageData | null> => {
-  const options = {
-    method: "GET",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary",
-    params: { symbol, region: "US" },
-    headers: {
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-  };
-
   try {
     const cachedQuote = queryClient.getQueryData([
       "quotePageData",
       symbol,
     ]) as QuotePageData;
-
-    if (cachedQuote) {
-      return cachedQuote;
-    }
+    if (cachedQuote) return cachedQuote;
 
     await new Promise((resolve) => setTimeout(resolve, 500));
-    const response = await axios.request(options);
-    if (isIndex) {
-      const temp = response.data.quoteType.symbol;
-      const quoteData: quoteType = {
-        symbol: temp.toLowerCase(),
-        price: response.data.price.regularMarketPrice.raw ?? "",
-        name: response.data.price.shortName ?? "",
-        priceChange: response.data.price.regularMarketChange.fmt ?? "",
-        percentChange: response.data.price.regularMarketChangePercent.raw ?? "",
-      };
-      const quoteSidebarData: QuotePageSidebarData = {
-        previousClose: "",
-        dayRange: "",
-        fiftyTwoWeekHigh: "",
-        marketCap: "",
-        average3MonthVolume: "",
-        trailingPE: "",
-        dividendYield: "",
-        primaryExchange: "",
-      };
-      const quoteSidebarAboutData: QuotePageSidebarAboutData = {
-        summary: "",
-        website: "",
-        headquarters: "",
-        employees: "",
-      };
 
-      const quoteFinancialData: QuotePageFinancialData = {
-        annualRevenue: "",
-        netIncome: "",
-        netProfitMargin: "",
-        ebitda: "",
-      };
+    // Fetch basic quote data
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.singleQuote.path}`,
+      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+    );
 
-      // Cache the quote data
-      const quotePageData: QuotePageData = {
-        quoteData,
-        quoteSidebarData,
-        quoteSidebarAboutData,
-        quoteFinancialData,
-      };
-      queryClient.setQueryData(["quotePageData", symbol], quotePageData);
-      return quotePageData;
-    }
-    if (!response.data.quoteType || !response.data.price) {
-      throw new Error("Incomplete or missing data in the API response");
-    }
+    const q = response.data?.[0];
+    if (!q) throw new Error("No quote data returned");
 
-    const temp = response.data.quoteType.symbol;
     const quoteData: quoteType = {
-      symbol: temp.toLowerCase(),
-      price: response.data.price.regularMarketPrice.raw ?? "",
-      name: response.data.price.shortName ?? "",
-      priceChange: response.data.price.regularMarketChange.fmt ?? "",
-      percentChange: response.data.price.regularMarketChangePercent.raw ?? "",
+      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
+      price: q.regularMarketPrice ?? 0,
+      name: q.shortName ?? "",
+      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+      percentChange: q.regularMarketChangePercent ?? 0,
     };
-    const quoteSidebarData: QuotePageSidebarData = {
-      previousClose:
-        "$" + (response.data.price.regularMarketPreviousClose.fmt ?? ""),
-      dayRange:
-        "$" +
-        (response.data.price.regularMarketDayLow.fmt ?? "") +
-        " - $" +
-        (response.data.price.regularMarketDayHigh.fmt ?? ""),
-      fiftyTwoWeekHigh: response.data.summaryDetail.fiftyTwoWeekHigh.fmt ?? "",
-      marketCap: response.data.summaryDetail.marketCap.fmt ?? "",
-      average3MonthVolume:
-        response.data.price.averageDailyVolume3Month.fmt ?? "",
-      trailingPE: response.data.summaryDetail.trailingPE.fmt ?? "",
-      dividendYield: response.data.summaryDetail.dividendYield.fmt ?? "",
-      primaryExchange: response.data.price.exchangeName ?? "",
+
+    // Populate sidebar from the flat quote response
+    const quoteSidebarData: QuotePageSidebarData = isIndex
+      ? {
+          previousClose: "",
+          dayRange: "",
+          fiftyTwoWeekHigh: "",
+          marketCap: "",
+          average3MonthVolume: "",
+          trailingPE: "",
+          dividendYield: "",
+          primaryExchange: "",
+        }
+      : {
+          previousClose: q.regularMarketPreviousClose
+            ? `$${q.regularMarketPreviousClose}`
+            : "",
+          dayRange:
+            q.regularMarketDayLow && q.regularMarketDayHigh
+              ? `$${q.regularMarketDayLow} - $${q.regularMarketDayHigh}`
+              : q.regularMarketDayRange ?? "",
+          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh
+            ? `${q.fiftyTwoWeekHigh}`
+            : "",
+          marketCap: q.marketCap ? formatLargeNumber(q.marketCap) : "",
+          average3MonthVolume: q.averageDailyVolume3Month
+            ? formatLargeNumber(q.averageDailyVolume3Month)
+            : "",
+          trailingPE: q.trailingPE ? `${q.trailingPE.toFixed(2)}` : "",
+          dividendYield: q.dividendYield
+            ? `${q.dividendYield.toFixed(2)}%`
+            : "",
+          primaryExchange: q.fullExchangeName ?? "",
+        };
+
+    // Module data (profile, financials) requires separate calls
+    let quoteSidebarAboutData: QuotePageSidebarAboutData = {
+      summary: "",
+      website: "",
+      headquarters: "",
+      employees: "",
     };
-    const quoteSidebarAboutData: QuotePageSidebarAboutData = {
-      summary: response.data.summaryProfile.longBusinessSummary ?? "",
-      website: response.data.summaryProfile.website ?? "",
-      headquarters: `${
-        response.data.summaryProfile.city || ""
-      }, ${getStateFullName(response.data.summaryProfile.state ?? "NC")} ${
-        response.data.summaryProfile.country || ""
-      }`,
-      employees: response.data.summaryProfile.fullTimeEmployees ?? "",
+    let quoteFinancialData: QuotePageFinancialData = {
+      annualRevenue: "",
+      netIncome: "",
+      netProfitMargin: "",
+      ebitda: "",
     };
-    const quoteFinancialData: QuotePageFinancialData = {
-      annualRevenue: response.data.financialData.totalRevenue.fmt ?? "",
-      netIncome: response.data.defaultKeyStatistics.netIncomeToCommon.fmt ?? "",
-      netProfitMargin: response.data.financialData.profitMargins.fmt ?? "",
-      ebitda: response.data.financialData.ebitda.fmt ?? "",
-    };
-    //
-    // Cache the quote data
+
+    if (!isIndex) {
+      try {
+        const [profileRes, financialRes] = await Promise.all([
+          axios.get(`${BASE}${ENDPOINTS.modules.path}`, {
+            params: { ticker: symbol, module: "asset-profile" },
+            headers: headers(),
+          }),
+          axios.get(`${BASE}${ENDPOINTS.modules.path}`, {
+            params: { ticker: symbol, module: "financial-data" },
+            headers: headers(),
+          }),
+        ]);
+
+        const profile = profileRes.data?.body?.assetProfile ?? profileRes.data?.assetProfile;
+        if (profile) {
+          quoteSidebarAboutData = {
+            summary: profile.longBusinessSummary ?? "",
+            website: profile.website ?? "",
+            headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
+            employees: profile.fullTimeEmployees
+              ? `${profile.fullTimeEmployees}`
+              : "",
+          };
+        }
+
+        const fin = financialRes.data?.body?.financialData ?? financialRes.data?.financialData;
+        if (fin) {
+          quoteFinancialData = {
+            annualRevenue: fin.totalRevenue?.fmt ?? "",
+            netIncome: fin.netIncomeToCommon?.fmt ?? "",
+            netProfitMargin: fin.profitMargins?.fmt ?? "",
+            ebitda: fin.ebitda?.fmt ?? "",
+          };
+        }
+      } catch {
+        // Module calls failed — keep empty defaults
+      }
+    }
+
     const quotePageData: QuotePageData = {
       quoteData,
       quoteSidebarData,
@@ -302,45 +283,36 @@ export const getQuotePageData = async (
   }
 };
 
+/** Format large numbers like marketCap into human-readable strings */
+function formatLargeNumber(num: number): string {
+  if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
+  if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+  if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+  return `${num}`;
+}
+
 export interface Symbols {
   symbols: string;
 }
 
 export const getMoversSymbols = async (title: string): Promise<string[]> => {
-  const options = {
-    method: "GET",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-movers",
-    params: {
-      region: "US",
-      lang: "en-US",
-      start: "0",
-      count: "5",
-    },
-    headers: {
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL2}`,
-    },
-  };
+  // Map UI title strings to API type param
+  let type = "MOST_ACTIVE";
+  if (title === "active") type = "MOST_ACTIVE";
+  else if (title === "losers") type = "LOSERS";
+  else type = "GAINERS";
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await axios.request<any>(options);
+    const response = await axios.get(`${BASE}${ENDPOINTS.trending.path}`, {
+      params: { type },
+      headers: headers(),
+    });
 
-    const symbols: string[] = [];
-    let resultIndex;
-    if (title === "active") {
-      resultIndex = 2;
-    } else if (title === "losers") {
-      resultIndex = 1;
-    } else {
-      resultIndex = 0;
-    }
-    response.data.finance.result[resultIndex].quotes.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (q: any) => {
-        symbols.push(q.symbol); // Replace with the actual way you get the symbol
-      }
-    );
+    // Response may be { body: [...] } or a flat array
+    const quotes = response.data?.body ?? response.data ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const symbols: string[] = quotes.slice(0, 5).map((q: any) => q.symbol);
     return symbols;
   } catch (error) {
     return [];
@@ -349,37 +321,25 @@ export const getMoversSymbols = async (title: string): Promise<string[]> => {
 
 export const getTrending = async (queryClient: QueryClient) => {
   const cachedData = queryClient.getQueryData(["trending"]);
-
-  if (cachedData) {
-    return cachedData;
-  }
-
-  const options = {
-    method: "GET",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/get-trending-tickers",
-    params: { region: "US" },
-    headers: {
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-  };
+  if (cachedData) return cachedData;
 
   try {
-    const response = await axios.request(options);
-    const trendingQuotes = response.data.finance.result[0].quotes.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (q: any) => ({
-        symbol: q.symbol,
-        name: q.shortName,
-        price: q.regularMarketPrice,
-        priceChange: q.regularMarketChange.toFixed(2),
-        percentChange: q.regularMarketChangePercent.toFixed(2),
-      })
-    );
+    const response = await axios.get(`${BASE}${ENDPOINTS.trending.path}`, {
+      params: { type: "MOST_WATCHED" },
+      headers: headers(),
+    });
 
-    // Cache the data
+    const quotes = response.data?.body ?? response.data ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const trendingQuotes = quotes.slice(0, 10).map((q: any) => ({
+      symbol: q.symbol,
+      name: q.shortName ?? q.longName ?? "",
+      price: q.regularMarketPrice ?? 0,
+      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+      percentChange: (q.regularMarketChangePercent ?? 0).toFixed(2),
+    }));
+
     queryClient.setQueryData(["trending"], trendingQuotes);
-
     return trendingQuotes;
   } catch (error) {
     return [];

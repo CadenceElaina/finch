@@ -9,12 +9,10 @@ import {
   MostFollowedSecurityWithoutDetails,
 } from "../../types/types";
 import WatchlistModal from "../modals/WatchlistModal";
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQuote } from "../search/quoteUtils";
 
 const MostFollowed = () => {
-  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [modalPosition, setModalPosition] = useState<{
     left: number;

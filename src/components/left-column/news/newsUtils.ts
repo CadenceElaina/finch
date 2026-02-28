@@ -1,8 +1,14 @@
 import { QueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { YH_KEY, /*  YH_KEY1, YH_KEY3, */ YH_URL } from "../../../constants";
+import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../../config/api";
 import { newsSegmentType } from "../../../types/types";
 import { queryClient } from "../../quote-chart/quoteQueryClient";
+
+const BASE = `https://${YH_API_HOST}/api`;
+const headers = () => ({
+  "X-RapidAPI-Key": YH_API_KEY,
+  "X-RapidAPI-Host": YH_API_HOST,
+});
 
 const getRandomSegment = (): newsSegmentType => {
   const segments: newsSegmentType[] = ["Top", "Local", "World"];
@@ -36,48 +42,31 @@ export const getSymbolsNews = async (symbol: string) => {
     return cachedData;
   }
 
-  const options = {
-    method: "POST",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/news/v2/list",
-    params: {
-      region: "US",
-      snippetCount: "28",
-      s: `${symbol}`,
-    },
-    headers: {
-      "content-type": "text/plain",
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-    data: "Pass in the value of uuids field returned right in this endpoint to load the next page, or leave empty to load first page",
-  };
-
   try {
-    const response = await axios.request(options);
-    const articles = response.data.data.main.stream.map(
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.news.path}`,
+      {
+        params: { tickers: symbol, type: "ALL" },
+        headers: headers(),
+      }
+    );
+
+    const rawArticles = Array.isArray(response.data) ? response.data : [];
+    const articles = rawArticles.map(
       (a: {
-        content: {
-          id: string;
-          clickThroughUrl: { url: string };
-          title: string;
-          pubDate: string;
-          thumbnail: { resolutions: { url: string }[] };
-          provider: { displayName: string };
-          finance: { stockTickers: { symbol: string }[] };
-        };
+        guid: string;
+        link: string;
+        title: string;
+        pubDate: string;
+        source: string;
       }) => ({
-        id: a.content.id ?? "",
-        link: a.content?.clickThroughUrl?.url || "",
-        title: a.content.title ?? "",
-        time: calculateTimeDifference(a.content.pubDate) ?? "time",
-        img:
-          a.content.thumbnail?.resolutions?.[3]?.url ||
-          a.content.thumbnail?.resolutions?.[2]?.url ||
-          a.content.thumbnail?.resolutions?.[1]?.url ||
-          a.content.thumbnail?.resolutions?.[0]?.url ||
-          "",
-        source: a.content.provider.displayName ?? "",
-        relatedSymbol: a.content.finance?.stockTickers?.[0]?.symbol || "^DJI",
+        id: a.guid ?? "",
+        link: a.link ?? "",
+        title: a.title ?? "",
+        time: calculateTimeDifference(a.pubDate) ?? "time",
+        img: "",
+        source: a.source ?? "",
+        relatedSymbol: symbol || "^DJI",
       })
     );
 
@@ -98,47 +87,31 @@ export const getNews = async (queryClient: QueryClient) => {
     return cachedData;
   }
 
-  const options = {
-    method: "POST",
-    url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/news/v2/list",
-    params: {
-      region: "US",
-      snippetCount: "28",
-    },
-    headers: {
-      "content-type": "text/plain",
-      "X-RapidAPI-Key": `${YH_KEY}`,
-      "X-RapidAPI-Host": `${YH_URL}`,
-    },
-    data: "Pass in the value of uuids field returned right in this endpoint to load the next page, or leave empty to load first page",
-  };
-
   try {
-    const response = await axios.request(options);
-    const articles = response.data.data.main.stream.map(
+    const response = await axios.get(
+      `${BASE}${ENDPOINTS.news.path}`,
+      {
+        params: { type: "ALL" },
+        headers: headers(),
+      }
+    );
+
+    const rawArticles = Array.isArray(response.data) ? response.data : [];
+    const articles = rawArticles.map(
       (a: {
-        content: {
-          id: string;
-          clickThroughUrl: { url: string };
-          title: string;
-          pubDate: string;
-          thumbnail: { resolutions: { url: string }[] };
-          provider: { displayName: string };
-          finance: { stockTickers: { symbol: string }[] };
-        };
+        guid: string;
+        link: string;
+        title: string;
+        pubDate: string;
+        source: string;
       }) => ({
-        id: a.content.id ?? "",
-        link: a.content?.clickThroughUrl?.url || "",
-        title: a.content.title ?? "",
-        time: calculateTimeDifference(a.content.pubDate) ?? "time",
-        img:
-          a.content.thumbnail?.resolutions?.[3]?.url ||
-          a.content.thumbnail?.resolutions?.[2]?.url ||
-          a.content.thumbnail?.resolutions?.[1]?.url ||
-          a.content.thumbnail?.resolutions?.[0]?.url ||
-          "",
-        source: a.content.provider.displayName ?? "",
-        relatedSymbol: a.content.finance?.stockTickers?.[0]?.symbol || "^DJI",
+        id: a.guid ?? "",
+        link: a.link ?? "",
+        title: a.title ?? "",
+        time: calculateTimeDifference(a.pubDate) ?? "time",
+        img: "",
+        source: a.source ?? "",
+        relatedSymbol: "^DJI",
         segment: getRandomSegment(),
       })
     );

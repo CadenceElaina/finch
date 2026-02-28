@@ -12,7 +12,7 @@ import {
   ComposedChart,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { SA_KEY1, SA_URL } from "../../constants";
+import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
 import axios from "axios";
 import { formatTime, formatXAxis } from "./QuoteChartUtils";
 import { queryClient } from "./quoteQueryClient";
@@ -24,9 +24,38 @@ type ChartData = {
   formattedXAxis: string;
 };
 
-interface Values {
-  close: number; // Adjust the type accordingly
-  // Add other properties if necessary
+interface HistoryItem {
+  date: string;
+  date_utc: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+/** Map UI period strings to API interval + limit params */
+function periodToParams(period: string): { interval: string; limit: number } {
+  switch (period) {
+    case "1D":
+      return { interval: "5m", limit: 640 };
+    case "5D":
+      return { interval: "15m", limit: 640 };
+    case "1M":
+      return { interval: "1d", limit: 30 };
+    case "6M":
+      return { interval: "1d", limit: 180 };
+    case "YTD":
+      return { interval: "1d", limit: 365 };
+    case "1Y":
+      return { interval: "1d", limit: 365 };
+    case "5Y":
+      return { interval: "1wk", limit: 260 };
+    case "MAX":
+      return { interval: "1mo", limit: 600 };
+    default:
+      return { interval: "1d", limit: 30 };
+  }
 }
 
 const QuoteChart: React.FC<{
@@ -52,40 +81,40 @@ const QuoteChart: React.FC<{
     if (cachedChartData) {
       return { chartData: cachedChartData };
     }
-    // If not in the cache, make the API call
-    const options = {
-      method: "GET",
-      url: "https://seeking-alpha.p.rapidapi.com/symbols/get-chart",
-      params: {
-        symbol: `${symbol}`,
-        period: `${period}`,
-      },
-      headers: {
-        "X-RapidAPI-Key": `${SA_KEY1}`,
-        "X-RapidAPI-Host": `${SA_URL}`,
-      },
-    };
+
+    const { interval: apiInterval, limit } = periodToParams(period);
 
     try {
-      const response = await axios.request(options);
-
-      const attributesEntries = Object.entries(response.data.attributes) as [
-        string,
-        Values
-      ][];
-      const chartData = attributesEntries.map(
-        ([timestamp, values]: [string, Values]) => {
-          const time = new Date(timestamp);
-          // Format time for tooltip and x-axis
-          const formattedTime = formatTime(time, interval);
-          const formattedXAxis = formatXAxis(time, interval);
-          return {
-            time: formattedTime,
-            close: values.close,
-            formattedXAxis: formattedXAxis,
-          };
+      const response = await axios.get(
+        `https://${YH_API_HOST}/api${ENDPOINTS.history.path}`,
+        {
+          params: {
+            ticker: symbol,
+            type: "HISTORICAL",
+            interval: apiInterval,
+            diffandsplits: "false",
+          },
+          headers: {
+            "X-RapidAPI-Key": YH_API_KEY,
+            "X-RapidAPI-Host": YH_API_HOST,
+          },
         }
       );
+
+      const items: Record<string, HistoryItem> = response.data?.items ?? {};
+      const entries = Object.entries(items)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .slice(-limit);
+
+      const chartData = entries.map(([, values]) => {
+        const time = new Date(values.date_utc * 1000);
+        return {
+          time: formatTime(time, interval),
+          close: values.close,
+          formattedXAxis: formatXAxis(time, interval),
+        };
+      });
+
       // Cache the chart data
       queryClient.setQueryData(chartQueryKey, chartData);
 
