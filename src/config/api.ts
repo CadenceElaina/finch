@@ -1,28 +1,27 @@
 /**
- * Finch — Yahoo Finance API Configuration & Cache Policy
+ * Finch — YH Finance API Configuration & Cache Policy
  * -------------------------------------------------------
  * Single source of truth for API endpoints, rate limits, cache TTLs,
  * and refresh strategies. Import from here instead of scattering magic
  * numbers across components.
  *
- * Provider : Yahoo Finance 15 via RapidAPI
- * Host     : yahoo-finance15.p.rapidapi.com
+ * Provider : YH Finance via RapidAPI
+ * Host     : yh-finance.p.rapidapi.com
  * Tier     : Free (Basic)
  *
  * HARD LIMITS (free tier)
  * ─────────────────────────────────────────────────────────
- * • 750 requests per ~30 min reset window (most endpoints)
- * • 500 requests per ~30 min reset window (news endpoints)
- * • 500,000 requests per calendar month (hard cap, all endpoints)
+ * • 500 requests per calendar month (hard cap)
+ * • No per-minute / per-window sub-limits documented
  *
- * If we average ~550 calls/day we stay under 17 k/month — well within
- * the 500 k ceiling. The 750/30 min window is the real constraint
- * during peak usage; batching + caching keeps us safe.
+ * Combined with Seeking Alpha (500/month) → 1,000 total.
+ * Budget: ~16 calls/day if spread evenly.
+ * Batching + caching is essential.
  */
 
 // ── API keys & host ──────────────────────────────────────
 
-export const YH_API_HOST = "yahoo-finance15.p.rapidapi.com";
+export const YH_API_HOST = "yh-finance.p.rapidapi.com";
 
 // Key is read from env at runtime (Vite injects it)
 // Falls back to the old apidojo key since it's the same RapidAPI account
@@ -40,16 +39,10 @@ export const yhHeaders = () => ({
 // ── Rate limits ──────────────────────────────────────────
 
 export const RATE_LIMITS = {
-  /** Requests allowed per reset window (most endpoints) */
-  perWindow: 750,
-  /** Requests allowed per reset window (news endpoints) */
-  perWindowNews: 500,
-  /** Approximate reset window in seconds (~30 min) */
-  windowSeconds: 1800,
   /** Hard monthly cap (free tier) */
-  monthlyHardCap: 500_000,
-  /** Our self-imposed daily budget to stay safe */
-  dailyBudget: 550,
+  monthlyHardCap: 500,
+  /** Our self-imposed daily budget to stay safe (~16/day) */
+  dailyBudget: 16,
 } as const;
 
 // ── Endpoints we actually use (MVP) ─────────────────────
@@ -64,138 +57,81 @@ export const RATE_LIMITS = {
 
 export const ENDPOINTS = {
   /**
-   * Market summary — S&P 500, DJIA, NASDAQ, etc.
-   * Used by: Homepage hero, IndexCards, MarketIndexes
-   * Path:  GET /api/v1/markets/quote?type=MARKET
-   * Notes: Returns ~30 index quotes. One call covers entire homepage.
-   */
-  marketSummary: {
-    path: "/api/v1/markets/quote",
-    params: { type: "MARKET" },
-    cache: { stale: 60_000, gc: 5 * 60_000 }, // 1 min stale, 5 min gc
-  },
-
-  /**
-   * Batch stock quotes (snapshots)
-   * Used by: Watchlists, Portfolios, MostFollowed, Gainers/Losers/Active
-   * Path:  GET /api/v1/markets/quote?ticker=MSFT,AAPL,GOOG
-   * Notes: Comma-separated tickers. Max ~50 per call recommended.
-   *        This is our primary batching endpoint — one call per list.
+   * Batch stock/index quotes (snapshots)
+   * Used by: Homepage hero, IndexCards, MarketIndexes, Watchlists,
+   *          Portfolios, MostFollowed, Gainers/Losers/Active
+   * Path:  GET /market/v2/get-quotes?region=US&symbols=AAPL,MSFT,^DJI
+   * Notes: Comma-separated symbols (supports ^DJI style index tickers).
+   *        Up to ~50 symbols per call. This is our PRIMARY query endpoint.
    */
   batchQuotes: {
-    path: "/api/v1/markets/quote",
-    // params.ticker set at call time
+    path: "/market/v2/get-quotes",
+    params: { region: "US" },
     cache: { stale: 30_000, gc: 5 * 60_000 }, // 30 s stale, 5 min gc
-  },
-
-  /**
-   * Single stock quote (same endpoint, one ticker)
-   * Used by: Quote page header, search preview
-   * Path:  GET /api/v1/markets/quote?ticker=MSFT
-   */
-  singleQuote: {
-    path: "/api/v1/markets/quote",
-    cache: { stale: 30_000, gc: 15 * 60_000 }, // 30 s stale, 15 min gc
-  },
-
-  /**
-   * Stock chart / price history
-   * Used by: QuoteChart (1D / 5D / 1M / 6M / YTD / 1Y / 5Y)
-   * Path:  GET /api/v2/markets/tickers/history?ticker=MSFT&type=HISTORICAL
-   * Params: interval (5m | 15m | 1d | 1wk | 1mo), diffandsplits (false)
-   * Notes: Intraday intervals (5m/15m) only go back ~5 days.
-   *        Daily/weekly/monthly go back years.
-   */
-  history: {
-    path: "/api/v2/markets/tickers/history",
-    cache: {
-      stale: 5 * 60_000, // 5 min stale (chart doesn't need to be live)
-      gc: 30 * 60_000, // 30 min gc
-    },
   },
 
   /**
    * Auto-complete / search
    * Used by: Search bar
-   * Path:  GET /api/v1/markets/search?search=micro
+   * Path:  GET /auto-complete?q=micro&region=US
    */
   search: {
-    path: "/api/v1/markets/search",
-    cache: { stale: 15 * 60_000, gc: 30 * 60_000 }, // search results are stable
+    path: "/auto-complete",
+    params: { region: "US" },
+    cache: { stale: 15 * 60_000, gc: 30 * 60_000 },
   },
 
   /**
-   * Stock modules — rich detail for a single symbol
-   * Used by: Quote page tabs (Summary, Financials, Profile, etc.)
-   * Path:  GET /api/v1/markets/stock/modules?ticker=MSFT&module=<name>
-   *
-   * Modules we use:
-   *   asset-profile       → Company description, sector, industry, website
-   *   financial-data       → Revenue, margins, EPS, target price
-   *   default-key-statistics → Market cap, PE, beta, 52-wk range
-   *   earnings             → Quarterly EPS actual vs estimate
-   *   income-statement     → Annual / quarterly income statements
-   *   balance-sheet        → Annual / quarterly balance sheets
-   *   cashflow-statement   → Annual / quarterly cash flows
-   *   recommendation-trend → Analyst buy/hold/sell counts
-   *
-   * These are mostly static — financials update quarterly, profile rarely.
-   * Cache aggressively in localStorage.
+   * Stock chart / price history
+   * Used by: QuoteChart (1D / 5D / 1M / 6M / YTD / 1Y / 5Y)
+   * Path:  GET /stock/v3/get-chart?interval=1d&symbol=AAPL&range=1y&region=US
+   * Params: interval (1m|5m|15m|1d|1wk|1mo), range (1d|5d|1mo|6mo|ytd|1y|5y|max)
    */
-  modules: {
-    path: "/api/v1/markets/stock/modules",
+  history: {
+    path: "/stock/v3/get-chart",
+    params: { region: "US" },
     cache: {
-      stale: 60 * 60_000, // 1 hour stale in memory
-      gc: 2 * 60 * 60_000, // 2 hour gc
-      ls: 24 * 60 * 60_000, // 24 hour localStorage TTL
+      stale: 5 * 60_000,
+      gc: 30 * 60_000,
     },
   },
 
   /**
-   * News — general market or per-symbol
-   * Used by: Homepage news feed, Quote page news tab
-   * Path:  GET /api/v2/markets/news?tickers=MSFT&type=ALL
-   * Notes: Separate rate limit (500/window). Cache longer.
+   * Market movers — gainers, losers, most-active in one call
+   * Used by: MarketTrends tabs (Gainers/Losers/MostActive)
+   * Path:  GET /market/v2/get-movers?region=US&lang=en-US&count=25&start=0
+   * Notes: Returns gainers + losers + most-active all in one response.
    */
-  news: {
-    path: "/api/v2/markets/news",
-    cache: { stale: 10 * 60_000, gc: 30 * 60_000 }, // 10 min stale
+  movers: {
+    path: "/market/v2/get-movers",
+    params: { region: "US", lang: "en-US", count: 25, start: 0 },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
   },
 
   /**
-   * Trending tickers
-   * Used by: MarketTrends "Trending" tab
-   * Path:  GET /api/v1/markets/trending?type=MOST_WATCHED (or MOST_ACTIVE, GAINERS, LOSERS)
+   * Stock profile (summary, financials)
+   * Used by: Quote page
+   * Path:  GET /stock/v3/get-profile?symbol=AAPL&region=US
    */
-  trending: {
-    path: "/api/v1/markets/trending",
-    cache: { stale: 60_000, gc: 5 * 60_000 }, // 1 min stale
-  },
-
-  /**
-   * Calendar events — earnings, dividends, splits
-   * Used by: Homepage "Upcoming Earnings" / earnings calendar
-   * Path:  GET /api/v1/markets/calendar/events?type=EARNINGS&from=2026-02-28&to=2026-03-07
-   */
-  calendarEvents: {
-    path: "/api/v1/markets/calendar/events",
-    cache: { stale: 60 * 60_000, gc: 2 * 60 * 60_000 }, // 1 hr stale (daily data)
-  },
-
-  /**
-   * Stock earnings history
-   * Used by: Quote page earnings chart (EPS actual vs estimate)
-   * Path:  GET /api/v1/markets/stock/modules?ticker=MSFT&module=earnings
-   * (same modules endpoint, listed separately for clarity)
-   */
-  earnings: {
-    path: "/api/v1/markets/stock/modules",
-    module: "earnings",
+  profile: {
+    path: "/stock/v3/get-profile",
+    params: { region: "US" },
     cache: {
       stale: 60 * 60_000,
       gc: 2 * 60 * 60_000,
       ls: 24 * 60 * 60_000,
     },
+  },
+
+  /**
+   * Trending tickers
+   * Used by: MarketTrends "Trending" tab
+   * Path:  GET /market/get-trending-tickers?region=US
+   */
+  trending: {
+    path: "/market/get-trending-tickers",
+    params: { region: "US" },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
   },
 } as const;
 
@@ -245,38 +181,18 @@ export const CACHE_POLICY = {
   calendarRefreshInterval: 24 * 60 * 60_000, // 24 hours
 } as const;
 
-// ── Morning batch job (Vercel Cron) ──────────────────────
+// ── Morning batch job (future) ───────────────────────────
 //
-// Runs at 9:00 AM ET (13:00 UTC) weekdays, ~30 min before
-// US market open. Pre-warms the cache so the first visitor
-// of the day sees instant data.
-//
-// Estimated calls per run: ~8-12
-//   1  marketSummary       (indexes)
-//   1  trending GAINERS    (pre-market movers)
-//   1  trending LOSERS
-//   1  trending MOST_ACTIVE
-//   1  trending MOST_WATCHED
-//   1  calendarEvents      (today's earnings)
-//   1  news (general)
-//   ~3 batchQuotes          (popular symbols from watchlists)
-//
-// This is Phase 3+ work. Documenting now for budget planning.
+// Phase 3+ work. With 500 calls/month we can't afford a cron
+// job yet. Documenting for when we upgrade to a paid tier.
 
 export const CRON_SCHEDULE = {
-  /** Cron expression: 9:00 AM ET (13:00 UTC), Mon–Fri */
   expression: "0 13 * * 1-5",
-  /** Estimated API calls per run */
-  estimatedCalls: 10,
-  /** Pre-warm these query keys in cache */
+  estimatedCalls: 5,
   warmKeys: [
-    "marketSummary",
-    "trending:GAINERS",
-    "trending:LOSERS",
-    "trending:MOST_ACTIVE",
-    "trending:MOST_WATCHED",
-    "calendarEvents",
-    "news:general",
+    "batchQuotes:indexes",
+    "movers",
+    "trending",
   ],
 } as const;
 
