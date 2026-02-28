@@ -13,6 +13,7 @@ interface PortfoliosContextProps {
   portfolios: Portfolio[];
   appendPortfolio: (newPortfolio: Portfolio) => void;
   removePortfolio: (removedPortfolio: Portfolio) => void;
+  renamePortfolio: (portfolioId: string, newTitle: string) => void;
   addSecurityToPortfolio: (portfolioId: string, security: Security) => void;
   removeSecurityFromPortfolio: (portfolioId: string, symbol: string) => void;
 }
@@ -38,6 +39,15 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
     portfolioStorage.remove(removedPortfolio.id);
     setPortfolios((prevPortfolios) =>
       prevPortfolios.filter((p) => p.id !== removedPortfolio.id)
+    );
+  };
+
+  const renamePortfolio = (portfolioId: string, newTitle: string) => {
+    portfolioStorage.rename(portfolioId, newTitle);
+    setPortfolios((prev) =>
+      prev.map((p) =>
+        p.id === portfolioId ? { ...p, title: newTitle } : p
+      )
     );
   };
 
@@ -82,6 +92,7 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
       portfolios,
       appendPortfolio,
       removePortfolio,
+      renamePortfolio,
       addSecurityToPortfolio,
       removeSecurityFromPortfolio,
     }),

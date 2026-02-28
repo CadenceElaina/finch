@@ -16,6 +16,7 @@ interface WatchlistContextProps {
   setWatchlists: Dispatch<SetStateAction<Watchlist[]>>;
   appendWatchlist: (newWatchlist: Watchlist) => void;
   removeWatchlist: (removedWatchlist: Watchlist) => void;
+  renameWatchlist: (watchlistId: string, newTitle: string) => void;
   addSecurityToWatchlist: (
     watchlistId: string,
     security: WatchlistSecurity
@@ -53,6 +54,15 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     watchlistStorage.remove(removedWatchlist.id);
     updateWatchlistsState(
       watchlists.filter((w) => w.id !== removedWatchlist.id)
+    );
+  };
+
+  const renameWatchlist = (watchlistId: string, newTitle: string) => {
+    watchlistStorage.rename(watchlistId, newTitle);
+    updateWatchlistsState(
+      watchlists.map((w) =>
+        w.id === watchlistId ? { ...w, title: newTitle } : w
+      )
     );
   };
 
@@ -98,6 +108,7 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
       setWatchlists: updateWatchlistsState,
       appendWatchlist,
       removeWatchlist,
+      renameWatchlist,
       addSecurityToWatchlist,
       removeSecurityFromWatchlist,
     }),
