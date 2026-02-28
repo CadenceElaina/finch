@@ -7,15 +7,12 @@ import { /* fetchQuoteWithRetry */ getQuote } from "../search/quoteUtils";
 import { quoteType } from "../search/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortfolios } from "../../context/PortfoliosContext";
-import { useAuth } from "../../context/AuthContext";
 import { Skeleton, Typography } from "@mui/material";
 import { PortfolioSymbols } from "../../types/types";
 
 const Watchlist = () => {
   const { portfolios } = usePortfolios();
   const { watchlists } = useWatchlists();
-  const { user } = useAuth();
-  const auth = !!user;
   const [isLoading, setIsLoading] = useState(true);
   const [watchlistsAndPortfoliosQuotes, setWatchlistsAndPortfoliosQuotes] =
     useState<Data[]>([]);
@@ -136,9 +133,7 @@ const Watchlist = () => {
       }
     };
     // Execute the fetchQuotes function
-    if (auth) {
-      fetchQuotes();
-    }
+    fetchQuotes();
   }, [portfolios]);
 
   const fetchWatchlistQuotes = async () => {
@@ -211,7 +206,7 @@ const Watchlist = () => {
 
   useEffect(() => {
     // Check if portfolioQuotes has been fetched
-    if (Object.keys(portfolioQuotes).length > 0 && auth) {
+    if (Object.keys(portfolioQuotes).length > 0) {
       // Fetch watchlist quotes
       fetchWatchlistQuotes();
     }
@@ -270,8 +265,7 @@ const Watchlist = () => {
 
   return (
     <>
-      {auth && (
-        <div className="table-container">
+      <div className="table-container">
           <div role="heading" className="watchlist-heading">
             {isLoading ? (
               // Show heading skeleton while data is loading
@@ -304,7 +298,6 @@ const Watchlist = () => {
             />
           )}
         </div>
-      )}
     </>
   );
 };

@@ -3,7 +3,6 @@ import CustomButton from "../../CustomButton";
 import { FaChartBar } from "react-icons/fa";
 import "./Portfolio.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
 import { portfolioStorage } from "../../../services/storage";
 import NewPortfolioModal from "../../modals/AddPortfolioModal";
 import { usePortfolios } from "../../../context/PortfoliosContext";
@@ -12,17 +11,11 @@ import { useNotification } from "../../../context/NotificationContext";
 const AddPortfolio = () => {
   const {  appendPortfolio } = usePortfolios();
   const { addNotification } = useNotification();
-  const { user } = useAuth();
-  const auth = !!user;
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => {
-    if (!auth) {
-      navigate("/login");
-    } else {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
@@ -31,7 +24,6 @@ const AddPortfolio = () => {
   const handleSavePortfolio = (portfolioName: string) => {
     const response = portfolioStorage.create({
       title: portfolioName,
-      author: user?.name,
     });
     appendPortfolio(response);
     addNotification(`${response.title} added!`, "success");

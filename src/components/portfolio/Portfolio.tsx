@@ -7,7 +7,6 @@ import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import { useWatchlists } from "../../context/WatchlistContext";
-import { useAuth } from "../../context/AuthContext";
 import { watchlistStorage } from "../../services/storage";
 import PortfolioContent from "./PortfolioContent";
 import WatchlistContent from "./WatchlistContent";
@@ -39,14 +38,11 @@ const Portfolio = () => {
   const { watchlists, addSecurityToWatchlist, appendWatchlist } =
     useWatchlists();
 
-  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
-  const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
-  const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
-  const addToWatchlistDisabled = usersWatchlists.length > 3;
-  const firstWatchlist = usersWatchlists[0];
-  const firstPortfolio = usersPortfolios[0];
+  const addToWatchlistDisabled = watchlists.length > 3;
+  const firstWatchlist = watchlists[0];
+  const firstPortfolio = portfolios[0];
 
   useEffect(() => {
     // Find the portfolio with the matching id and set activePortfolio
@@ -120,7 +116,6 @@ const Portfolio = () => {
   const handleSaveWatchlist = (watchlistName: string) => {
     const response = watchlistStorage.create({
       title: watchlistName,
-      author: user?.name,
     });
     appendWatchlist(response);
     addNotification(`${response.title} added!`, "success");
@@ -221,8 +216,7 @@ const Portfolio = () => {
           </div>
           <div className="portfolio-header-item">
             {activeListType === "watchlists" &&
-              user &&
-              usersWatchlists.map((watchlist) => (
+              watchlists.map((watchlist) => (
                 <div
                   key={watchlist.id}
                   className={`tab ${
@@ -272,8 +266,7 @@ const Portfolio = () => {
             </div>
 
             {activeListType === "portfolios" &&
-              user &&
-              usersPortfolios.map((portfolio) => (
+              portfolios.map((portfolio) => (
                 <div
                   key={portfolio.id}
                   className={`tab ${

@@ -4,7 +4,7 @@ import "./Portfolio.css";
 import PortfolioPerformance from "./PortfolioPerformance";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import { Portfolio } from "../../types/types";
-import { useAuth } from "../../context/AuthContext";
+
 
 interface PortfolioContentProps {
   portfolio: Portfolio | undefined;
@@ -23,12 +23,10 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
   showDropdown,
   openAddToPortfolioModal,
 }) => {
-  const { user } = useAuth();
   const { portfolios } = usePortfolios();
-  const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
   return (
     <>
-      {usersPortfolios.length > 0 && (
+      {portfolios.length > 0 && (
         <>
           <div className="chart">
             <div className="chart-header">

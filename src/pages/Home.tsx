@@ -10,7 +10,6 @@ import MostFollowed from "../components/right-column/MostFollowed";
 import MarketTrendsList from "../components/MarketTrendsList";
 import DiscoverMore from "../components/slider/DiscoverMore";
 import Footer from "../components/Footer";
-import { useAuth } from "../context/AuthContext";
 import { usePortfolios } from "../context/PortfoliosContext";
 import YourPortfolios from "../components/right-column/portfolio/YourPortfolios";
 import HomeNews from "../components/left-column/news/HomeNews";
@@ -21,7 +20,6 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = () => {
-  const { user } = useAuth();
   const { portfolios } = usePortfolios();
   return (
     <>
@@ -36,7 +34,7 @@ const Home: React.FC<HomeProps> = () => {
               <HomeNews />
             </div>
             <div className="main-content-right">
-              {portfolios && user ? <YourPortfolios /> : <AddPortfolio />}
+              {portfolios.length > 0 ? <YourPortfolios /> : <AddPortfolio />}
 
               <MarketTrends />
               <MostFollowed />

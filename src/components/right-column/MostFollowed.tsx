@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import Table from "../table/Table";
 import "./right.css";
 import { Data, RowConfig } from "../table/types";
-import { useAuth } from "../../context/AuthContext";
 import { useWatchlists } from "../../context/WatchlistContext";
 import {
   MostFollowedSecurities,
@@ -29,7 +28,6 @@ const MostFollowed = () => {
     name: "most-followed",
   };
   const { watchlists } = useWatchlists();
-  const { user } = useAuth();
   const [top5Securities, setTop5Securities] = useState<
     MostFollowedSecurities[]
   >([]);
@@ -119,10 +117,6 @@ const MostFollowed = () => {
   }, [watchlists]);
 
   const onIconClick = (symbol: string) => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     let s = "";
     if (typeof symbol === "string") {
       s = symbol.toLowerCase();

@@ -1,7 +1,6 @@
 import React from "react";
 import { FaEllipsisV, FaPlus } from "react-icons/fa";
 import "./Portfolio.css";
-import { useAuth } from "../../context/AuthContext";
 import { useWatchlists } from "../../context/WatchlistContext";
 
 interface WatchlistContentProps {
@@ -19,12 +18,10 @@ const WatchlistContent: React.FC<WatchlistContentProps> = ({
   showDropdown,
   openAddToWatchlistModal,
 }) => {
-  const { user } = useAuth();
   const { watchlists } = useWatchlists();
-  const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
   return (
     <>
-      {usersWatchlists.length > 0 && (
+      {watchlists.length > 0 && (
         <>
           <div className="chart">
             <div className="chart-header">

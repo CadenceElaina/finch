@@ -5,7 +5,6 @@ import { IoMdAddCircleOutline } from "react-icons/io";
 import { TableProps, AllowedFields } from "./types";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlists } from "../../context/WatchlistContext";
-import { useAuth } from "../../context/AuthContext";
 
 const getRandomColor = (): string => {
   const letters = "0123456789ABCDEF";
@@ -42,13 +41,11 @@ const Table: React.FC<TableProps> = ({
   onIconClick,
 }) => {
   const { watchlists } = useWatchlists();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const handleClick = (symbol: string) => {
     const newState = [false, symbol];
     navigate(`/quote/${symbol}`, { state: newState });
   };
-  const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
   return (
     <ul className={`custom-list${full ? "-full" : ""}`}>
       {data.map((item, i) => (
@@ -303,8 +300,7 @@ const Table: React.FC<TableProps> = ({
                 )
             )}
 
-            {user &&
-            usersWatchlists.some(
+            {watchlists.some(
               (watchlist) =>
                 watchlist.securities?.some(
                   (s) => s.symbol?.toLowerCase() === item.symbol?.toLowerCase()

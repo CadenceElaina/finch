@@ -6,7 +6,6 @@ import { MdManageSearch, MdOutlineInsertChart } from "react-icons/md";
 import SidebarItem from "./SidebarItem";
 import { SidebarProps } from "./types";
 import { FaUncharted } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext";
 import "./Layout.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import { useWatchlists } from "../../context/WatchlistContext";
@@ -17,26 +16,23 @@ import AddWatchlistModal from "../modals/AddWatchlistModal";
 
 const Sidebar: React.FC<SidebarProps> = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { portfolios, appendPortfolio } = usePortfolios();
   const { watchlists, appendWatchlist } = useWatchlists();
   const [portfolioModal, setPortfolioModal] = useState(false);
   const [addWatchlistModalIsOpen, setAddWatchlistModalIsOpen] = useState(false);
-  const auth = !!user;
-  const settings = `/${user?.username}/settings/`;
-  const login = "/login";
+  const settings = "/settings";
   const topItems = [
     {
       icon: BsHouseFill,
       label: "Home",
       href: "/",
-      auth: true, // We dont want to be rerouted to login if click home
+      auth: true,
     },
     {
       icon: MdManageSearch,
       label: "Market Trends",
       href: "/market-trends/indexes",
-      auth: true, //does not require user signed in
+      auth: true,
     },
   ];
   const bottomItems = [
@@ -44,35 +40,27 @@ const Sidebar: React.FC<SidebarProps> = () => {
       icon: MdOutlineInsertChart,
       label: "portfolio",
       href: "/portfolio",
-      auth: auth,
+      auth: true,
     },
     {
       icon: BsListUl,
       label: "watchlist",
       href: "/portfolio",
-      auth: auth,
+      auth: true,
     },
     {
       icon: IoMdSettings,
       label: "settings",
-      href: `${user ? settings : login}`,
-      auth: auth,
+      href: settings,
+      auth: true,
     },
   ];
 
   const canCreateNewPortfolio = () => {
-    // Check if the user has less than 3 portfolios
-    const userPortfolios = portfolios.filter(
-      (portfolio) => portfolio.author === user?.name
-    );
-    return userPortfolios.length < 3;
+    return portfolios.length < 3;
   };
   const canCreateNewWatchlist = () => {
-    // Check if the user has less than 3 portfolios
-    const userWatchlists = watchlists.filter(
-      (watchlist) => watchlist.author === user?.name
-    );
-    return userWatchlists.length < 3;
+    return watchlists.length < 3;
   };
   const closeModal = () => {
     setPortfolioModal(false);
@@ -81,7 +69,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const handleSavePortfolio = (portfolioName: string) => {
     const response = portfolioStorage.create({
       title: portfolioName,
-      author: user?.name,
     });
     appendPortfolio(response);
 
@@ -92,7 +79,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const handleSaveWatchlist = (watchlistName: string) => {
     const response = watchlistStorage.create({
       title: watchlistName,
-      author: user?.name,
     });
     appendWatchlist(response);
 
@@ -100,9 +86,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   };
 
   const addList = (listType: string) => {
-    if (!user) {
-      navigate("/login");
-    }
     if (listType === "portfolio" && canCreateNewPortfolio()) {
       setPortfolioModal(true);
     }
@@ -110,8 +93,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
       setAddWatchlistModalIsOpen(true);
     }
   };
-  const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
-  const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
   const exceedsWatchlistLimit = watchlists.length >= 3;
   const exceedsPortfoliosLimit = portfolios.length >= 3;
   return (
@@ -157,8 +138,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             )}
           </div>
         </li>
-        {user &&
-          usersPortfolios.map((p) => (
+        {portfolios.map((p) => (
             <Link to={"/portfolio"}>
               <li key={p.id} className="sidebar-item">
                 <div className="sidebar-button-icon">
@@ -182,8 +162,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             )}
           </div>
         </li>
-        {user &&
-          usersWatchlists.map((w) => (
+        {watchlists.map((w) => (
             <Link to={`/portfolio/${w.id}`} key={w.id}>
               <li className="sidebar-item">
                 <div className="sidebar-button-icon">

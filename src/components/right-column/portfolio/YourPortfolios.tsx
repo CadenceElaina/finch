@@ -4,7 +4,6 @@ import { usePortfolios } from "../../../context/PortfoliosContext";
 import CustomButton from "../../CustomButton";
 import { portfolioStorage } from "../../../services/storage";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
 import NewPortfolioModal from "../../modals/AddPortfolioModal";
 import "./Portfolio.css";
 import { Skeleton } from "@mui/material";
@@ -16,8 +15,6 @@ import { PortfolioSymbols } from "../../../types/types";
 
 const YourPortfolios = () => {
   const { portfolios, appendPortfolio } = usePortfolios();
-  const { user } = useAuth();
-  const auth = !!user;
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,7 +88,7 @@ const YourPortfolios = () => {
 
   useEffect(() => {
     // Fetch quotes for each portfolio
-    if (user && usersPortfolios.length > 0) {
+    if (portfolios.length > 0) {
       portfolios.forEach((portfolio) => {
         fetchPortfolioQuotes(portfolio.title);
         setIsLoading(false);
@@ -100,11 +97,7 @@ const YourPortfolios = () => {
   }, [portfolios]);
 
   const openModal = () => {
-    if (!auth) {
-      navigate("/login");
-    } else {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
@@ -113,7 +106,6 @@ const YourPortfolios = () => {
   const handleSavePortfolio = (portfolioName: string) => {
     const response = portfolioStorage.create({
       title: portfolioName,
-      author: user?.name,
     });
     appendPortfolio(response);
 
@@ -122,19 +114,14 @@ const YourPortfolios = () => {
   };
 
   const canCreateNewPortfolio = () => {
-    // Check if the user has less than 3 portfolios
-    const userPortfolios = portfolios.filter(
-      (portfolio) => portfolio.author === user?.name
-    );
-    return userPortfolios.length < 3;
+    return portfolios.length < 3;
   };
 
   const Tooltip = () => (
     <div className="tooltip">You may not have more than 3 portfolios</div>
   );
 
-  const usersPortfolios = portfolios.filter((p) => p.author === user?.name);
-  const totalPortfolioValue = usersPortfolios.reduce((acc, portfolio) => {
+  const totalPortfolioValue = portfolios.reduce((acc, portfolio) => {
     const securities = portfolioQuotes[portfolio.title] || [];
     const portfolioValue = securities.reduce((valueAcc, security) => {
       return valueAcc + security.price * security.quantity;
@@ -152,7 +139,7 @@ const YourPortfolios = () => {
         <div className="add-portfolio-text">Your portfolios</div>
       </div>
       <div className="portfolio-value">
-        {isLoading && usersPortfolios.length > 0 ? (
+        {isLoading && portfolios.length > 0 ? (
           <Skeleton
             variant="text"
             width={100}
@@ -166,7 +153,7 @@ const YourPortfolios = () => {
         )}
       </div>
       <div className="border-top"></div>
-      {usersPortfolios.length > 0 ? (
+      {portfolios.length > 0 ? (
         <div className="portfolio-list">
           {isLoading ? (
             <>
@@ -193,7 +180,7 @@ const YourPortfolios = () => {
               />
             </>
           ) : (
-            usersPortfolios.map((portfolio) => {
+            portfolios.map((portfolio) => {
               const securities = portfolioQuotes[portfolio.title] || [];
               const totalValue = securities.reduce((acc, security) => {
                 const { quantity, percentChange } = security;

@@ -3,7 +3,6 @@ import { WatchlistSecurity, Watchlist } from "../../types/types";
 import "./WatchlistModal.css";
 import { watchlistStorage } from "../../services/storage";
 import { useWatchlists } from "../../context/WatchlistContext";
-import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../context/NotificationContext";
 
@@ -22,10 +21,8 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotification();
-  const { user } = useAuth();
-  const usersWatchlists = watchlists.filter((w) => w.author === user?.name);
   const [selectedWatchlists, setSelectedWatchlists] = useState<string[]>(
-    usersWatchlists
+    watchlists
       .filter((watchlist) =>
         watchlist.securities?.some((s) => s.symbol === selectedSecurity)
       )
@@ -93,10 +90,10 @@ const WatchlistModal: React.FC<WatchlistModalProps> = ({
 
   return (
     <div className="watchlist-modal" style={style}>
-      {usersWatchlists.length >= 1 ? (
+      {watchlists.length >= 1 ? (
         <>
           <h2>Select Watchlists</h2>
-          {usersWatchlists.map((watchlist) => (
+          {watchlists.map((watchlist) => (
             <div key={watchlist.id}>
               <input
                 type="checkbox"
