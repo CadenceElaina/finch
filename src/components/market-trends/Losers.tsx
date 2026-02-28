@@ -24,7 +24,7 @@ const Losers = () => {
 
   const fetchMostActiveQuotes = async () => {
     try {
-      const newSymbols = await getMoversSymbols("losers");
+      const newSymbols = await getMoversSymbols("losers", queryClient);
 
       setSymbols(newSymbols);
     } catch (error) {

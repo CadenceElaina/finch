@@ -7,7 +7,7 @@ import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import { useWatchlists } from "../../context/WatchlistContext";
-import { watchlistStorage } from "../../services/storage";
+import { watchlistStorage, portfolioStorage } from "../../services/storage";
 import PortfolioContent from "./PortfolioContent";
 import WatchlistContent from "./WatchlistContent";
 import AddToWatchlistModal from "../modals/AddToWatchlist";
@@ -35,7 +35,7 @@ const Portfolio = () => {
     useState<boolean>(false);
   const { portfolios, removePortfolio, addSecurityToPortfolio } =
     usePortfolios();
-  const { watchlists, addSecurityToWatchlist, appendWatchlist } =
+  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, setWatchlists } =
     useWatchlists();
 
   const { id } = useParams();
@@ -71,11 +71,49 @@ const Portfolio = () => {
   };
 
   const handleDropdownOptionClick = async (option: string) => {
-    if (option === "remove" && activeTab !== "watchlist") {
-      const removedPortfolio = portfolios.find((p) => p.title === activeTab);
+    if (option === "remove") {
+      if (activeListType === "portfolios") {
+        const removedPortfolio = portfolios.find((p) => p.title === activeTab);
+        if (removedPortfolio) {
+          removePortfolio(removedPortfolio);
+          addNotification(`${removedPortfolio.title} removed`, "success");
+          // Navigate to first remaining portfolio or home
+          const remaining = portfolios.filter((p) => p.id !== removedPortfolio.id);
+          if (remaining.length > 0) {
+            navigate(`/portfolio/${remaining[0].id}`);
+          } else {
+            navigate("/");
+          }
+        }
+      } else if (activeListType === "watchlists") {
+        const removedWatchlist = watchlists.find((w) => w.title === activeTab);
+        if (removedWatchlist) {
+          removeWatchlist(removedWatchlist);
+          addNotification(`${removedWatchlist.title} removed`, "success");
+          const remaining = watchlists.filter((w) => w.id !== removedWatchlist.id);
+          if (remaining.length > 0) {
+            navigate(`/portfolio/${remaining[0].id}`);
+          } else {
+            navigate("/");
+          }
+        }
+      }
+    }
 
-      if (removedPortfolio) {
-        removePortfolio(removedPortfolio);
+    if (option === "rename") {
+      const newName = prompt("Enter new name:");
+      if (newName && newName.trim()) {
+        if (activeListType === "portfolios" && activePortfolio) {
+          portfolioStorage.rename(activePortfolio.id, newName.trim());
+          // Refresh portfolios state from storage
+          const updated = portfolioStorage.getAll();
+          // We need to call removePortfolio + appendPortfolio to refresh, or just reload
+          // Simpler: directly set via navigate to trigger re-render
+          window.location.reload();
+        } else if (activeListType === "watchlists" && activeWatchlist) {
+          watchlistStorage.rename(activeWatchlist.id, newName.trim());
+          window.location.reload();
+        }
       }
     }
 

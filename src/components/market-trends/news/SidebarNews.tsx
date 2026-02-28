@@ -5,27 +5,23 @@ import { useNews } from "../../../context/NewsContext";
 const SidebarNews = () => {
   const newsData = useNews();
 
-  // Generate 9 random articles
-  const numRandomArticles = 6;
-  const randomIndexes = Array.from(
-    { length: Math.min(numRandomArticles, newsData.length) },
-    () => Math.floor(Math.random() * newsData.length)
-  );
-
-  // Get the selected random articles from newsData
-  const randomArticles = randomIndexes.map((index) => newsData[index]);
+  // Pick up to 6 unique random articles using Fisher-Yates shuffle
+  const numRandomArticles = Math.min(6, newsData.length);
+  const shuffled = [...newsData].sort(() => Math.random() - 0.5);
+  const randomArticles = shuffled.slice(0, numRandomArticles);
 
   return (
     <div className="sidebar-news">
-      Sidebar News
-      <div>
-        <div role="heading" className="news-heading">
-          Today's financial news
-        </div>
+      {newsData.length > 0 && (
         <div>
-          <Article articles={randomArticles} />
+          <div role="heading" className="news-heading">
+            Today's financial news
+          </div>
+          <div>
+            <Article articles={randomArticles} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

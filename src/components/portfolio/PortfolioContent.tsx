@@ -40,15 +40,9 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
                   <div className="dropdown-content">
                     <div
                       className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("Option 1")}
+                      onClick={() => handleDropdownOptionClick("rename")}
                     >
-                      Option 1
-                    </div>
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("Option 2")}
-                    >
-                      Option 2
+                      Rename
                     </div>
                     <div
                       className="dropdown-option"

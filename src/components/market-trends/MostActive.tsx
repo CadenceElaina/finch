@@ -24,7 +24,7 @@ const MostActive = () => {
 
   const fetchMostActiveQuotes = async () => {
     try {
-      const newSymbols = await getMoversSymbols("active");
+      const newSymbols = await getMoversSymbols("active", queryClient);
 
       setSymbols(newSymbols);
     } catch (error) {

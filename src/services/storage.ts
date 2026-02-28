@@ -45,6 +45,15 @@ export const portfolioStorage = {
     write(PORTFOLIOS_KEY, portfolios);
   },
 
+  rename(id: string, newTitle: string): Portfolio {
+    const portfolios = portfolioStorage.getAll();
+    const portfolio = portfolios.find((p) => p.id === id);
+    if (!portfolio) throw new Error(`Portfolio ${id} not found`);
+    portfolio.title = newTitle;
+    write(PORTFOLIOS_KEY, portfolios);
+    return portfolio;
+  },
+
   addSecurity(id: string, security: Security): Portfolio {
     const portfolios = portfolioStorage.getAll();
     const portfolio = portfolios.find((p) => p.id === id);
@@ -86,6 +95,15 @@ export const watchlistStorage = {
   remove(id: string): void {
     const watchlists = watchlistStorage.getAll().filter((w) => w.id !== id);
     write(WATCHLISTS_KEY, watchlists);
+  },
+
+  rename(id: string, newTitle: string): Watchlist {
+    const watchlists = watchlistStorage.getAll();
+    const watchlist = watchlists.find((w) => w.id === id);
+    if (!watchlist) throw new Error(`Watchlist ${id} not found`);
+    watchlist.title = newTitle;
+    write(WATCHLISTS_KEY, watchlists);
+    return watchlist;
   },
 
   addSecurity(id: string, security: WatchlistSecurity): Watchlist {

@@ -73,8 +73,8 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
                 <span>Quantity:</span>
                 <input
                   type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                  value={quantity || ""}
+                  onChange={(e) => setQuantity(Number(e.target.value) || 0)}
                   min={0}
                 />
               </div>
@@ -90,9 +90,10 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
                 <span>Purchase Price:</span>
                 <input
                   type="number"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(parseFloat(e.target.value))}
+                  value={purchasePrice || ""}
+                  onChange={(e) => setPurchasePrice(Number(e.target.value) || 0)}
                   min={0}
+                  step="0.01"
                 />
               </div>
             </div>
