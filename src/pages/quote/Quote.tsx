@@ -14,6 +14,7 @@ import {
 import QuoteNews from "../../components/quote-chart/news/QuoteNews";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQuotePageData } from "../../components/search/quoteUtils";
+import { ENDPOINTS } from "../../config/api";
 import { IoAddSharp } from "react-icons/io5";
 import { CiShare2 } from "react-icons/ci";
 import { isHoliday } from "./quoteUtils";
@@ -63,7 +64,9 @@ const Quote: React.FC<QuoteProps> = () => {
     queryKey: ["quotePageData", symbol],
     queryFn: () =>
       getQuotePageData(queryClient, symbol || "", state[0] || false),
-    enabled: Boolean(symbol), // Only enable the query when symbol is available
+    enabled: Boolean(symbol),
+    staleTime: ENDPOINTS.profile.cache.stale,
+    gcTime: ENDPOINTS.profile.cache.gc,
   });
 
   useEffect(() => {
