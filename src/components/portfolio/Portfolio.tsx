@@ -37,9 +37,9 @@ const Portfolio = () => {
     useState<boolean>(false);
   const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
     useState<boolean>(false);
-  const { portfolios, removePortfolio, addSecurityToPortfolio, appendPortfolio } =
+  const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, appendPortfolio } =
     usePortfolios();
-  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, removeSecurityFromWatchlist } =
+  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } =
     useWatchlists();
 
   const { id } = useParams();
@@ -122,15 +122,11 @@ const Portfolio = () => {
       const newName = prompt("Enter new name:");
       if (newName && newName.trim()) {
         if (activeListType === "portfolios" && activePortfolio) {
-          portfolioStorage.rename(activePortfolio.id, newName.trim());
-          // Refresh portfolios state from storage
-          portfolioStorage.getAll();
-          // We need to call removePortfolio + appendPortfolio to refresh, or just reload
-          // Simpler: directly set via navigate to trigger re-render
-          window.location.reload();
+          renamePortfolio(activePortfolio.id, newName.trim());
+          addNotification(`Renamed to ${newName.trim()}`, "success");
         } else if (activeListType === "watchlists" && activeWatchlist) {
-          watchlistStorage.rename(activeWatchlist.id, newName.trim());
-          window.location.reload();
+          renameWatchlist(activeWatchlist.id, newName.trim());
+          addNotification(`Renamed to ${newName.trim()}`, "success");
         }
       }
     }
@@ -303,7 +299,7 @@ const Portfolio = () => {
                   <div className="tab-inner">
                     <FaList size={18} />
                     <span className="label">{watchlist.title}</span>
-                    <span className="count">0</span>
+                    <span className="count">{watchlist.securities?.length ?? 0}</span>
                   </div>
                 </div>
               ))}
@@ -347,7 +343,7 @@ const Portfolio = () => {
                   <div className="tab-inner">
                     <FaChartLine size={18} />
                     <span className="label">{portfolio.title}</span>
-                    <span className="count">0</span>
+                    <span className="count">{portfolio.securities?.length ?? 0}</span>
                   </div>
                 </div>
               ))}
