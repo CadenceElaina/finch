@@ -34,6 +34,29 @@ export const saHeaders = () => ({
 
 export const SA_BASE = `https://${SA_API_HOST}`;
 
+// ── Proxy-aware fetch helper ─────────────────────────────
+
+import axios from "axios";
+
+/**
+ * Make a GET request to a Seeking Alpha endpoint, routing through
+ * the Vercel Edge proxy in production.
+ */
+export async function saFetch(
+  endpoint: string,
+  params: Record<string, string | number> = {}
+) {
+  if (import.meta.env.PROD) {
+    return axios.get("/api/seeking-alpha", {
+      params: { endpoint, ...params },
+    });
+  }
+  return axios.get(`${SA_BASE}${endpoint}`, {
+    params,
+    headers: saHeaders(),
+  });
+}
+
 // ── Endpoints ────────────────────────────────────────────
 
 export const SA_ENDPOINTS = {

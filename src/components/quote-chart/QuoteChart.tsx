@@ -12,8 +12,7 @@ import {
   ComposedChart,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
-import axios from "axios";
+import { ENDPOINTS, yhFetch } from "../../config/api";
 import { formatTime, formatXAxis } from "./QuoteChartUtils";
 import { queryClient } from "./quoteQueryClient";
 import "./QuoteChart.css";
@@ -76,21 +75,12 @@ const QuoteChart: React.FC<{
     const { interval: apiInterval, limit } = periodToParams(period);
 
     try {
-      const response = await axios.get(
-        `https://${YH_API_HOST}${ENDPOINTS.history.path}`,
-        {
-          params: {
-            symbol: symbol,
-            interval: apiInterval,
-            range: period.toLowerCase(),
-            region: "US",
-          },
-          headers: {
-            "X-RapidAPI-Key": YH_API_KEY,
-            "X-RapidAPI-Host": YH_API_HOST,
-          },
-        }
-      );
+      const response = await yhFetch(ENDPOINTS.history.path, {
+        symbol: symbol,
+        interval: apiInterval,
+        range: period.toLowerCase(),
+        region: "US",
+      });
 
       // YH Finance chart response: chart.result[0].indicators.quote[0]
       const chartResult = response.data?.chart?.result?.[0];

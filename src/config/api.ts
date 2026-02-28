@@ -36,6 +36,39 @@ export const yhHeaders = () => ({
   "x-rapidapi-key": YH_API_KEY,
 });
 
+// ── Proxy-aware fetch helper ─────────────────────────────
+//
+// In production (Vercel): calls /api/yh-finance?endpoint=...
+//   → Edge Function adds the API key server-side.
+// In development: calls RapidAPI directly with the key from .env.
+
+import axios from "axios";
+
+/**
+ * Make a GET request to a YH Finance endpoint, routing through
+ * the Vercel Edge proxy in production.
+ *
+ * @param endpoint - The YH Finance path, e.g. "/market/v2/get-quotes"
+ * @param params   - Query parameters (region, symbols, etc.)
+ * @returns The axios response
+ */
+export async function yhFetch(
+  endpoint: string,
+  params: Record<string, string | number> = {}
+) {
+  if (import.meta.env.PROD) {
+    // Production: route through /api/yh-finance Edge Function
+    return axios.get("/api/yh-finance", {
+      params: { endpoint, ...params },
+    });
+  }
+  // Development: call RapidAPI directly
+  return axios.get(`https://${YH_API_HOST}${endpoint}`, {
+    params,
+    headers: yhHeaders(),
+  });
+}
+
 // ── Rate limits ──────────────────────────────────────────
 
 export const RATE_LIMITS = {
