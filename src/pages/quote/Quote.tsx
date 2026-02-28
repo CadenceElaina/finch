@@ -36,55 +36,15 @@ const Quote: React.FC<QuoteProps> = () => {
   const symbol = state?.[1] ? `${state[1]}` : (urlParam ?? "");
   const symbolState = state?.[1] || (urlParam ?? "");
 
-  let symbolForChart = "";
-  if (isIndex === true) {
-    switch (symbolState) {
-      case "^DJI":
-        symbolForChart = "DJI";
-        break;
-      case "^GSPC":
-        symbolForChart = "SP500";
-        break;
-      case "^IXIC":
-        symbolForChart = "COMP.IND";
-        break;
-      case "^RUT":
-        symbolForChart = "IWM";
-        break;
-      case "^VIX":
-        symbolForChart = "VIX";
-        break;
-      case "^GDAXI":
-        symbolForChart = "DAX";
-        break;
-      case "^FTSE":
-        symbolForChart = "UKX";
-        break;
-      case "^IBEX":
-        symbolForChart = "IBEX:IND";
-        break;
-      case "^N225":
-        symbolForChart = "NKY:IND";
-        break;
-      case "^HSI":
-        symbolForChart = "HSI";
-        break;
-      case "^BSEN":
-        symbolForChart = "SENSEX";
-        break;
-      case "BTC-USD":
-        symbolForChart = "BTC-USD";
-        break;
-      case "ETH-USD":
-        symbolForChart = "ETH-USD";
-        break;
-      case "BAT-USD":
-        symbolForChart = "BAT-USD";
-        break;
-      default:
-        symbolForChart = "";
-    }
-  }
+  // For YH Finance chart API, use the actual Yahoo symbol (with ^ prefix for indexes).
+  // When navigating via IndexCards, symbolState already has ^ prefix (e.g. "^GSPC").
+  // When navigating via URL (e.g. /quote/GSPC), we need to detect and add ^ for known indexes.
+  const KNOWN_INDEXES = ["DJI", "GSPC", "IXIC", "RUT", "VIX", "GDAXI", "FTSE", "IBEX", "N225", "HSI", "BSEN"];
+  const strippedSymbol = symbolState.replace("^", "");
+  const detectedIndex = KNOWN_INDEXES.includes(strippedSymbol);
+  const chartSymbol = detectedIndex
+    ? (symbolState.startsWith("^") ? symbolState : `^${symbolState}`)
+    : symbol;
 
   // State to track the selected time interval
   const [selectedInterval, setSelectedInterval] = useState("1D");
@@ -275,7 +235,7 @@ const Quote: React.FC<QuoteProps> = () => {
               {/* Chart component with the selected interval */}
               <QuoteChart
                 interval={selectedInterval}
-                symbol={symbolForChart || ""}
+                symbol={chartSymbol || ""}
                 previousClosePrice={""}
               />
             </div>
@@ -391,7 +351,7 @@ const Quote: React.FC<QuoteProps> = () => {
             {/* Chart component with the selected interval */}
             <QuoteChart
               interval={selectedInterval}
-              symbol={symbol || ""}
+              symbol={chartSymbol || symbol || ""}
               previousClosePrice={quoteSidebarData?.previousClose || ""}
             />
             <div className="quote-news">
@@ -495,7 +455,9 @@ const Quote: React.FC<QuoteProps> = () => {
                               </span>
                             ) : key.toLowerCase() === "employees" ? (
                               <span>
-                                {parseInt(value, 10).toLocaleString()}
+                                {value && !isNaN(parseInt(value, 10))
+                                  ? parseInt(value, 10).toLocaleString()
+                                  : "N/A"}
                               </span>
                             ) : (
                               <span>{value}</span>

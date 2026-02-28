@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
+import { FaList, FaChartLine, FaPlus, FaAngleRight, FaTimes } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
+import NewPortfolioModal from "../modals/AddPortfolioModal";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { watchlistStorage, portfolioStorage } from "../../services/storage";
 import PortfolioContent from "./PortfolioContent";
@@ -33,14 +34,17 @@ const Portfolio = () => {
     useState<boolean>(false);
   const [addWatchlistModalIsOpen, setAddWatchlistModalIsOpen] =
     useState<boolean>(false);
-  const { portfolios, removePortfolio, addSecurityToPortfolio } =
+  const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
+    useState<boolean>(false);
+  const { portfolios, removePortfolio, addSecurityToPortfolio, appendPortfolio, removeSecurityFromPortfolio } =
     usePortfolios();
-  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, setWatchlists } =
+  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, setWatchlists, removeSecurityFromWatchlist } =
     useWatchlists();
 
   const { id } = useParams();
   const navigate = useNavigate();
-  const addToWatchlistDisabled = watchlists.length > 3;
+  const addToWatchlistDisabled = watchlists.length >= 3;
+  const addPortfolioDisabled = portfolios.length >= 3;
   const firstWatchlist = watchlists[0];
   const firstPortfolio = portfolios[0];
 
@@ -160,6 +164,16 @@ const Portfolio = () => {
     onCloseWatchlist();
   };
 
+  const handleSaveNewPortfolio = (portfolioName: string) => {
+    const response = portfolioStorage.create({
+      title: portfolioName,
+    });
+    appendPortfolio(response);
+    addNotification(`${response.title} created!`, "success");
+    setNewPortfolioModalOpen(false);
+    navigate(`/portfolio/${response.id}`);
+  };
+
   const onCloseWatchlist = () => {
     setAddWatchlistModalIsOpen(false);
   };
@@ -224,6 +238,12 @@ const Portfolio = () => {
           }}
         />
       )}
+      {newPortfolioModalOpen && (
+        <NewPortfolioModal
+          onCancel={() => setNewPortfolioModalOpen(false)}
+          onSave={handleSaveNewPortfolio}
+        />
+      )}
       <div className="portfolio-container">
         <div className="portfolio-header">
           <div className="portfolio-header-item">
@@ -272,34 +292,28 @@ const Portfolio = () => {
                 </div>
               ))}
             <div className="add-list-div">
-              {addToWatchlistDisabled && activeListType === "watchlists" && (
+              {activeListType === "watchlists" && (
                 <>
                   <button
                     disabled={addToWatchlistDisabled}
-                    className={`add-list ${
-                      addToWatchlistDisabled ? "disabled" : ""
-                    }`}
+                    className={`add-list ${addToWatchlistDisabled ? "disabled" : ""}`}
                     onClick={() => setAddWatchlistModalIsOpen(true)}
                   >
                     <FaPlus size={18} />
                     <span className="label">New list</span>
-                  </button>{" "}
-                  <Tooltip />
+                  </button>
+                  {addToWatchlistDisabled && <Tooltip />}
                 </>
               )}
-              {!addToWatchlistDisabled && activeListType && (
-                <>
-                  <button
-                    disabled={addToWatchlistDisabled}
-                    className={`add-list ${
-                      addToWatchlistDisabled ? "disabled" : ""
-                    }`}
-                    onClick={() => setAddWatchlistModalIsOpen(true)}
-                  >
-                    <FaPlus size={18} />
-                    <span className="label">New list</span>
-                  </button>{" "}
-                </>
+              {activeListType === "portfolios" && (
+                <button
+                  disabled={addPortfolioDisabled}
+                  className={`add-list ${addPortfolioDisabled ? "disabled" : ""}`}
+                  onClick={() => setNewPortfolioModalOpen(true)}
+                >
+                  <FaPlus size={18} />
+                  <span className="label">New Portfolio</span>
+                </button>
               )}
             </div>
 
@@ -340,16 +354,6 @@ const Portfolio = () => {
               showDropdown={showDropdown}
               openAddToPortfolioModal={openAddToPortfolioModal}
             />
-            <div>
-              {activePortfolio?.securities?.map((s) => (
-                <div key={s.symbol}>
-                  {s.symbol}
-                  {s.quantity}
-                  {s.purchaseDate}
-                  {s.purchasePrice}
-                </div>
-              ))}
-            </div>
           </div>
         )}
         {activeListType === "watchlists" && (
@@ -363,13 +367,22 @@ const Portfolio = () => {
               showDropdown={showDropdown}
               openAddToWatchlistModal={openAddToWatchlistModal}
             />
-            <div>
+            <div className="securities-list">
               {activeWatchlist?.securities?.map((s) => (
-                <div key={s.symbol}>
-                  {s.symbol}
-                  {s.quantity}
-                  {s.purchaseDate}
-                  {s.purchasePrice}
+                <div key={s.symbol} className="security-row">
+                  <span className="security-symbol">{s.symbol.toUpperCase()}</span>
+                  <button
+                    className="security-remove-btn"
+                    title={`Remove ${s.symbol}`}
+                    onClick={() => {
+                      if (activeWatchlist) {
+                        removeSecurityFromWatchlist(activeWatchlist.id, s);
+                        addNotification(`${s.symbol} removed`, "success");
+                      }
+                    }}
+                  >
+                    <FaTimes size={14} />
+                  </button>
                 </div>
               ))}
             </div>

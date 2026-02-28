@@ -72,11 +72,27 @@ const transformSaArticle = (item: any): Article => {
 
 /**
  * Fetch general market news from Seeking Alpha.
- * Cached in react-query for 10 minutes.
+ * Cached in react-query AND localStorage for 10 minutes.
  */
 export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
+  // 1. Check react-query in-memory cache
   const cached = queryClient.getQueryData<Article[]>(["saNews"]);
   if (cached && cached.length > 0) return cached;
+
+  // 2. Check localStorage (survives page reloads / dev server restarts)
+  try {
+    const lsRaw = localStorage.getItem("finch_sa_news");
+    if (lsRaw) {
+      const { data: lsData, ts } = JSON.parse(lsRaw) as { data: Article[]; ts: number };
+      const TEN_MINUTES = 10 * 60 * 1000;
+      if (Date.now() - ts < TEN_MINUTES && lsData.length > 0) {
+        queryClient.setQueryData(["saNews"], lsData);
+        return lsData;
+      }
+    }
+  } catch {
+    // localStorage read failed — continue to fetch
+  }
 
   try {
     const response = await axios.get(`${SA_BASE}${SA_ENDPOINTS.newsList}`, {
@@ -88,6 +104,10 @@ export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
     const articles: Article[] = items.map(transformSaArticle);
 
     queryClient.setQueryData(["saNews"], articles);
+    // Persist to localStorage
+    try {
+      localStorage.setItem("finch_sa_news", JSON.stringify({ data: articles, ts: Date.now() }));
+    } catch { /* quota exceeded — ignore */ }
     return articles;
   } catch (error) {
     console.error("Failed to fetch SA news:", error);

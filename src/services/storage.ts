@@ -71,6 +71,17 @@ export const portfolioStorage = {
     write(PORTFOLIOS_KEY, portfolios);
     return portfolio;
   },
+
+  removeSecurity(id: string, symbol: string): Portfolio {
+    const portfolios = portfolioStorage.getAll();
+    const portfolio = portfolios.find((p) => p.id === id);
+    if (!portfolio) throw new Error(`Portfolio ${id} not found`);
+    portfolio.securities = (portfolio.securities ?? []).filter(
+      (s) => s.symbol !== symbol
+    );
+    write(PORTFOLIOS_KEY, portfolios);
+    return portfolio;
+  },
 };
 
 // Watchlists

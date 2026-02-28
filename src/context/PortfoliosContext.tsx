@@ -14,6 +14,7 @@ interface PortfoliosContextProps {
   appendPortfolio: (newPortfolio: Portfolio) => void;
   removePortfolio: (removedPortfolio: Portfolio) => void;
   addSecurityToPortfolio: (portfolioId: string, security: Security) => void;
+  removeSecurityFromPortfolio: (portfolioId: string, symbol: string) => void;
 }
 
 const PortfoliosContext = createContext<PortfoliosContextProps | undefined>(
@@ -57,12 +58,32 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
+  const removeSecurityFromPortfolio = (
+    portfolioId: string,
+    symbol: string
+  ) => {
+    portfolioStorage.removeSecurity(portfolioId, symbol);
+    setPortfolios((prev) =>
+      prev.map((portfolio) =>
+        portfolio.id === portfolioId
+          ? {
+              ...portfolio,
+              securities: (portfolio.securities ?? []).filter(
+                (s) => s.symbol !== symbol
+              ),
+            }
+          : portfolio
+      )
+    );
+  };
+
   const contextValue = useMemo(
     () => ({
       portfolios,
       appendPortfolio,
       removePortfolio,
       addSecurityToPortfolio,
+      removeSecurityFromPortfolio,
     }),
     [portfolios]
   );

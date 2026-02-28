@@ -387,6 +387,12 @@ export const getMoversSymbols = async (
   else if (title === "losers") canonicalName = "DAY_LOSERS";
   else canonicalName = "DAY_GAINERS";
 
+  // Check cache first — avoid refetching on every tab switch
+  if (queryClient) {
+    const cached = queryClient.getQueryData<string[]>(["movers", canonicalName]);
+    if (cached && cached.length > 0) return cached;
+  }
+
   try {
     const response = await axios.get(`${YH_BASE}${ENDPOINTS.movers.path}`, {
       params: { ...ENDPOINTS.movers.params },
@@ -395,26 +401,34 @@ export const getMoversSymbols = async (
 
     // Response shape: { finance: { result: [{ canonicalName, quotes: [...] }] } }
     const results = response.data?.finance?.result ?? [];
+
+    // Cache ALL categories from this single API call to avoid re-fetching on tab switch
+    if (queryClient) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const cat of results) {
+        const catQuotes = (cat?.quotes ?? []).slice(0, 5);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const catSymbols: string[] = catQuotes.map((q: any) => q.symbol);
+        queryClient.setQueryData(["movers", cat.canonicalName], catSymbols);
+        // Pre-cache individual quote data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const q of catQuotes) {
+          if (q.symbol) {
+            const parsed = parseQuote(q, q.symbol);
+            queryClient.setQueryData(["quote", q.symbol], parsed);
+          }
+        }
+      }
+    }
+
     const category = results.find(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (r: any) => r.canonicalName === canonicalName
     );
     const quotes = category?.quotes ?? [];
     const topQuotes = quotes.slice(0, 5);
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const symbols: string[] = topQuotes.map((q: any) => q.symbol);
-
-    // Cache the full quote data so getBatchQuotes won't need a second API call
-    if (queryClient) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const q of topQuotes) {
-        if (q.symbol) {
-          const parsed = parseQuote(q, q.symbol);
-          queryClient.setQueryData(["quote", q.symbol], parsed);
-        }
-      }
-    }
 
     return symbols;
   } catch (error) {
