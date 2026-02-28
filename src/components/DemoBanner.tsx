@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { useDemoMode } from "../../context/DemoModeContext";
+import { useDemoMode } from "../context/DemoModeContext";
 
 const DemoBanner: React.FC = () => {
   const { isDemoMode, exitDemoMode } = useDemoMode();
