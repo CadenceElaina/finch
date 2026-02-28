@@ -6,7 +6,7 @@ import { quoteType, suggestionType, utils } from "./types";
 import { useNavigate } from "react-router-dom";
 import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
 
-const BASE = `https://${YH_API_HOST}/api`;
+const BASE = `https://${YH_API_HOST}`;
 const headers = () => ({
   "X-RapidAPI-Key": YH_API_KEY,
   "X-RapidAPI-Host": YH_API_HOST,
@@ -45,18 +45,18 @@ const Search = () => {
     try {
       const response = await axios.get(
         `${BASE}${ENDPOINTS.search.path}`,
-        { params: { search: searchInput }, headers: headers() }
+        { params: { q: searchInput, region: "US" }, headers: headers() }
       );
 
-      const results = response.data?.body ?? [];
+      const results = response.data?.quotes ?? response.data?.body ?? [];
       const matches: suggestionType[] = results
         .slice(0, 5)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((item: any) => ({
           symbol: item.symbol ?? "",
-          name: item.name ?? "",
-          type: item.typeDisp ?? item.type ?? "",
-          region: item.exchDisp ?? item.exch ?? "",
+          name: item.shortname ?? item.longname ?? item.name ?? "",
+          type: item.typeDisp ?? item.quoteType ?? item.type ?? "",
+          region: item.exchDisp ?? item.exchange ?? item.exch ?? "",
           currency: "USD",
         }));
 
@@ -86,18 +86,18 @@ const Search = () => {
           return [newCachedQuote];
         }
         const response = await axios.get(
-          `${BASE}${ENDPOINTS.singleQuote.path}`,
-          { params: { ticker: searchInput, type: "STOCKS" }, headers: headers() }
+          `${BASE}${ENDPOINTS.batchQuotes.path}`,
+          { params: { region: "US", symbols: searchInput }, headers: headers() }
         );
 
-        const q = response.data?.[0];
+        const q = response.data?.quoteResponse?.result?.[0];
         if (!q) throw new Error("Incomplete or missing data in the API response");
 
         const quoteData: quoteType = {
           symbol: (q.symbol ?? searchInput).toLowerCase(),
           price: q.regularMarketPrice ?? 0,
           name: q.shortName ?? "",
-          priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+          priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
           percentChange: q.regularMarketChangePercent ?? 0,
         };
         return [quoteData];
@@ -114,20 +114,20 @@ const Search = () => {
       if (bestMatches !== undefined) {
         const matchesSymbols = utils.getSymbols(bestMatches);
         // Batch fetch quotes for all matched symbols in one call
-        const tickerStr = matchesSymbols.join(",");
+        const symbolsStr = matchesSymbols.join(",");
         const quotePromises = [async () => {
           try {
             const response = await axios.get(
               `${BASE}${ENDPOINTS.batchQuotes.path}`,
-              { params: { ticker: tickerStr, type: "STOCKS" }, headers: headers() }
+              { params: { region: "US", symbols: symbolsStr }, headers: headers() }
             );
-            const data = response.data?.body ?? response.data ?? [];
+            const data = response.data?.quoteResponse?.result ?? [];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (Array.isArray(data) ? data : [data]).map((q: any) => ({
               symbol: (q.symbol ?? "").toLowerCase(),
               price: q.regularMarketPrice ?? 0,
               name: q.shortName ?? "",
-              priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+              priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
               percentChange: q.regularMarketChangePercent ?? 0,
             }));
           } catch {

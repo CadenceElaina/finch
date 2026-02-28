@@ -9,31 +9,35 @@ import {
   quoteType,
   utils,
 } from "./types";
+
+// YH Finance is the primary API for quotes
 import { YH_API_HOST, YH_API_KEY, ENDPOINTS } from "../../config/api";
-
-const BASE = `https://${YH_API_HOST}/api`;
-
-const headers = () => ({
+const YH_BASE = `https://${YH_API_HOST}`;
+const yhHeaders = () => ({
   "X-RapidAPI-Key": YH_API_KEY,
   "X-RapidAPI-Host": YH_API_HOST,
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseQuote(q: any, fallbackSymbol?: string): quoteType {
+  // YH Finance format (primary)
   return {
     symbol: (q.symbol ?? fallbackSymbol ?? "").toLowerCase(),
     price: q.regularMarketPrice ?? 0,
     name: q.shortName ?? q.longName ?? "",
-    priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+    priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
     percentChange: q.regularMarketChangePercent ?? 0,
   };
 }
 
 /**
- * Fetch quotes for multiple symbols in a single API call.
- * Returns a map of symbol → quoteType (lower-cased keys).
+ * Fetch quotes for multiple symbols in a single API call via YH Finance.
+ * Returns a map of symbol → quoteType.
  * Symbols already in the React Query cache are returned from cache
  * and excluded from the network request.
+ *
+ * YH Finance accepts standard tickers (AAPL, ^DJI, ^GSPC, etc.)
+ * directly — no ID mapping needed.
  */
 export const getBatchQuotes = async (
   queryClient: QueryClient,
@@ -54,37 +58,38 @@ export const getBatchQuotes = async (
 
   if (uncached.length === 0) return result;
 
-  // 2. Batch fetch all uncached symbols in one call
+  // 2. Batch fetch all uncached symbols in one YH Finance call
   try {
+    const symbolsParam = uncached.join(",");
     const response = await axios.get(
-      `${BASE}${ENDPOINTS.batchQuotes.path}`,
+      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
       {
-        params: { ticker: uncached.join(","), type: "STOCKS" },
-        headers: headers(),
+        params: { region: "US", symbols: symbolsParam },
+        headers: yhHeaders(),
       }
     );
 
-    const body = response.data?.body ?? response.data ?? [];
-    const quotes: quoteType[] = (Array.isArray(body) ? body : [body]).map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (q: any) => parseQuote(q)
-    );
-
-    // Index response by symbol (lower-cased)
-    const bySymbol: Record<string, quoteType> = {};
-    for (const q of quotes) {
-      bySymbol[q.symbol] = q;
+    const rawQuotes = response.data?.quoteResponse?.result ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bySymbol: Record<string, any> = {};
+    for (const q of rawQuotes) {
+      if (q.symbol) {
+        bySymbol[q.symbol] = q;
+      }
     }
 
     for (const sym of uncached) {
-      const match = bySymbol[sym.toLowerCase()] ?? null;
-      result[sym] = match;
-      if (match) {
-        queryClient.setQueryData(["quote", sym], match);
+      const raw = bySymbol[sym] ?? bySymbol[sym.toUpperCase()];
+      if (raw) {
+        const parsed = parseQuote(raw, sym);
+        result[sym] = parsed;
+        queryClient.setQueryData(["quote", sym], parsed);
+      } else {
+        result[sym] = null;
       }
     }
   } catch (error) {
-    // If batch fails, fill uncached with null
+    console.error("getBatchQuotes YH error:", error);
     for (const sym of uncached) {
       result[sym] = null;
     }
@@ -162,11 +167,11 @@ export const getPreviousClose = async (
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     const response = await axios.get(
-      `${BASE}${ENDPOINTS.singleQuote.path}`,
-      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
+      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
     );
 
-    const q = response.data?.[0];
+    const q = response.data?.quoteResponse?.result?.[0];
     if (!q) throw new Error("No quote data returned");
 
     const quoteData: previousClose = {
@@ -196,18 +201,18 @@ export const getQuote = async (
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     const response = await axios.get(
-      `${BASE}${ENDPOINTS.singleQuote.path}`,
-      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
+      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
     );
 
-    const q = response.data?.[0];
+    const q = response.data?.quoteResponse?.result?.[0];
     if (!q) throw new Error("No quote data returned");
 
     const quoteData: quoteType = {
       symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
       price: q.regularMarketPrice ?? 0,
       name: q.shortName ?? "",
-      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+      priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
       percentChange: q.regularMarketChangePercent ?? 0,
     };
 
@@ -241,20 +246,20 @@ export const getQuotePageData = async (
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Fetch basic quote data
+    // Fetch basic quote data via batch quotes endpoint (1 symbol)
     const response = await axios.get(
-      `${BASE}${ENDPOINTS.singleQuote.path}`,
-      { params: { ticker: symbol, type: "STOCKS" }, headers: headers() }
+      `${YH_BASE}${ENDPOINTS.batchQuotes.path}`,
+      { params: { region: "US", symbols: symbol }, headers: yhHeaders() }
     );
 
-    const q = response.data?.[0];
+    const q = response.data?.quoteResponse?.result?.[0];
     if (!q) throw new Error("No quote data returned");
 
     const quoteData: quoteType = {
       symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
       price: q.regularMarketPrice ?? 0,
       name: q.shortName ?? "",
-      priceChange: (q.regularMarketChange ?? 0).toFixed(2),
+      priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
       percentChange: q.regularMarketChangePercent ?? 0,
     };
 
@@ -292,7 +297,7 @@ export const getQuotePageData = async (
           primaryExchange: q.fullExchangeName ?? "",
         };
 
-    // Module data (profile, financials) requires separate calls
+    // Profile data requires a separate call
     let quoteSidebarAboutData: QuotePageSidebarAboutData = {
       summary: "",
       website: "",
@@ -308,18 +313,17 @@ export const getQuotePageData = async (
 
     if (!isIndex) {
       try {
-        const [profileRes, financialRes] = await Promise.all([
-          axios.get(`${BASE}${ENDPOINTS.modules.path}`, {
-            params: { ticker: symbol, module: "asset-profile" },
-            headers: headers(),
-          }),
-          axios.get(`${BASE}${ENDPOINTS.modules.path}`, {
-            params: { ticker: symbol, module: "financial-data" },
-            headers: headers(),
-          }),
-        ]);
+        const profileRes = await axios.get(
+          `${YH_BASE}${ENDPOINTS.profile.path}`,
+          {
+            params: { symbol, region: "US" },
+            headers: yhHeaders(),
+          }
+        );
 
-        const profile = profileRes.data?.body?.assetProfile ?? profileRes.data?.assetProfile;
+        const profile =
+          profileRes.data?.quoteSummary?.result?.[0]?.assetProfile ??
+          profileRes.data?.assetProfile;
         if (profile) {
           quoteSidebarAboutData = {
             summary: profile.longBusinessSummary ?? "",
@@ -331,7 +335,9 @@ export const getQuotePageData = async (
           };
         }
 
-        const fin = financialRes.data?.body?.financialData ?? financialRes.data?.financialData;
+        const fin =
+          profileRes.data?.quoteSummary?.result?.[0]?.financialData ??
+          profileRes.data?.financialData;
         if (fin) {
           quoteFinancialData = {
             annualRevenue: fin.totalRevenue?.fmt ?? "",
@@ -341,7 +347,7 @@ export const getQuotePageData = async (
           };
         }
       } catch {
-        // Module calls failed — keep empty defaults
+        // Profile call failed — keep empty defaults
       }
     }
 
@@ -379,9 +385,9 @@ export const getMoversSymbols = async (title: string): Promise<string[]> => {
   else type = "GAINERS";
 
   try {
-    const response = await axios.get(`${BASE}${ENDPOINTS.trending.path}`, {
+    const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
       params: { type },
-      headers: headers(),
+      headers: yhHeaders(),
     });
 
     // Response may be { body: [...] } or a flat array
@@ -399,9 +405,9 @@ export const getTrending = async (queryClient: QueryClient) => {
   if (cachedData) return cachedData;
 
   try {
-    const response = await axios.get(`${BASE}${ENDPOINTS.trending.path}`, {
+    const response = await axios.get(`${YH_BASE}${ENDPOINTS.trending.path}`, {
       params: { type: "MOST_WATCHED" },
-      headers: headers(),
+      headers: yhHeaders(),
     });
 
     const quotes = response.data?.body ?? response.data ?? [];

@@ -86,13 +86,13 @@ const QuoteChart: React.FC<{
 
     try {
       const response = await axios.get(
-        `https://${YH_API_HOST}/api${ENDPOINTS.history.path}`,
+        `https://${YH_API_HOST}${ENDPOINTS.history.path}`,
         {
           params: {
-            ticker: symbol,
-            type: "HISTORICAL",
+            symbol: symbol,
             interval: apiInterval,
-            diffandsplits: "false",
+            range: period.toLowerCase(),
+            region: "US",
           },
           headers: {
             "X-RapidAPI-Key": YH_API_KEY,
@@ -101,19 +101,24 @@ const QuoteChart: React.FC<{
         }
       );
 
-      const items: Record<string, HistoryItem> = response.data?.items ?? {};
-      const entries = Object.entries(items)
-        .sort(([a], [b]) => Number(a) - Number(b))
-        .slice(-limit);
+      // YH Finance chart response: chart.result[0].indicators.quote[0]
+      const chartResult = response.data?.chart?.result?.[0];
+      const timestamps = chartResult?.timestamp ?? [];
+      const quotes = chartResult?.indicators?.quote?.[0] ?? {};
+      const closes: number[] = quotes.close ?? [];
 
-      const chartData = entries.map(([, values]) => {
-        const time = new Date(values.date_utc * 1000);
-        return {
-          time: formatTime(time, interval),
-          close: values.close,
-          formattedXAxis: formatXAxis(time, interval),
-        };
-      });
+      const chartData = timestamps
+        .map((ts: number, i: number) => {
+          if (closes[i] == null) return null;
+          const time = new Date(ts * 1000);
+          return {
+            time: formatTime(time, interval),
+            close: closes[i],
+            formattedXAxis: formatXAxis(time, interval),
+          };
+        })
+        .filter(Boolean)
+        .slice(-limit);
 
       // Cache the chart data
       queryClient.setQueryData(chartQueryKey, chartData);
