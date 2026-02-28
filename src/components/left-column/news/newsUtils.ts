@@ -4,6 +4,8 @@ import {
   saFetch,
 } from "../../../config/seekingAlphaApi";
 import { Article, NewsSegmentType } from "../../../types/types";
+import { isDemoActive } from "../../../data/demo/demoState";
+import { DEMO_NEWS, DEMO_SYMBOL_NEWS } from "../../../data/demo";
 
 /**
  * Calculate a human-readable time difference string.
@@ -77,6 +79,9 @@ export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
   const cached = queryClient.getQueryData<Article[]>(["saNews"]);
   if (cached && cached.length > 0) return cached;
 
+  // Demo mode fallback
+  if (isDemoActive()) return DEMO_NEWS;
+
   // 2. Check localStorage (survives page reloads / dev server restarts)
   try {
     const lsRaw = localStorage.getItem("finch_sa_news");
@@ -119,6 +124,12 @@ export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
  */
 export const getSymbolsNews = async (symbol: string): Promise<Article[]> => {
   if (!symbol) return [];
+
+  // Demo mode fallback
+  if (isDemoActive()) {
+    const sym = symbol.toUpperCase();
+    return DEMO_SYMBOL_NEWS[sym] ?? [];
+  }
 
   try {
     const response = await saFetch(

@@ -12,6 +12,9 @@ import {
 // YH Finance is the primary API for quotes
 import { ENDPOINTS, yhFetch } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
+import { isDemoActive } from "../../data/demo/demoState";
+import { DEMO_QUOTES, DEMO_GAINERS, DEMO_LOSERS, DEMO_MOST_ACTIVE, DEMO_TRENDING } from "../../data/demo";
+import { DEMO_QUOTE_PAGE_DATA } from "../../data/demo";
 
 // Cache TTLs for localStorage persistence (survive page refreshes)
 const LS_TTL = {
@@ -46,6 +49,15 @@ export const getBatchQuotes = async (
   queryClient: QueryClient,
   symbols: string[]
 ): Promise<Record<string, quoteType | null>> => {
+  // Demo mode: return static data immediately
+  if (isDemoActive()) {
+    const result: Record<string, quoteType | null> = {};
+    for (const sym of symbols) {
+      result[sym] = DEMO_QUOTES[sym] ?? DEMO_QUOTES[sym.toUpperCase()] ?? null;
+    }
+    return result;
+  }
+
   const result: Record<string, quoteType | null> = {};
   const uncached: string[] = [];
 
@@ -174,6 +186,11 @@ export const getQuote = async (
   symbol: string,
   retryCount: number = 0
 ): Promise<quoteType | null> => {
+  // Demo mode fallback
+  if (isDemoActive()) {
+    return DEMO_QUOTES[symbol] ?? DEMO_QUOTES[symbol.toUpperCase()] ?? null;
+  }
+
   try {
     const cachedQuote = queryClient.getQueryData(["quote", symbol]);
     if (cachedQuote) {
@@ -218,6 +235,12 @@ export const getQuotePageData = async (
   symbol: string,
   isIndex?: boolean
 ): Promise<QuotePageData | null> => {
+  // Demo mode fallback
+  if (isDemoActive()) {
+    const sym = symbol.toUpperCase();
+    return DEMO_QUOTE_PAGE_DATA[sym] ?? null;
+  }
+
   try {
     const cachedQuote = queryClient.getQueryData([
       "quotePageData",
@@ -381,6 +404,16 @@ export const getMoversSymbols = async (
   else if (title === "losers") canonicalName = "DAY_LOSERS";
   else canonicalName = "DAY_GAINERS";
 
+  // Demo mode fallback
+  if (isDemoActive()) {
+    const demoMap: Record<string, typeof DEMO_GAINERS> = {
+      DAY_GAINERS: DEMO_GAINERS,
+      DAY_LOSERS: DEMO_LOSERS,
+      MOST_ACTIVES: DEMO_MOST_ACTIVE,
+    };
+    return (demoMap[canonicalName] ?? DEMO_GAINERS).map((d) => d.symbol);
+  }
+
   // Check cache first — avoid refetching on every tab switch
   if (queryClient) {
     const cached = queryClient.getQueryData<string[]>(["movers", canonicalName]);
@@ -439,6 +472,9 @@ export const getMoversSymbols = async (
 };
 
 export const getTrending = async (queryClient: QueryClient) => {
+  // Demo mode fallback
+  if (isDemoActive()) return DEMO_TRENDING;
+
   const cachedData = queryClient.getQueryData(["trending"]);
   if (cachedData) return cachedData;
 
