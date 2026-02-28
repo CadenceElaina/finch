@@ -1,0 +1,268 @@
+/**
+ * Demo stock quotes — realistic frozen snapshot of popular US stocks.
+ * Used when API quota is exhausted or on first load.
+ *
+ * Prices are approximate Feb 2026 values for realism.
+ */
+
+import { quoteType } from "../../components/search/types";
+
+export const DEMO_QUOTES: Record<string, quoteType> = {
+  AAPL: {
+    symbol: "aapl",
+    name: "Apple Inc.",
+    price: 241.84,
+    priceChange: 3.12,
+    percentChange: 1.31,
+  },
+  MSFT: {
+    symbol: "msft",
+    name: "Microsoft Corporation",
+    price: 415.60,
+    priceChange: -2.45,
+    percentChange: -0.59,
+  },
+  GOOGL: {
+    symbol: "googl",
+    name: "Alphabet Inc.",
+    price: 185.43,
+    priceChange: 1.87,
+    percentChange: 1.02,
+  },
+  AMZN: {
+    symbol: "amzn",
+    name: "Amazon.com, Inc.",
+    price: 216.20,
+    priceChange: 4.10,
+    percentChange: 1.93,
+  },
+  TSLA: {
+    symbol: "tsla",
+    name: "Tesla, Inc.",
+    price: 338.59,
+    priceChange: -8.41,
+    percentChange: -2.42,
+  },
+  NVDA: {
+    symbol: "nvda",
+    name: "NVIDIA Corporation",
+    price: 131.28,
+    priceChange: 5.64,
+    percentChange: 4.49,
+  },
+  META: {
+    symbol: "meta",
+    name: "Meta Platforms, Inc.",
+    price: 676.10,
+    priceChange: 2.35,
+    percentChange: 0.35,
+  },
+  JPM: {
+    symbol: "jpm",
+    name: "JPMorgan Chase & Co.",
+    price: 268.44,
+    priceChange: 1.20,
+    percentChange: 0.45,
+  },
+  V: {
+    symbol: "v",
+    name: "Visa Inc.",
+    price: 342.90,
+    priceChange: 0.87,
+    percentChange: 0.25,
+  },
+  WMT: {
+    symbol: "wmt",
+    name: "Walmart Inc.",
+    price: 97.84,
+    priceChange: -0.56,
+    percentChange: -0.57,
+  },
+  // ── Indexes ──
+  "^DJI": {
+    symbol: "^dji",
+    name: "Dow Jones Industrial Average",
+    price: 43840.91,
+    priceChange: 159.95,
+    percentChange: 0.37,
+  },
+  "^GSPC": {
+    symbol: "^gspc",
+    name: "S&P 500",
+    price: 5954.50,
+    priceChange: 22.43,
+    percentChange: 0.38,
+  },
+  "^IXIC": {
+    symbol: "^ixic",
+    name: "NASDAQ Composite",
+    price: 19000.52,
+    priceChange: -42.18,
+    percentChange: -0.22,
+  },
+  "^RUT": {
+    symbol: "^rut",
+    name: "Russell 2000",
+    price: 2244.10,
+    priceChange: 8.76,
+    percentChange: 0.39,
+  },
+  "^VIX": {
+    symbol: "^vix",
+    name: "CBOE Volatility Index",
+    price: 19.63,
+    priceChange: -0.82,
+    percentChange: -4.01,
+  },
+  // ── International indexes ──
+  "^GDAXI": {
+    symbol: "^gdaxi",
+    name: "DAX PERFORMANCE-INDEX",
+    price: 22551.43,
+    priceChange: 112.30,
+    percentChange: 0.50,
+  },
+  "^FTSE": {
+    symbol: "^ftse",
+    name: "FTSE 100",
+    price: 8764.20,
+    priceChange: -18.50,
+    percentChange: -0.21,
+  },
+  " ^IBEX": {
+    symbol: " ^ibex",
+    name: "IBEX 35",
+    price: 13100.50,
+    priceChange: 45.80,
+    percentChange: 0.35,
+  },
+  "^N225": {
+    symbol: "^n225",
+    name: "Nikkei 225",
+    price: 38061.15,
+    priceChange: -204.32,
+    percentChange: -0.53,
+  },
+  "^HSI": {
+    symbol: "^hsi",
+    name: "Hang Seng Index",
+    price: 22944.24,
+    priceChange: 320.12,
+    percentChange: 1.41,
+  },
+  "^BSESN": {
+    symbol: "^bsesn",
+    name: "S&P BSE SENSEX",
+    price: 73198.10,
+    priceChange: 187.45,
+    percentChange: 0.26,
+  },
+  // ── Currencies ──
+  "EURUSD=X": {
+    symbol: "eurusd=x",
+    name: "EUR/USD",
+    price: 1.0421,
+    priceChange: 0.0012,
+    percentChange: 0.12,
+  },
+  "JPY=X": {
+    symbol: "jpy=x",
+    name: "USD/JPY",
+    price: 149.82,
+    priceChange: -0.34,
+    percentChange: -0.23,
+  },
+  "GBPUSD=X": {
+    symbol: "gbpusd=x",
+    name: "GBP/USD",
+    price: 1.2635,
+    priceChange: 0.0018,
+    percentChange: 0.14,
+  },
+  "CAD=X": {
+    symbol: "cad=x",
+    name: "USD/CAD",
+    price: 1.4425,
+    priceChange: 0.0031,
+    percentChange: 0.21,
+  },
+  // ── Crypto ──
+  "BTC-USD": {
+    symbol: "btc-usd",
+    name: "Bitcoin USD",
+    price: 84285.50,
+    priceChange: 1250.00,
+    percentChange: 1.51,
+  },
+  "ETH-USD": {
+    symbol: "eth-usd",
+    name: "Ethereum USD",
+    price: 2294.30,
+    priceChange: -45.80,
+    percentChange: -1.96,
+  },
+  "BAT-USD": {
+    symbol: "bat-usd",
+    name: "Basic Attention Token USD",
+    price: 0.1812,
+    priceChange: 0.0034,
+    percentChange: 1.91,
+  },
+  // ── Extra popular stocks for movers/trending ──
+  AMD: {
+    symbol: "amd",
+    name: "Advanced Micro Devices, Inc.",
+    price: 113.72,
+    priceChange: 4.35,
+    percentChange: 3.98,
+  },
+  NFLX: {
+    symbol: "nflx",
+    name: "Netflix, Inc.",
+    price: 1028.35,
+    priceChange: 12.80,
+    percentChange: 1.26,
+  },
+  CRM: {
+    symbol: "crm",
+    name: "Salesforce, Inc.",
+    price: 308.40,
+    priceChange: -5.12,
+    percentChange: -1.63,
+  },
+  INTC: {
+    symbol: "intc",
+    name: "Intel Corporation",
+    price: 24.38,
+    priceChange: -1.05,
+    percentChange: -4.13,
+  },
+  BA: {
+    symbol: "ba",
+    name: "The Boeing Company",
+    price: 178.92,
+    priceChange: -3.67,
+    percentChange: -2.01,
+  },
+  UBER: {
+    symbol: "uber",
+    name: "Uber Technologies, Inc.",
+    price: 72.48,
+    priceChange: 1.93,
+    percentChange: 2.74,
+  },
+  SHOP: {
+    symbol: "shop",
+    name: "Shopify Inc.",
+    price: 118.25,
+    priceChange: 3.40,
+    percentChange: 2.96,
+  },
+  COST: {
+    symbol: "cost",
+    name: "Costco Wholesale Corporation",
+    price: 1005.32,
+    priceChange: 8.45,
+    percentChange: 0.85,
+  },
+};
