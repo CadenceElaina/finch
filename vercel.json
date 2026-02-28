@@ -3,6 +3,12 @@
   "buildCommand": "tsc && vite build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "crons": [
+    {
+      "path": "/api/cron/morning-snapshot",
+      "schedule": "0 13 * * 1-5"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/yh-finance",
