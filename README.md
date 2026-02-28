@@ -1,30 +1,52 @@
-# React + TypeScript + Vite
+# Finch
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Google Finance-inspired market intelligence dashboard built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+Track market indices, research stocks, manage watchlists and portfolios — with plans for AI-powered insights via Google Gemini.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **Market Overview** — Live index cards (US, Europe, Asia, Currencies, Crypto)
+- **Stock Quotes** — Interactive multi-interval charts (1D–MAX) via Recharts
+- **Symbol Search** — Autocomplete powered by Alpha Vantage
+- **Market Trends** — Most Active, Gainers, Losers, Trending
+- **Watchlists** — Create and manage multiple watchlists
+- **Portfolios** — Track holdings with gain/loss calculations
+- **News** — Financial news feeds on home and quote pages
+- **Dark Mode** — Theme toggle
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Tech Stack
 
-- Configure the top-level `parserOptions` property like this:
+| Layer         | Choice                       |
+| ------------- | ---------------------------- |
+| Frontend      | React 18 + TypeScript        |
+| Build         | Vite                         |
+| Routing       | React Router v6              |
+| Data Fetching | TanStack Query (React Query) |
+| State         | React Context + Zustand      |
+| Charts        | Recharts                     |
+| UI            | Material UI + react-icons    |
+| Market Data   | Yahoo Finance via RapidAPI   |
+| Search        | Alpha Vantage via RapidAPI   |
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+## Getting Started
+
+```bash
+npm install
+npm run dev
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Create a `.env` file based on `.env.example` with your RapidAPI keys.
+
+## Roadmap
+
+See [docs/PLAN.md](docs/PLAN.md) for the full project plan.
+
+**Current focus:** Phase 0 — stabilize the codebase, remove legacy backend dependency, clean up dead code.
+
+**Planned:**
+
+- Vercel Edge Function API proxy (hide API keys server-side)
+- Vercel KV caching with morning market snapshot
+- Demo mode with static data fallback
+- AI research panel powered by Google Gemini 1.5 Flash
