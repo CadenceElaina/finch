@@ -19,6 +19,7 @@
  * }
  */
 
+import type { IncomingMessage, ServerResponse } from "http";
 import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./_kv";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
@@ -27,12 +28,16 @@ export const config = { runtime: "nodejs" };
 /** Maximum snapshot age (in seconds) before client should treat it as stale */
 const MAX_AGE_SECONDS = 15 * 60; // 15 minutes
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== "GET") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+function json(res: ServerResponse, status: number, body: unknown, extra?: Record<string, string>) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  if (extra) Object.entries(extra).forEach(([k, v]) => res.setHeader(k, v));
+  res.end(JSON.stringify(body));
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  if (req.method !== "GET") {
+    return json(res, 405, { error: "Method not allowed" });
   }
 
   let kv;
@@ -43,32 +48,14 @@ export default async function handler(request: Request): Promise<Response> {
   }
 
   if (!kv) {
-    return new Response(
-      JSON.stringify({ error: "KV not configured" }),
-      {
-        status: 503,
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store",
-        },
-      }
-    );
+    return json(res, 503, { error: "KV not configured" }, { "Cache-Control": "no-store" });
   }
 
   try {
     const raw = await kv.get(KV_SNAPSHOT_KEY);
 
     if (!raw) {
-      return new Response(
-        JSON.stringify({ error: "No snapshot available" }),
-        {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store",
-          },
-        }
-      );
+      return json(res, 404, { error: "No snapshot available" }, { "Cache-Control": "no-store" });
     }
 
     // Parse the snapshot (stored as JSON string)
@@ -76,33 +63,12 @@ export default async function handler(request: Request): Promise<Response> {
     const snapshotTime = new Date(snapshot.timestamp).getTime();
     const ageSeconds = Math.floor((Date.now() - snapshotTime) / 1000);
 
-    return new Response(
-      JSON.stringify({
-        ...snapshot,
-        age: ageSeconds,
-        stale: ageSeconds > MAX_AGE_SECONDS,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          // Cache at Edge for 60s — reduces KV reads
-          "Cache-Control": "s-maxage=60, stale-while-revalidate=30",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return json(res, 200, { ...snapshot, age: ageSeconds, stale: ageSeconds > MAX_AGE_SECONDS }, {
+      "Cache-Control": "s-maxage=60, stale-while-revalidate=30",
+      "Access-Control-Allow-Origin": "*",
+    });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "KV read failed", detail: String(err) }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store",
-        },
-      }
-    );
+    return json(res, 500, { error: "KV read failed", detail: String(err) }, { "Cache-Control": "no-store" });
   } finally {
     await disconnectKv();
   }

@@ -16,6 +16,7 @@
  * Schedule: "0 13 * * 1-5" (Mon-Fri 9 AM ET = 1 PM UTC)
  */
 
+import type { IncomingMessage, ServerResponse } from "http";
 import { getKv, disconnectKv, KV_SNAPSHOT_KEY, KV_SNAPSHOT_TTL } from "../_kv";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
@@ -34,22 +35,23 @@ export interface MarketSnapshot {
   errors: string[];
 }
 
-export default async function handler(request: Request): Promise<Response> {
+function json(res: ServerResponse, status: number, body: unknown, extra?: Record<string, string>) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  if (extra) Object.entries(extra).forEach(([k, v]) => res.setHeader(k, v));
+  res.end(JSON.stringify(body));
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   // Verify this is called by Vercel Cron (Authorization header)
-  const authHeader = request.headers.get("authorization");
+  const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json(res, 401, { error: "Unauthorized" });
   }
 
   const apiKey = process.env.YH_FINANCE_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: "API key not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return json(res, 500, { error: "API key not configured" });
   }
 
   const headers = {
@@ -115,15 +117,7 @@ export default async function handler(request: Request): Promise<Response> {
     await disconnectKv();
   }
 
-  return new Response(
-    JSON.stringify({ ...snapshot, kvWritten }),
-    {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        // Also cache at the Edge as a fallback
-        "Cache-Control": "s-maxage=900, stale-while-revalidate=600",
-      },
-    }
-  );
+  return json(res, 200, { ...snapshot, kvWritten }, {
+    "Cache-Control": "s-maxage=900, stale-while-revalidate=600",
+  });
 }
