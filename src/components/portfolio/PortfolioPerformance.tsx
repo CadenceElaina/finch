@@ -8,11 +8,12 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
-import { FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
+import { FaSortUp, FaSortDown, FaSort, FaTimes } from "react-icons/fa";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
   portfolio: Portfolio;
+  onRemoveSecurity?: (symbol: string) => void;
 }
 
 interface SecurityDetail {
@@ -28,13 +29,16 @@ interface SecurityDetail {
   totalGainPct: number;
   dayChange: number;
   dayChangePct: number;
+  holdingPeriodDays: number;
+  holdingPeriodReturn: number;
 }
 
-type PortfolioSortField = "symbol" | "name" | "quantity" | "purchasePrice" | "purchaseDate" | "currentPrice" | "dayChange" | "totalGain" | "totalGainPct";
+type PortfolioSortField = "symbol" | "name" | "quantity" | "purchasePrice" | "purchaseDate" | "currentPrice" | "dayChange" | "totalGain" | "totalGainPct" | "holdingPeriodReturn";
 type SortDir = "asc" | "desc";
 
 const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   portfolio,
+  onRemoveSecurity,
 }) => {
   //const [symbols, setSymbols] = useState<string[]>([]);
   const [securityDetails, setSecurityDetails] = useState<SecurityDetail[]>([]);
@@ -100,6 +104,11 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       const currentValue = currentPrice * sec.quantity;
       const totalGain = currentValue - costBasis;
       const totalGainPct = costBasis > 0 ? (totalGain / costBasis) * 100 : 0;
+      // Holding period return
+      const purchaseMs = sec.purchaseDate ? new Date(sec.purchaseDate).getTime() : Date.now();
+      const holdingPeriodDays = Math.max(1, Math.round((Date.now() - purchaseMs) / 86_400_000));
+      const holdingPeriodReturn = costBasis > 0 ? (totalGain / costBasis) * 100 : 0;
+
       return {
         symbol: sec.symbol.toUpperCase(),
         name: q?.name ?? "",
@@ -113,6 +122,8 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         totalGainPct,
         dayChange: (q?.priceChange ?? 0) * sec.quantity,
         dayChangePct: q?.percentChange ?? 0,
+        holdingPeriodDays,
+        holdingPeriodReturn,
       };
     });
     setSecurityDetails(details);
@@ -257,6 +268,8 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                 <th className="sortable-th" onClick={() => handleSort("dayChange")}>Day Chg <PSortIcon field="dayChange" /></th>
                 <th className="sortable-th" onClick={() => handleSort("totalGain")}>Total Gain <PSortIcon field="totalGain" /></th>
                 <th className="sortable-th" onClick={() => handleSort("totalGainPct")}>Total % <PSortIcon field="totalGainPct" /></th>
+                <th className="sortable-th" onClick={() => handleSort("holdingPeriodReturn")}>HPR <PSortIcon field="holdingPeriodReturn" /></th>
+                {onRemoveSecurity && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -277,6 +290,20 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                   <td className={gainClass(d.totalGainPct)}>
                     {d.totalGainPct >= 0 ? "+" : ""}{d.totalGainPct.toFixed(2)}%
                   </td>
+                  <td className={gainClass(d.holdingPeriodReturn)} title={`${d.holdingPeriodDays}d held`}>
+                    {d.holdingPeriodReturn >= 0 ? "+" : ""}{d.holdingPeriodReturn.toFixed(2)}%
+                  </td>
+                  {onRemoveSecurity && (
+                    <td>
+                      <button
+                        className="security-remove-btn"
+                        title={`Remove ${d.symbol}`}
+                        onClick={() => onRemoveSecurity(d.symbol.toLowerCase())}
+                      >
+                        <FaTimes size={14} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
