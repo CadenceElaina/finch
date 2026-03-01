@@ -122,11 +122,9 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   if (rows.length === 0) {
     return (
-      <div
-        className="portfolio-performance-container"
-        style={{ padding: "1rem", color: "var(--text-secondary, #999)" }}
-      >
-        No securities in this watchlist yet.
+      <div className="empty-state" style={{ marginTop: "1rem" }}>
+        <p className="empty-state-text">No securities in this watchlist yet</p>
+        <p className="empty-state-subtext">Add symbols to track their price, change, and trends</p>
       </div>
     );
   }
