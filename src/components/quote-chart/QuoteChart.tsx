@@ -15,6 +15,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ENDPOINTS, yhFetch } from "../../config/api";
 import { formatTime, formatXAxis } from "./QuoteChartUtils";
 import { queryClient } from "./quoteQueryClient";
+import { isDemoActive } from "../../data/demo/demoState";
+import { getDemoChartData } from "../../data/demo/charts";
 import "./QuoteChart.css";
 
 type ChartData = {
@@ -72,6 +74,13 @@ const QuoteChart: React.FC<{
       return { chartData: cachedChartData };
     }
 
+    // Return demo data when API is unavailable
+    if (isDemoActive()) {
+      const demoData = getDemoChartData(symbol.replace("^", ""), period);
+      queryClient.setQueryData(chartQueryKey, demoData);
+      return { chartData: demoData };
+    }
+
     const { interval: apiInterval, limit } = periodToParams(period);
 
     try {
@@ -118,9 +127,24 @@ const QuoteChart: React.FC<{
     gcTime: ENDPOINTS.history.cache.gc,
   });
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error fetching data</div>;
-  if (!data?.chartData) return <div>No chart data available</div>;
+  if (isLoading)
+    return (
+      <div className="chart-quote chart-placeholder">
+        <div className="chart-loading-shimmer" />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="chart-quote chart-placeholder">
+        <span>Unable to load chart data</span>
+      </div>
+    );
+  if (!data?.chartData)
+    return (
+      <div className="chart-quote chart-placeholder">
+        <span>No chart data available</span>
+      </div>
+    );
 
   const uniqueDaysSet = new Set();
   const uniqueYearsSet = new Set();
