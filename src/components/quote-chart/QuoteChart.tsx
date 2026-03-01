@@ -12,7 +12,7 @@ import {
   ComposedChart,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
-import { ENDPOINTS, yhFetch } from "../../config/api";
+import { ENDPOINTS, yhFetch, getQuoteRefreshInterval } from "../../config/api";
 import { formatTime, formatXAxis } from "./QuoteChartUtils";
 import { queryClient } from "./quoteQueryClient";
 import { isDemoActive } from "../../data/demo/demoState";
@@ -125,6 +125,9 @@ const QuoteChart: React.FC<{
     queryFn: () => fetchChartData(symbol, period),
     staleTime: ENDPOINTS.history.cache.stale,
     gcTime: ENDPOINTS.history.cache.gc,
+    // Only poll intraday charts when market is open
+    refetchInterval: period === "1D" ? getQuoteRefreshInterval() : false,
+    refetchIntervalInBackground: false,
   });
 
   if (isLoading)
