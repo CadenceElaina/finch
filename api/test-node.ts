@@ -1,35 +1,29 @@
-// Node.js runtime test — with Redis connection
+// Node.js runtime test — import from _kv module
 export const config = { runtime: "nodejs" };
 
 import type { IncomingMessage, ServerResponse } from "http";
-import Redis from "ioredis";
+import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./_kv";
 
 export default async function handler(_req: IncomingMessage, res: ServerResponse) {
   res.setHeader("Content-Type", "application/json");
 
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: "No REDIS_URL" }));
-    return;
-  }
-
-  let client: Redis | null = null;
   try {
-    client = new Redis(url, {
-      maxRetriesPerRequest: 1,
-      connectTimeout: 5000,
-      lazyConnect: true,
-    });
-    await client.connect();
-    await client.set("test:ping", "pong", "EX", 60);
-    const val = await client.get("test:ping");
+    const kv = await getKv();
+    if (!kv) {
+      res.statusCode = 503;
+      res.end(JSON.stringify({ error: "KV not configured" }));
+      return;
+    }
+
+    await kv.set("test:ping", "pong", "EX", 60);
+    const val = await kv.get("test:ping");
+    const snapshot = await kv.get(KV_SNAPSHOT_KEY);
     res.statusCode = 200;
-    res.end(JSON.stringify({ ok: true, redis: "connected", testValue: val }));
+    res.end(JSON.stringify({ ok: true, testValue: val, hasSnapshot: !!snapshot }));
   } catch (err: unknown) {
     res.statusCode = 500;
-    res.end(JSON.stringify({ error: "Redis failed", detail: String(err) }));
+    res.end(JSON.stringify({ error: "Failed", detail: String(err) }));
   } finally {
-    if (client) await client.quit().catch(() => {});
+    await disconnectKv();
   }
 }
