@@ -25,7 +25,6 @@
 }
 
 .chip {
-  padding: 1rem;
   flex: 1;
   cursor: pointer;
   border: 1px solid var(--border);

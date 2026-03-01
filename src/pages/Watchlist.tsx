@@ -2,36 +2,47 @@ import Layout from "../components/layout/Layout";
 import Footer from "../components/Footer";
 import { useWatchlists } from "../context/WatchlistContext";
 import { Link } from "react-router-dom";
+import { FaChevronRight } from "react-icons/fa";
+import "./Watchlist.css";
 
 const Watchlist = () => {
   const { watchlists } = useWatchlists();
 
   return (
     <Layout>
-      <div className="content-wrapper">
-        <div
-          role="heading"
-          style={{ fontSize: "1.5rem", fontWeight: 600, padding: "1rem 0" }}
-        >
-          Your Watchlists
-        </div>
+      <div className="watchlist-page">
+        <h1 className="watchlist-page-heading">Your Watchlists</h1>
+
         {watchlists.length === 0 ? (
-          <p style={{ color: "var(--text-secondary, #999)" }}>
-            You don't have any watchlists yet. Create one from the sidebar.
-          </p>
+          <div className="watchlist-empty">
+            <p className="watchlist-empty-text">
+              You don't have any watchlists yet.
+            </p>
+            <p className="watchlist-empty-hint">
+              Create one from the sidebar to start tracking stocks.
+            </p>
+          </div>
         ) : (
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {watchlists.map((w) => (
-              <li key={w.id} style={{ padding: "0.5rem 0" }}>
+          <div className="watchlist-list">
+            {watchlists.map((w) => {
+              const count = w.securities?.length ?? 0;
+              return (
                 <Link
-                  to={`/portfolio/${w.id}`}
-                  style={{ color: "var(--text-primary, #e0e0e0)" }}
+                  key={w.id}
+                  to={`/watchlist/${w.id}`}
+                  className="watchlist-card"
                 >
-                  {w.title} ({w.securities?.length ?? 0} securities)
+                  <div className="watchlist-card-info">
+                    <span className="watchlist-card-title">{w.title}</span>
+                    <span className="watchlist-card-meta">
+                      {count} {count === 1 ? "security" : "securities"}
+                    </span>
+                  </div>
+                  <FaChevronRight className="watchlist-card-arrow" />
                 </Link>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
         )}
       </div>
       <Footer />

@@ -335,9 +335,13 @@ export const getQuotePageData = async (
           region: "US",
         });
 
+        const d = profileRes.data ?? {};
+
+        // /stock/v3/get-profile returns flat keys: summaryProfile, financialData, etc.
         const profile =
-          profileRes.data?.quoteSummary?.result?.[0]?.assetProfile ??
-          profileRes.data?.assetProfile;
+          d.quoteSummary?.result?.[0]?.assetProfile ??
+          d.summaryProfile ??
+          d.assetProfile;
         if (profile) {
           // Extract CEO from companyOfficers array
           const officers = profile.companyOfficers ?? [];
@@ -352,25 +356,27 @@ export const getQuotePageData = async (
             website: profile.website ?? "",
             headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
             employees: profile.fullTimeEmployees
-              ? `${profile.fullTimeEmployees}`
+              ? `${profile.fullTimeEmployees.toLocaleString()}`
               : "",
             ceo: ceoEntry?.name ?? "",
           };
         }
 
         const fin =
-          profileRes.data?.quoteSummary?.result?.[0]?.financialData ??
-          profileRes.data?.financialData;
+          d.quoteSummary?.result?.[0]?.financialData ??
+          d.financialData;
+        // netIncomeToCommon lives in defaultKeyStatistics, not financialData
+        const keyStats = d.quoteSummary?.result?.[0]?.defaultKeyStatistics ?? d.defaultKeyStatistics;
         if (fin) {
           quoteFinancialData = {
             annualRevenue: fin.totalRevenue?.fmt ?? "",
-            netIncome: fin.netIncomeToCommon?.fmt ?? "",
-            netProfitMargin: fin.profitMargins?.fmt ?? "",
+            netIncome: keyStats?.netIncomeToCommon?.fmt ?? fin.netIncomeToCommon?.fmt ?? "",
+            netProfitMargin: fin.profitMargins?.fmt ?? keyStats?.profitMargins?.fmt ?? "",
             ebitda: fin.ebitda?.fmt ?? "",
           };
         }
-      } catch {
-        // Profile call failed — keep empty defaults
+      } catch (err) {
+        console.warn(`[Finch] Profile fetch failed for ${symbol}:`, err);
       }
     }
 
@@ -381,7 +387,12 @@ export const getQuotePageData = async (
       quoteFinancialData,
     };
     queryClient.setQueryData(["quotePageData", symbol], quotePageData);
-    cacheStorage.set(`quotePageData_${symbol}`, quotePageData);
+    // Only persist to localStorage if we got meaningful profile data
+    // (avoids caching empty about/financial data from a failed profile fetch)
+    const hasProfileData = quoteSidebarAboutData.summary || quoteFinancialData.annualRevenue;
+    if (hasProfileData) {
+      cacheStorage.set(`quotePageData_${symbol}`, quotePageData);
+    }
     return quotePageData;
   } catch (error) {
     return null;

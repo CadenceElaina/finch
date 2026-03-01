@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Exchange, IndexCard } from "./types";
 import IndexCards from "./IndexCards";
 import "./markets.css";
@@ -17,14 +17,12 @@ const Markets = () => {
   const [currExchange, setCurrExchange] = useState(Exchange.US);
   const [fetchError, setFetchError] = useState(false);
   const { newsData } = useNews();
-  // Generate 9 random articles
-  const numRandomArticles = 1;
-  const randomIndexes = Array.from(
-    { length: Math.min(numRandomArticles, newsData.length) },
-    () => Math.floor(Math.random() * newsData.length)
-  );
-  // Get the selected random articles from newsData
-  const randomArticles = randomIndexes.map((index) => newsData[index]);
+
+  // Pick a stable random article (only changes when newsData array changes)
+  const spotlightArticle = useMemo(() => {
+    if (!newsData.length) return null;
+    return newsData[Math.floor(Math.random() * newsData.length)];
+  }, [newsData.length]);
   const symbolsUS = ["^DJI", "^GSPC", "^IXIC", "^RUT", "^VIX"];
   const symbolsEUR = ["^GDAXI", "^FTSE", " ^IBEX"];
   const symbolsASIA = ["^N225", "^HSI", "^BSESN"];
@@ -85,7 +83,7 @@ const Markets = () => {
   return (
     <>
       <div className="markets-container">
-        <div className="compare-markets">Compare Markets - </div>
+        <div className="compare-markets">Compare Markets</div>
         <div className="exchange-chips">
           {Object.values(Exchange).map((exchangeType) => (
             <div
@@ -98,23 +96,23 @@ const Markets = () => {
               {exchangeType}
             </div>
           ))}
-        </div>{" "}
+        </div>
         <div className="markets-article">
-          {randomArticles[0] && (
+          {spotlightArticle && (
             <>
               <div className="markets-article-link">
                 <a
-                  href={randomArticles[0].link}
+                  href={spotlightArticle.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="linkToArticle"
                 >
-                  {randomArticles[0].title}
+                  {spotlightArticle.title}
                 </a>
               </div>
               <div className="markets-article-source">
-                {randomArticles[0].source}{" "}
-                {randomArticles[0].time}
+                {spotlightArticle.source}{" "}
+                {spotlightArticle.time}
               </div>
             </>
           )}

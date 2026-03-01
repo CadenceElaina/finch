@@ -1,12 +1,21 @@
+import { useState } from "react";
 import Layout from "../components/layout/Layout";
 import Footer from "../components/Footer";
 import { useDemoMode } from "../context/DemoModeContext";
 import { useAi } from "../context/AiContext";
+import { usePortfolios } from "../context/PortfoliosContext";
+import { useWatchlists } from "../context/WatchlistContext";
 import "./Settings.css";
+
+const APP_VERSION = "0.10.0";
+const CACHE_PREFIX = "finch_cache_";
 
 const Settings = () => {
   const { isDemoMode, exitDemoMode, enterDemoMode } = useDemoMode();
   const { creditsRemaining, maxCredits, configured } = useAi();
+  const { portfolios } = usePortfolios();
+  const { watchlists } = useWatchlists();
+  const [cacheCleared, setCacheCleared] = useState(false);
 
   const handleDemoToggle = () => {
     if (isDemoMode) {
@@ -19,6 +28,29 @@ const Settings = () => {
     // new demo/live flag.  Short delay lets the localStorage write flush first.
     setTimeout(() => window.location.assign("/"), 150);
   };
+
+  const handleClearCache = () => {
+    // Remove all finch_cache_ keys (API caches), preserve portfolios/watchlists/preferences
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_PREFIX)) keysToRemove.push(key);
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    setCacheCleared(true);
+    setTimeout(() => setCacheCleared(false), 3000);
+  };
+
+  const storageStats = () => {
+    let cacheEntries = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_PREFIX)) cacheEntries++;
+    }
+    return { cacheEntries, portfolios: portfolios.length, watchlists: watchlists.length };
+  };
+
+  const stats = storageStats();
 
   return (
     <Layout>
@@ -66,6 +98,37 @@ const Settings = () => {
           </section>
         )}
 
+        {/* Storage & Cache */}
+        <section className="settings-section">
+          <div className="settings-section-title">Storage</div>
+          <div className="settings-row">
+            <div className="settings-row-info">
+              <div className="settings-row-label">Local Data</div>
+              <div className="settings-row-desc">
+                {stats.portfolios} portfolio{stats.portfolios !== 1 ? "s" : ""},{" "}
+                {stats.watchlists} watchlist{stats.watchlists !== 1 ? "s" : ""},{" "}
+                {stats.cacheEntries} cached API response{stats.cacheEntries !== 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+          <div className="settings-row">
+            <div className="settings-row-info">
+              <div className="settings-row-label">Clear API Cache</div>
+              <div className="settings-row-desc">
+                Remove cached market data to force fresh API calls. Your portfolios
+                and watchlists are preserved.
+              </div>
+            </div>
+            <button
+              className="settings-action-btn"
+              onClick={handleClearCache}
+              disabled={cacheCleared}
+            >
+              {cacheCleared ? "Cleared ✓" : "Clear"}
+            </button>
+          </div>
+        </section>
+
         {/* About */}
         <section className="settings-section">
           <div className="settings-section-title">About</div>
@@ -77,6 +140,7 @@ const Settings = () => {
                 React, TypeScript, and Gemini AI.
               </div>
             </div>
+            <div className="settings-version-pill">v{APP_VERSION}</div>
           </div>
           <div className="settings-row">
             <div className="settings-row-info">
