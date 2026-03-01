@@ -17,6 +17,7 @@ const Search = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [fetchDataClicked, setFetchDataClicked] =
     React.useState<boolean>(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
 
   const queryClient = useQueryClient(); // Step 2
 
@@ -230,6 +231,7 @@ const Search = () => {
   const handleChange = (e: { target: { value: string } }) => {
     setIsTyping(true);
     setSearchInput(e.target.value.toLowerCase());
+    setActiveIndex(-1);
   };
 
   const handleClick = () => {
@@ -248,8 +250,35 @@ const Search = () => {
   };
 
   //If enter is pressed while search-input is focused we get quote for current input
-  const handleKeyDown = (e: { key: string }) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setShowDropdown(false);
+      setActiveIndex(-1);
+      return;
+    }
+
+    // Collect all visible result symbols for arrow-key navigation
+    const allResults = getVisibleResults();
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setShowDropdown(true);
+      setActiveIndex((prev) => Math.min(prev + 1, allResults.length - 1));
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.max(prev - 1, -1));
+      return;
+    }
+
     if (e.key === "Enter") {
+      // If an option is highlighted via arrow keys, navigate to it
+      if (activeIndex >= 0 && allResults[activeIndex]) {
+        handleClickQuote(allResults[activeIndex]);
+        return;
+      }
       setSearchedQuote(searchInput);
       setFetchDataClicked(true);
       setShowDropdown(true);
@@ -260,6 +289,17 @@ const Search = () => {
         quoteQuery.refetch();
       }
     }
+  };
+
+  /** Returns an ordered list of symbols currently visible in the dropdown. */
+  const getVisibleResults = (): string[] => {
+    if (quoteQuery.data && quoteQuery.data.length >= 1) {
+      return quoteQuery.data.map((q) => q.symbol);
+    }
+    if (bestMatchesQuery.data) {
+      return bestMatchesQuery.data.map((r) => r.symbol);
+    }
+    return [];
   };
 
   const handleClickQuote = (quote: string) => {
@@ -273,32 +313,41 @@ const Search = () => {
   };
 
   const renderQuoteResults = () => {
+    let optionIndex = 0;
+
     const renderRow = (
       quote: quoteType,
       matches: suggestionType[] | undefined
-    ) => (
-      <div
-        key={quote.symbol}
-        className="quote-row"
-        onClick={() => handleClickQuote(quote.symbol)}
-      >
-        <div className="left-column">
-          <div className="stock-name">{quote.name}</div>
-          <div className="stock-details">{`${quote.symbol} :  ${
-            matches ? matches[0]?.region : ""
-          }`}</div>
+    ) => {
+      const currentIndex = optionIndex++;
+      return (
+        <div
+          key={quote.symbol}
+          id={`search-option-${currentIndex}`}
+          role="option"
+          tabIndex={-1}
+          aria-selected={currentIndex === activeIndex}
+          className={`quote-row${currentIndex === activeIndex ? " active" : ""}`}
+          onClick={() => handleClickQuote(quote.symbol)}
+        >
+          <div className="left-column">
+            <div className="stock-name">{quote.name}</div>
+            <div className="stock-details">{`${quote.symbol} :  ${
+              matches ? matches[0]?.region : ""
+            }`}</div>
+          </div>
+          <div className="right-column">
+            <div className="price">{quote.price}</div>
+            <div className="price-change">{`${quote.priceChange > 0 ? "+" : ""}${
+              quote.priceChange
+            }`}</div>
+            <div className="percent-change">{`${
+              quote.percentChange > 0 ? "+" : ""
+            }${quote.percentChange}%`}</div>
+          </div>
         </div>
-        <div className="right-column">
-          <div className="price">{quote.price}</div>
-          <div className="price-change">{`${quote.priceChange > 0 ? "+" : ""}${
-            quote.priceChange
-          }`}</div>
-          <div className="percent-change">{`${
-            quote.percentChange > 0 ? "+" : ""
-          }${quote.percentChange}%`}</div>
-        </div>
-      </div>
-    );
+      );
+    };
 
     if (quoteQuery.data && quoteQuery.data.length === 1) {
       // Display single result
@@ -307,6 +356,8 @@ const Search = () => {
       return (
         <div
           className="result-container"
+          role="listbox"
+          id="search-listbox"
           onClick={() => handleClickQuote(result.symbol)}
         >
           {renderRow(result, bestMatchesQuery.data)}
@@ -319,7 +370,7 @@ const Search = () => {
     ) {
       // Display multiple results
       return (
-        <div className="result-container">
+        <div className="result-container" role="listbox" id="search-listbox">
           {quoteQuery.data.map((quote) =>
             renderRow(quote, bestMatchesQuery.data)
           )}
@@ -328,30 +379,45 @@ const Search = () => {
     } else if (bestMatchesQuery.data) {
       // Display bestMatchesQuery results
       return (
-        <div className="result-container">
-          {bestMatchesQuery.data.map((result) => (
-            <div
-              key={result.symbol}
-              className="quote-row"
-              onClick={() => handleClickQuote(result.symbol)}
-            >
-              <div className="left-column">
-                <div className="stock-name">{result.name}</div>
-                <div className="stock-details">{`${result.symbol} : ${result.region}`}</div>
+        <div className="result-container" role="listbox" id="search-listbox">
+          {bestMatchesQuery.data.map((result) => {
+            const currentIndex = optionIndex++;
+            return (
+              <div
+                key={result.symbol}
+                id={`search-option-${currentIndex}`}
+                role="option"
+                tabIndex={-1}
+                aria-selected={currentIndex === activeIndex}
+                className={`quote-row${currentIndex === activeIndex ? " active" : ""}`}
+                onClick={() => handleClickQuote(result.symbol)}
+              >
+                <div className="left-column">
+                  <div className="stock-name">{result.name}</div>
+                  <div className="stock-details">{`${result.symbol} : ${result.region}`}</div>
+                </div>
               </div>
-              {/* You can decide if you want to display price, price change, percent change for best matches */}
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
 
-    return null; // Return null if there are no results
+    // Show "no results" when search completed but nothing found
+    if (searchInput.trim().length > 0 && !bestMatchesQuery.isLoading && !quoteQuery.isLoading) {
+      return (
+        <div className="result-container">
+          <div className="no-results">No results found for "{searchInput}"</div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
     <>
-      <div className="app-container">
+      <div className="app-container" role="search">
         <div className="search-container" ref={inputRef}>
           <input
             className="search-input"
@@ -360,8 +426,21 @@ const Search = () => {
             onClick={handleInputClick}
             onKeyDown={handleKeyDown}
             placeholder="Search for stocks..."
+            role="combobox"
+            aria-label="Search for stocks"
+            aria-expanded={showDropdown}
+            aria-autocomplete="list"
+            aria-controls={showDropdown ? "search-listbox" : undefined}
+            aria-activedescendant={
+              activeIndex >= 0 ? `search-option-${activeIndex}` : undefined
+            }
+            autoComplete="off"
           />
-          <button className="search-button" onClick={handleClick}>
+          <button
+            className="search-button"
+            onClick={handleClick}
+            aria-label="Search"
+          >
             Search
           </button>
         </div>

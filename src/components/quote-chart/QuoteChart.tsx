@@ -140,6 +140,21 @@ const QuoteChart: React.FC<{
     return (
       <div className="chart-quote chart-placeholder">
         <span>Unable to load chart data</span>
+        <button
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["chartData", symbol, period] })}
+          style={{
+            marginTop: 8,
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.7)",
+            borderRadius: 6,
+            padding: "4px 14px",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+          }}
+        >
+          Retry
+        </button>
       </div>
     );
   if (!data?.chartData)

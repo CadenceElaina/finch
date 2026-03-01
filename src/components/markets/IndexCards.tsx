@@ -2,14 +2,43 @@ import React from "react";
 import { IndexCardProps, IndexCard, Exchange } from "./types";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import ErrorState from "../ErrorState";
 
-const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange }) => {
+const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError }) => {
   const isIndex = true;
+  const filteredCards = cards.filter((card: IndexCard) => card.exchange === currExchange);
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="index-cards-inner">
+        <ErrorState
+          message="Unable to load market data."
+          onRetry={() => window.location.reload()}
+          compact
+        />
+      </div>
+    );
+  }
+
+  // Loading skeleton when no cards yet
+  if (filteredCards.length === 0) {
+    return (
+      <div className="index-cards-inner">
+        {Array.from({ length: currExchange === "Currencies" ? 4 : 5 }).map((_, i) => (
+          <div key={i} className="index-card-skeleton">
+            <div className="skeleton-bar sm" />
+            <div className="skeleton-bar lg" />
+            <div className="skeleton-bar md" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="index-cards-inner">
-      {cards
-        .filter((card: IndexCard) => card.exchange === currExchange)
+      {filteredCards
         .map((card: IndexCard) => {
           // Create a variable for the symbol
           let symbol = card.symbol;

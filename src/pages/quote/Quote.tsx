@@ -20,6 +20,9 @@ import { ENDPOINTS, getQuoteRefreshInterval } from "../../config/api";
 import { IoAddSharp } from "react-icons/io5";
 import { CiShare2 } from "react-icons/ci";
 import { isHoliday } from "./quoteUtils";
+import { formatCurrency, formatPriceChange } from "../../utils/format";
+import Skeleton from "@mui/material/Skeleton";
+import ErrorState from "../../components/ErrorState";
 
 interface QuoteProps {
   symbol?: string;
@@ -62,7 +65,7 @@ const Quote: React.FC<QuoteProps> = () => {
     setSelectedInterval(interval);
   };
 
-  const { data: quotePageData } = useQuery({
+  const { data: quotePageData, isLoading, isError, refetch } = useQuery({
     queryKey: ["quotePageData", symbol],
     queryFn: () =>
       getQuotePageData(queryClient, symbol || "", state[0] || false),
@@ -134,6 +137,57 @@ const Quote: React.FC<QuoteProps> = () => {
   };
 
   // If it's a direct link from an index card, update the symbol from the state
+  if (isLoading && !quotePageData) {
+    return (
+      <div>
+        <Layout>
+          <div className="quote-top-container">
+            <div className="quote-links">
+              <Link to={"/"}>HOME</Link>
+              <FaAngleRight className="quote-arrow" />
+              <div>{symbol}</div>
+            </div>
+            <Skeleton variant="text" width={280} height={36} sx={{ bgcolor: 'rgba(255,255,255,0.06)' }} />
+          </div>
+          <div className="quote-container">
+            <div className="quote-main-column">
+              <Skeleton variant="text" width={180} height={48} sx={{ bgcolor: 'rgba(255,255,255,0.06)' }} />
+              <Skeleton variant="text" width={120} height={24} sx={{ bgcolor: 'rgba(255,255,255,0.06)' }} />
+              <Skeleton variant="rectangular" width="100%" height={400} sx={{ bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '8px', mt: 2 }} />
+            </div>
+            <div className="quote-side-column">
+              <div className="quote-right-info">
+                <Skeleton variant="rectangular" width="100%" height={300} sx={{ bgcolor: 'rgba(255,255,255,0.06)', borderRadius: '8px' }} />
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <Layout>
+          <div className="quote-top-container">
+            <div className="quote-links">
+              <Link to={"/"}>HOME</Link>
+              <FaAngleRight className="quote-arrow" />
+              <div>{symbol}</div>
+            </div>
+          </div>
+          <div className="quote-container">
+            <ErrorState
+              message={`Unable to load data for ${symbol}.`}
+              onRetry={() => refetch()}
+            />
+          </div>
+        </Layout>
+      </div>
+    );
+  }
+
   if (isIndex === true) {
     // ... (rest of the component remains unchanged)
     return (
@@ -166,9 +220,9 @@ const Quote: React.FC<QuoteProps> = () => {
                         : "quote-price-negative"
                     }
                   >
-                    ${quoteData?.price}
-                  </div>
-                  <div
+{formatCurrency(quoteData?.price)}
+                </div>
+                <div
                     className={
                       quoteData?.percentChange !== undefined &&
                       quoteData.percentChange >= 0
@@ -184,7 +238,7 @@ const Quote: React.FC<QuoteProps> = () => {
                     )}
 
                     {quoteData?.percentChange !== undefined
-                      ? `${quoteData.percentChange.toFixed(2)}%`
+                      ? `${Math.abs(quoteData.percentChange).toFixed(2)}%`
                       : ""}
                   </div>
                   <div
@@ -195,11 +249,7 @@ const Quote: React.FC<QuoteProps> = () => {
                         : "quote-price-change-negative"
                     }
                   >
-                    {quoteData?.priceChange !== undefined
-                      ? quoteData.priceChange > 0
-                        ? `+${quoteData.priceChange}`
-                        : quoteData.priceChange
-                      : ""}
+                    {formatPriceChange(quoteData?.priceChange)}
                   </div>
                   <div
                     className={
@@ -282,7 +332,7 @@ const Quote: React.FC<QuoteProps> = () => {
                       : "quote-price-negative"
                   }
                 >
-                  ${quoteData?.price}
+                  {formatCurrency(quoteData?.price)}
                 </div>
                 <div
                   className={
@@ -300,7 +350,7 @@ const Quote: React.FC<QuoteProps> = () => {
                   )}
 
                   {quoteData?.percentChange !== undefined
-                    ? `${quoteData.percentChange.toFixed(2)}%`
+                    ? `${Math.abs(quoteData.percentChange).toFixed(2)}%`
                     : ""}
                 </div>
                 <div
@@ -311,11 +361,7 @@ const Quote: React.FC<QuoteProps> = () => {
                       : "quote-price-change-negative"
                   }
                 >
-                  {quoteData?.priceChange !== undefined
-                    ? quoteData.priceChange > 0
-                      ? `+${quoteData.priceChange}`
-                      : quoteData.priceChange
-                    : ""}
+                  {formatPriceChange(quoteData?.priceChange)}
                 </div>
                 <div
                   className={
