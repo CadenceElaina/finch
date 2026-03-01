@@ -21,7 +21,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
         style={{
           padding: "1rem 0",
           textAlign: "center",
-          color: "var(--text-secondary, rgba(255,255,255,0.5))",
+          color: "var(--text-secondary)",
           fontSize: "0.85rem",
         }}
       >
@@ -30,9 +30,9 @@ const ErrorState: React.FC<ErrorStateProps> = ({
           <button
             onClick={onRetry}
             style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "rgba(255,255,255,0.7)",
+              background: "var(--bg-hover)",
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-secondary)",
               borderRadius: "6px",
               padding: "4px 14px",
               fontSize: "0.8rem",
@@ -40,10 +40,10 @@ const ErrorState: React.FC<ErrorStateProps> = ({
               transition: "background 0.15s",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.14)")
+              (e.currentTarget.style.background = "var(--bg-tertiary)")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.08)")
+              (e.currentTarget.style.background = "var(--bg-hover)")
             }
           >
             Retry
@@ -62,7 +62,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
         justifyContent: "center",
         padding: "2rem 1rem",
         textAlign: "center",
-        color: "var(--text-secondary, rgba(255,255,255,0.5))",
+        color: "var(--text-secondary)",
       }}
     >
       <svg
@@ -85,9 +85,9 @@ const ErrorState: React.FC<ErrorStateProps> = ({
         <button
           onClick={onRetry}
           style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            color: "rgba(255,255,255,0.7)",
+            background: "var(--bg-hover)",
+            border: "1px solid var(--border-strong)",
+            color: "var(--text-secondary)",
             borderRadius: "8px",
             padding: "6px 20px",
             fontSize: "0.85rem",
@@ -95,10 +95,10 @@ const ErrorState: React.FC<ErrorStateProps> = ({
             transition: "background 0.15s",
           }}
           onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.14)")
+            (e.currentTarget.style.background = "var(--bg-tertiary)")
           }
           onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.08)")
+            (e.currentTarget.style.background = "var(--bg-hover)")
           }
         >
           Try again

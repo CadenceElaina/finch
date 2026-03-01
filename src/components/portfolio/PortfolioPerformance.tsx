@@ -314,8 +314,8 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                     `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                     name,
                   ]}
-                  contentStyle={{ background: "#1e1e1e", border: "1px solid #444", borderRadius: 8, fontSize: "0.85rem" }}
-                  itemStyle={{ color: "#fff" }}
+                  contentStyle={{ background: "var(--bg-elevated)", border: "1px solid var(--border-strong)", borderRadius: 8, fontSize: "0.85rem" }}
+                  itemStyle={{ color: "var(--text-primary)" }}
                 />
               </PieChart>
             </ResponsiveContainer>

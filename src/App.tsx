@@ -33,7 +33,7 @@ const NotFound = () => (
     <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
       <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>404</h1>
       <p style={{ marginBottom: "1.5rem" }}>Page not found</p>
-      <Link to="/" style={{ color: "#1a73e8" }}>Go home</Link>
+      <Link to="/" style={{ color: "var(--accent)" }}>Go home</Link>
     </div>
   </Layout>
 );

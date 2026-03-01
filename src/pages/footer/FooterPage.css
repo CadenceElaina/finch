@@ -15,7 +15,7 @@
 
 .footer-page .page-subtitle {
   font-size: 0.85rem;
-  color: var(--text-tertiary));
+  color: var(--text-tertiary);
   margin-bottom: 2rem;
 }
 
@@ -29,7 +29,7 @@
 
 .footer-page p {
   font-size: 0.92rem;
-  color: var(--text-secondary));
+  color: var(--text-secondary);
   line-height: 1.65;
   margin-bottom: 1rem;
 }
@@ -42,7 +42,7 @@
 
 .footer-page li {
   font-size: 0.92rem;
-  color: var(--text-secondary));
+  color: var(--text-secondary);
   line-height: 1.65;
   margin-bottom: 0.4rem;
 }
@@ -58,8 +58,8 @@
 
 /* Help page specifics */
 .help-section {
-  background: var(--bg-secondary));
-  border: 1px solid var(--border));
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
@@ -89,8 +89,8 @@
   min-height: 120px;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid var(--border));
-  background: var(--bg-secondary));
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.92rem;
@@ -103,7 +103,7 @@
 }
 
 .feedback-form textarea::placeholder {
-  color: var(--text-tertiary));
+  color: var(--text-tertiary);
 }
 
 .feedback-submit {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Line,
   XAxis,
@@ -17,6 +17,7 @@ import { formatTime, formatXAxis } from "./QuoteChartUtils";
 import { queryClient } from "./quoteQueryClient";
 import { isDemoActive } from "../../data/demo/demoState";
 import { getDemoChartData } from "../../data/demo/charts";
+import { useTheme } from "../../context/ThemeContext";
 import "./QuoteChart.css";
 
 type ChartData = {
@@ -55,6 +56,23 @@ const QuoteChart: React.FC<{
   symbol: string;
   previousClosePrice: string;
 }> = ({ interval, symbol, previousClosePrice }) => {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+
+  // Theme-aware chart colors
+  const colors = useMemo(() => ({
+    positive: isLight ? "#137333" : "#81c995",
+    negative: isLight ? "#c5221f" : "#f28b82",
+    positiveArea: isLight ? "rgba(19, 115, 51, 0.1)" : "rgba(129, 201, 149, 0.15)",
+    negativeArea: isLight ? "rgba(197, 34, 31, 0.1)" : "rgba(255, 0, 0, 0.15)",
+    grid: isLight ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)",
+    tick: isLight ? "#5f6368" : "#9aa0a6",
+    refLine: isLight ? "#5f6368" : "#9aa0a6",
+    refText: isLight ? "#202124" : "#e8eaed",
+    tooltipBg: isLight ? "#ffffff" : "#303134",
+    tooltipBorder: isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
+  }), [isLight]);
+
   queryClient.setQueryDefaults(["chartData"], { gcTime: 1000 * 60 * 30 });
   const period = interval;
 
@@ -144,9 +162,9 @@ const QuoteChart: React.FC<{
           onClick={() => queryClient.invalidateQueries({ queryKey: ["chartData", symbol, period] })}
           style={{
             marginTop: 8,
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            color: "rgba(255,255,255,0.7)",
+            background: "var(--bg-hover)",
+            border: "1px solid var(--border-strong)",
+            color: "var(--text-secondary)",
             borderRadius: 6,
             padding: "4px 14px",
             fontSize: "0.8rem",
@@ -199,25 +217,24 @@ const QuoteChart: React.FC<{
 
   const uniqueDaysArray = Array.from(uniqueDaysSet);
 
-  let lineStrokeColor = "#8884d8"; // Default color
+  let lineStrokeColor = colors.positive; // Default color
 
   if (chartData.length > 0) {
     if (interval === "1D" && previousCloseNumber !== undefined) {
       const finalClose = chartData[chartData.length - 1]?.close;
-      // Compare final close with previous close and set line color accordingly
       if (finalClose !== undefined) {
-        lineStrokeColor = finalClose > previousCloseNumber ? "green" : "red";
+        lineStrokeColor = finalClose > previousCloseNumber ? colors.positive : colors.negative;
       }
     } else if (interval !== "1D") {
       const initialPrice = chartData[0]?.close;
       const finalClose = chartData[chartData.length - 1]?.close;
       if (initialPrice !== undefined && finalClose !== undefined) {
-        lineStrokeColor = finalClose > initialPrice ? "green" : "red";
+        lineStrokeColor = finalClose > initialPrice ? colors.positive : colors.negative;
       }
     }
   }
   const areaFill =
-    lineStrokeColor === "red" ? "rgba(255, 0, 0, 0.2)" : "rgba(0, 255, 0, 0.2)";
+    lineStrokeColor === colors.negative ? colors.negativeArea : colors.positiveArea;
   return (
     <div className="chart-quote">
       <ResponsiveContainer width="100%" height={528}>
@@ -225,14 +242,15 @@ const QuoteChart: React.FC<{
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
           <XAxis
             dataKey="formattedXAxis"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 12, fill: colors.tick }}
             ticks={uniqueDaysArray as (string | number)[]}
           />
           <YAxis
             scale="linear"
+            tick={{ fontSize: 12, fill: colors.tick }}
             domain={
               interval === "1D" && previousCloseNumber !== 0
                 ? [previousCloseNumber, "auto"]
@@ -247,7 +265,7 @@ const QuoteChart: React.FC<{
               if (payload && payload.length > 0) {
                 const { time, close } = payload[0].payload;
                 return (
-                  <div className="custom-tooltip">
+                  <div className="custom-tooltip" style={{ background: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}` }}>
                     <p>{`Time: ${time}`}</p>
                     <p>{`Price: ${close}`}</p>
                   </div>
@@ -277,7 +295,7 @@ const QuoteChart: React.FC<{
                 {/* Horizontal Dotted Line */}
                 <ReferenceLine
                   y={previousCloseNumber}
-                  stroke="black"
+                  stroke={colors.refLine}
                   strokeDasharray="3 3"
                   label={`Prev close ${previousCloseNumber}`}
                 />
@@ -287,14 +305,14 @@ const QuoteChart: React.FC<{
                   x={chartData[chartData.length - 1]?.formattedXAxis} // X-coordinate of the dot (last data point)
                   y={previousCloseNumber} // Y-coordinate of the dot (previous close price)
                   r={0} // Radius of the dot
-                  fill="white" // Dot color
+                  fill="transparent"
                   stroke="none"
                 >
                   {/* Label for the dot */}
-                  <text x={10} y={-10} dy={-4} fontSize={12} fill="white">
+                  <text x={10} y={-10} dy={-4} fontSize={12} fill={colors.refText}>
                     Prev close
                   </text>
-                  <text x={10} y={-10} dy={12} fontSize={12} fill="black">
+                  <text x={10} y={-10} dy={12} fontSize={12} fill={colors.tick}>
                     ${previousCloseNumber}
                   </text>
                 </ReferenceDot>

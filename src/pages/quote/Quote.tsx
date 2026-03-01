@@ -148,16 +148,16 @@ const Quote: React.FC<QuoteProps> = () => {
               <FaAngleRight className="quote-breadcrumb-sep" />
               <span>{symbol}</span>
             </div>
-            <Skeleton variant="text" width={280} height={36} sx={{ bgcolor: "rgba(255,255,255,0.06)" }} />
+            <Skeleton variant="text" width={280} height={36} sx={{ bgcolor: "var(--skeleton-bg)" }} />
           </div>
           <div className="quote-layout">
             <div className="quote-main">
-              <Skeleton variant="text" width={180} height={48} sx={{ bgcolor: "rgba(255,255,255,0.06)" }} />
-              <Skeleton variant="text" width={120} height={24} sx={{ bgcolor: "rgba(255,255,255,0.06)" }} />
-              <Skeleton variant="rectangular" width="100%" height={400} sx={{ bgcolor: "rgba(255,255,255,0.06)", borderRadius: "8px", mt: 2 }} />
+              <Skeleton variant="text" width={180} height={48} sx={{ bgcolor: "var(--skeleton-bg)" }} />
+              <Skeleton variant="text" width={120} height={24} sx={{ bgcolor: "var(--skeleton-bg)" }} />
+              <Skeleton variant="rectangular" width="100%" height={400} sx={{ bgcolor: "var(--skeleton-bg)", borderRadius: "8px", mt: 2 }} />
             </div>
             <aside className="quote-sidebar">
-              <Skeleton variant="rectangular" width="100%" height={300} sx={{ bgcolor: "rgba(255,255,255,0.06)", borderRadius: "8px" }} />
+              <Skeleton variant="rectangular" width="100%" height={300} sx={{ bgcolor: "var(--skeleton-bg)", borderRadius: "8px" }} />
             </aside>
           </div>
         </div>

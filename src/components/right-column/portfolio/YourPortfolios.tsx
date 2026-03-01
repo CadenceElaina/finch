@@ -135,7 +135,7 @@ const YourPortfolios = () => {
             variant="text"
             width={100}
             height={20}
-            sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            sx={{ bgcolor: "var(--skeleton-bg)" }}
           />
         ) : totalPortfolioValue ? (
           `$${totalPortfolioValue.toFixed(2)}`
@@ -152,21 +152,21 @@ const YourPortfolios = () => {
                 variant="rounded"
                 width={300}
                 height={50}
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+                sx={{ bgcolor: "var(--skeleton-bg)" }}
                 style={{ marginBottom: "10px" }}
               />
               <Skeleton
                 variant="rounded"
                 width={300}
                 height={50}
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+                sx={{ bgcolor: "var(--skeleton-bg)" }}
                 style={{ marginBottom: "10px" }}
               />
               <Skeleton
                 variant="rounded"
                 width={300}
                 height={50}
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+                sx={{ bgcolor: "var(--skeleton-bg)" }}
                 style={{ marginBottom: "10px" }}
               />
             </>

@@ -49,6 +49,15 @@
   --toggle-knob: #fff;
   --toggle-hover-bg: rgba(255, 255, 255, 0.12);
   --toggle-hover-border: rgba(255, 255, 255, 0.2);
+
+  /* Skeleton / shimmer */
+  --skeleton-bg: rgba(255, 255, 255, 0.06);
+  --shimmer-from: rgba(255, 255, 255, 0.04);
+  --shimmer-to: rgba(255, 255, 255, 0.1);
+  --chart-text: #9aa0a6;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-tooltip-bg: #303134;
+  --chart-tooltip-border: rgba(255, 255, 255, 0.15);
 }
 
 /* ── Light Theme ───────────────────────────────── */
@@ -87,6 +96,14 @@
   --toggle-knob: #fff;
   --toggle-hover-bg: rgba(0, 0, 0, 0.06);
   --toggle-hover-border: rgba(0, 0, 0, 0.2);
+
+  --skeleton-bg: rgba(0, 0, 0, 0.06);
+  --shimmer-from: rgba(0, 0, 0, 0.04);
+  --shimmer-to: rgba(0, 0, 0, 0.1);
+  --chart-text: #5f6368;
+  --chart-grid: rgba(0, 0, 0, 0.06);
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: rgba(0, 0, 0, 0.15);
 }
 
 html {

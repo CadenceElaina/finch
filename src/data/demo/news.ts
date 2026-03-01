@@ -1,6 +1,7 @@
 /**
  * Demo news articles — static snapshot resembling Seeking Alpha articles.
  * Each article has our Article interface shape.
+ * Images: free stock photos from picsum.photos (Lorem Picsum).
  */
 
 import { Article } from "../../types/types";
@@ -13,7 +14,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "2h ago",
     relatedSymbol: "",
-    img: "",
+    img: "https://picsum.photos/seed/finch1/400/250",
     segment: ["Top"],
   },
   {
@@ -23,7 +24,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "3h ago",
     relatedSymbol: "NVDA",
-    img: "",
+    img: "https://picsum.photos/seed/finch2/400/250",
     segment: ["Top"],
   },
   {
@@ -33,7 +34,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "4h ago",
     relatedSymbol: "",
-    img: "",
+    img: "https://picsum.photos/seed/finch3/400/250",
     segment: ["Top", "Local"],
   },
   {
@@ -43,7 +44,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "5h ago",
     relatedSymbol: "TSLA",
-    img: "",
+    img: "https://picsum.photos/seed/finch4/400/250",
     segment: ["Top"],
   },
   {
@@ -53,7 +54,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "6h ago",
     relatedSymbol: "AAPL",
-    img: "",
+    img: "https://picsum.photos/seed/finch5/400/250",
     segment: ["Top"],
   },
   {
@@ -63,7 +64,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "7h ago",
     relatedSymbol: "",
-    img: "",
+    img: "https://picsum.photos/seed/finch6/400/250",
     segment: ["Top", "World"],
   },
   {
@@ -73,7 +74,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "8h ago",
     relatedSymbol: "AMZN",
-    img: "",
+    img: "https://picsum.photos/seed/finch7/400/250",
     segment: ["Top"],
   },
   {
@@ -83,7 +84,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "10h ago",
     relatedSymbol: "",
-    img: "",
+    img: "https://picsum.photos/seed/finch8/400/250",
     segment: ["Top", "World"],
   },
   {
@@ -93,7 +94,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "11h ago",
     relatedSymbol: "INTC",
-    img: "",
+    img: "https://picsum.photos/seed/finch9/400/250",
     segment: ["Top"],
   },
   {
@@ -103,7 +104,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "12h ago",
     relatedSymbol: "",
-    img: "",
+    img: "https://picsum.photos/seed/finch10/400/250",
     segment: ["Top", "World"],
   },
   {
@@ -113,7 +114,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "14h ago",
     relatedSymbol: "META",
-    img: "",
+    img: "https://picsum.photos/seed/finch11/400/250",
     segment: ["Top"],
   },
   {
@@ -123,7 +124,7 @@ export const DEMO_NEWS: Article[] = [
     source: "Seeking Alpha",
     time: "16h ago",
     relatedSymbol: "MSFT",
-    img: "",
+    img: "https://picsum.photos/seed/finch12/400/250",
     segment: ["Top"],
   },
 ];
@@ -138,7 +139,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
       source: "Seeking Alpha",
       time: "6h ago",
       relatedSymbol: "AAPL",
-      img: "",
+      img: "https://picsum.photos/seed/finchaapl1/400/250",
       segment: ["Top"],
     },
     {
@@ -148,7 +149,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
       source: "Seeking Alpha",
       time: "1d ago",
       relatedSymbol: "AAPL",
-      img: "",
+      img: "https://picsum.photos/seed/finchaapl2/400/250",
       segment: ["Top"],
     },
     {
@@ -158,7 +159,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
       source: "Seeking Alpha",
       time: "2d ago",
       relatedSymbol: "AAPL",
-      img: "",
+      img: "https://picsum.photos/seed/finchaapl3/400/250",
       segment: ["Top"],
     },
   ],

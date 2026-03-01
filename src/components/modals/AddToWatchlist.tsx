@@ -93,10 +93,10 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
           </div>
         )}
         {error && (
-          <div style={{ color: "#e53935", fontSize: "0.85rem", marginTop: 4 }}>{error}</div>
+          <div style={{ color: "var(--negative)", fontSize: "0.85rem", marginTop: 4 }}>{error}</div>
         )}
         {validated && resolvedName && (
-          <div style={{ color: "#00c853", fontSize: "0.85rem", marginTop: 4 }}>
+          <div style={{ color: "var(--positive)", fontSize: "0.85rem", marginTop: 4 }}>
             {symbol.toUpperCase()} — {resolvedName}
           </div>
         )}

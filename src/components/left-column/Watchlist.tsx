@@ -262,7 +262,7 @@ const Watchlist = () => {
                   variant="rectangular"
                   width={300}
                   height={50}
-                  sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+                  sx={{ bgcolor: "var(--skeleton-bg)" }}
                 />
               </Typography>
             ) : (
@@ -275,7 +275,7 @@ const Watchlist = () => {
               variant="rectangular"
               width={600}
               height={300}
-              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+              sx={{ bgcolor: "var(--skeleton-bg)" }}
             />
           ) : watchlistsAndPortfoliosQuotes.length > 0 ? (
             <Table

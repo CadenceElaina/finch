@@ -27,7 +27,7 @@
 }
 
 .stock-snapshot-locked {
-  color: var(--text-tertiary));
+  color: var(--text-tertiary);
   cursor: help;
   display: flex;
   align-items: center;

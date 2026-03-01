@@ -32,7 +32,7 @@ const DemoBanner: React.FC = () => {
       style={{
         background: "rgba(26, 115, 232, 0.15)",
         borderBottom: "1px solid rgba(26, 115, 232, 0.3)",
-        color: "rgba(255,255,255,0.8)",
+        color: "var(--text-primary)",
         padding: "5px 16px",
         display: "flex",
         alignItems: "center",
@@ -52,7 +52,7 @@ const DemoBanner: React.FC = () => {
         style={{
           background: "rgba(26, 115, 232, 0.3)",
           border: "1px solid rgba(26, 115, 232, 0.5)",
-          color: "rgba(255,255,255,0.9)",
+          color: "var(--text-primary)",
           borderRadius: "4px",
           padding: "2px 8px",
           fontSize: "11px",
@@ -70,7 +70,7 @@ const DemoBanner: React.FC = () => {
           right: "12px",
           background: "transparent",
           border: "none",
-          color: "rgba(255,255,255,0.4)",
+          color: "var(--text-tertiary)",
           cursor: "pointer",
           fontSize: "14px",
           lineHeight: 1,

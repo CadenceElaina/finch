@@ -19,7 +19,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  box-shadow: 0 4px 20px black;
+  box-shadow: var(--shadow-md);
 }
 
 .search-input {

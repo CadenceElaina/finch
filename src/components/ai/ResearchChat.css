@@ -79,7 +79,7 @@
 }
 
 .research-chat-msg.model .research-chat-bubble {
-  background: var(--bg-tertiary));
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
 }

@@ -22,7 +22,8 @@
   border-radius: var(--radius-md);
 }
 .portfolio-performance-container {
-  min-width: 1000px;
+  min-width: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -234,8 +235,8 @@
   bottom: calc(61% + 8px);
   left: 50%;
   transform: translateX(45%);
-  background-color: gray;
-  color: black;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
   padding: 8px;
   border-radius: 4px;
   font-size: 14px;
@@ -269,7 +270,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .security-symbol {
@@ -303,7 +304,7 @@
 .security-details-table td {
   padding: 8px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
@@ -407,7 +408,7 @@
 .benchmark-row {
   margin-top: 0.75rem;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-hover);
   border-radius: 8px;
   font-size: 0.82rem;
   display: flex;

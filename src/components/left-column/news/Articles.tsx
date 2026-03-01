@@ -14,20 +14,20 @@ const Articles: React.FC<articleProps & { limit?: number }> = ({ articles, currN
               variant="text"
               width={80}
               height={20}
-              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+              sx={{ bgcolor: "var(--skeleton-bg)" }}
             />
           </div>
           <Skeleton
             variant="text"
             width="100%"
             height={30}
-            sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            sx={{ bgcolor: "var(--skeleton-bg)" }}
           />
           <Skeleton
             variant="rectangular"
             width="100%"
             height={150}
-            sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            sx={{ bgcolor: "var(--skeleton-bg)" }}
           />
         </div>
       </div>

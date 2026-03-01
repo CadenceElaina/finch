@@ -8,7 +8,7 @@ import { useWatchlists } from "../context/WatchlistContext";
 import { useTheme } from "../context/ThemeContext";
 import "./Settings.css";
 
-const APP_VERSION = "0.14.0";
+const APP_VERSION = "0.15.0";
 const CACHE_PREFIX = "finch_cache_";
 
 const Settings = () => {
