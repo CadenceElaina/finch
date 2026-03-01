@@ -19,11 +19,16 @@ const MarketOverview: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  // Try to load from cache on mount
+  // Try to load from cache on mount, or auto-generate if no cached data
   useEffect(() => {
     const cached = cacheStorage.get<string>(CACHE_KEY, CACHE_TTL);
-    if (cached) setSummary(cached);
-  }, []);
+    if (cached) {
+      setSummary(cached);
+    } else if (configured && creditsRemaining > 0) {
+      // Auto-generate on first visit when no cache exists
+      generateSummary();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateSummary = useCallback(async () => {
     if (!configured || creditsRemaining <= 0) return;

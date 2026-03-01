@@ -248,11 +248,8 @@ img {
   align-items: flex-start;
   padding: 16px;
   margin-bottom: 16px;
-  margin-left: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  max-width: 360px;
-  min-width: 255px;
 }
 
 .market-trends-header {

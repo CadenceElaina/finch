@@ -92,7 +92,6 @@ const MostFollowed = () => {
         if (isMounted) {
           setTop5Securities(updatedTop5Securities);
         }
-        setTop5Securities(updatedTop5Securities);
       } catch (error) {
         console.error("Error fetching quotes:", error);
       } finally {
@@ -139,15 +138,21 @@ const MostFollowed = () => {
       <div role="heading" className="most-followed-heading">
         Most followed on Finch
       </div>
-      <div>
-        <Table
-          data={convertedTop5Securities}
-          config={mostFollowedConfig}
-          full={true}
-          icon={true}
-          onIconClick={onIconClick}
-        />
-      </div>
+      {convertedTop5Securities.length === 0 ? (
+        <p className="most-followed-empty">
+          Add stocks to a watchlist to see your most tracked here.
+        </p>
+      ) : (
+        <div>
+          <Table
+            data={convertedTop5Securities}
+            config={mostFollowedConfig}
+            full={true}
+            icon={true}
+            onIconClick={onIconClick}
+          />
+        </div>
+      )}
       {showModal && selectedSecurity && (
         <WatchlistModal
           watchlists={watchlists}

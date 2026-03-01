@@ -7,7 +7,7 @@ import Watchlist from "../components/left-column/Watchlist";
 import AddPortfolio from "../components/right-column/portfolio/AddPortfolio";
 import MarketTrends from "../components/right-column/MarketTrends";
 import MostFollowed from "../components/right-column/MostFollowed";
-import DiscoverMore from "../components/slider/DiscoverMore";
+import EarningsCalendar from "../components/right-column/EarningsCalendar";
 import Footer from "../components/Footer";
 import { usePortfolios } from "../context/PortfoliosContext";
 import YourPortfolios from "../components/right-column/portfolio/YourPortfolios";
@@ -41,11 +41,11 @@ const Home: React.FC<HomeProps> = () => {
 
               <MarketTrends />
               <MostFollowed />
+              <EarningsCalendar />
             </div>
           </div>
           {/* MarketTrendsList disabled — needs movers/trending API migration */}
           {/* <MarketTrendsList /> */}
-          <DiscoverMore />
           <Footer />
         </div>
       </Layout>
