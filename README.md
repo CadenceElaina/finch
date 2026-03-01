@@ -41,6 +41,11 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 - Static data for popular tickers (AAPL, GOOGL, MSFT, AMZN, TSLA, NVDA, META)
 - Persistent "DEMO" badge in header — clickable to toggle in Settings
 
+### Appearance
+
+- **Light / Dark theme** — Toggle in header or Settings, persisted to localStorage
+- **Responsive** — Desktop-first with mobile-friendly collapse
+
 ---
 
 ## Tech Stack
@@ -94,11 +99,16 @@ npm run dev
 Create a `.env` file in the project root:
 
 ```env
+# RapidAPI key — used for both Yahoo Finance and Seeking Alpha
 VITE_YH_FINANCE_KEY=your_rapidapi_key
+
+# Google Gemini API key (from https://aistudio.google.com/apikey)
 VITE_GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Both APIs use a single RapidAPI key. The Gemini key is from [Google AI Studio](https://aistudio.google.com/apikey) (free tier).
+Both market data APIs use a single RapidAPI key. The Gemini key is from [Google AI Studio](https://aistudio.google.com/apikey) (free tier).
+
+In production, API keys are proxied through Vercel Edge Functions (`/api/yh-finance`, `/api/seeking-alpha`) so they are never exposed to the client. In development, the `VITE_` prefixed keys are used directly.
 
 If no keys are provided, Finch automatically runs in demo mode with static sample data.
 

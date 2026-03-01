@@ -67,7 +67,7 @@
   height: 24px;
   border-radius: 12px;
   border: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--toggle-track);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.2s;
@@ -85,7 +85,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--toggle-knob);
   transition: transform 0.2s;
   pointer-events: none;
 }
@@ -135,8 +135,8 @@
 }
 
 .settings-action-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--toggle-hover-bg);
+  border-color: var(--toggle-hover-border);
 }
 
 .settings-action-btn:disabled {

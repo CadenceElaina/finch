@@ -42,7 +42,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home portfolios={[]} />} />
+        <Route path="/" element={<Home />} />
         <Route path="/news" element={<News />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/portfolio/:id" element={<Portfolio />} />

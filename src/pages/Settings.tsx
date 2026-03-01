@@ -5,9 +5,10 @@ import { useDemoMode } from "../context/DemoModeContext";
 import { useAi } from "../context/AiContext";
 import { usePortfolios } from "../context/PortfoliosContext";
 import { useWatchlists } from "../context/WatchlistContext";
+import { useTheme } from "../context/ThemeContext";
 import "./Settings.css";
 
-const APP_VERSION = "0.10.0";
+const APP_VERSION = "0.14.0";
 const CACHE_PREFIX = "finch_cache_";
 
 const Settings = () => {
@@ -15,6 +16,7 @@ const Settings = () => {
   const { creditsRemaining, maxCredits, configured } = useAi();
   const { portfolios } = usePortfolios();
   const { watchlists } = useWatchlists();
+  const { theme, toggleTheme } = useTheme();
   const [cacheCleared, setCacheCleared] = useState(false);
 
   const handleDemoToggle = () => {
@@ -73,6 +75,28 @@ const Settings = () => {
               className={`settings-toggle ${isDemoMode ? "active" : ""}`}
               onClick={handleDemoToggle}
               aria-label="Toggle demo mode"
+            >
+              <span className="settings-toggle-knob" />
+            </button>
+          </div>
+        </section>
+
+        {/* Appearance */}
+        <section className="settings-section">
+          <div className="settings-section-title">Appearance</div>
+          <div className="settings-row">
+            <div className="settings-row-info">
+              <div className="settings-row-label">Theme</div>
+              <div className="settings-row-desc">
+                {theme === "dark"
+                  ? "Dark mode is active. Easier on the eyes in low light."
+                  : "Light mode is active. Classic bright appearance."}
+              </div>
+            </div>
+            <button
+              className={`settings-toggle ${theme === "light" ? "active" : ""}`}
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
             >
               <span className="settings-toggle-knob" />
             </button>

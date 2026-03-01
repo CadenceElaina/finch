@@ -29,12 +29,11 @@ const MostFollowed = () => {
   const [top5Securities, setTop5Securities] = useState<
     MostFollowedSecurities[]
   >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const isMounted = true;
+    let isMounted = true;
     // Count the occurrences of each symbol and calculate the total followers for each security in watchlists
     const symbolFollowers: { [symbol: string]: number } = {};
 
@@ -49,7 +48,6 @@ const MostFollowed = () => {
 
     // Sort symbols based on their total followers in descending order
     const sortedSymbols = Object.entries(symbolFollowers).sort(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([, followersA], [, followersB]) => followersB - followersA
     );
 
@@ -101,6 +99,9 @@ const MostFollowed = () => {
     if (newTop5Securities) {
       fetchQuotes();
     }
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchlists]);
   useEffect(() => {

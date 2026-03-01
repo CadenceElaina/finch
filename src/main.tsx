@@ -10,10 +10,12 @@ import { NotificationProvider } from "./context/NotificationContext.tsx";
 import { DemoModeProvider } from "./context/DemoModeContext.tsx";
 import { AiProvider } from "./context/AiContext.tsx";
 import { SnapshotProvider } from "./context/SnapshotContext.tsx";
+import { ThemeProvider } from "./context/ThemeContext.tsx";
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <ThemeProvider>
     <DemoModeProvider>
       <AiProvider>
         <NotificationProvider>
@@ -34,5 +36,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       </NotificationProvider>
       </AiProvider>
     </DemoModeProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

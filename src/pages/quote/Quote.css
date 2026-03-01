@@ -226,7 +226,7 @@
 
 .quote-intervals button.active {
   background: var(--accent);
-  color: #1f1f1f;
+  color: var(--accent-active-text);
 }
 
 /* ── Tab navigation ── */

@@ -52,7 +52,7 @@
 
 .watchlist-card:hover {
   background: var(--bg-tertiary);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-strong);
 }
 
 .watchlist-card-info {

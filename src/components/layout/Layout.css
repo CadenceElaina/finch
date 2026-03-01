@@ -85,6 +85,29 @@
   background: rgba(255, 165, 0, 0.25);
 }
 
+/* ── Theme toggle ── */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
 .logo-container {
   display: flex;
   align-items: center;
@@ -113,7 +136,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   border-right: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
   z-index: 900;
 }
 .sidebar-item {
@@ -250,7 +273,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-bg);
   z-index: 800; /* Ensure the overlay is between the top banner and sidebar */
   display: none;
 }

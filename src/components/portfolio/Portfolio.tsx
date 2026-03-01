@@ -22,6 +22,7 @@ import {
 import { useNotification } from "../../context/NotificationContext";
 import Notification from "../Notification";
 import PortfolioSummary from "../ai/PortfolioSummary";
+import RenameModal from "../modals/RenameModal";
 
 const Portfolio = () => {
   const { addNotification } = useNotification();
@@ -38,6 +39,7 @@ const Portfolio = () => {
     useState<boolean>(false);
   const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
     useState<boolean>(false);
+  const [renameModalOpen, setRenameModalOpen] = useState<boolean>(false);
   const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, removeSecurityFromPortfolio, appendPortfolio } =
     usePortfolios();
   const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } =
@@ -120,16 +122,7 @@ const Portfolio = () => {
     }
 
     if (option === "rename") {
-      const newName = prompt("Enter new name:");
-      if (newName && newName.trim()) {
-        if (activeListType === "portfolios" && activePortfolio) {
-          renamePortfolio(activePortfolio.id, newName.trim());
-          addNotification(`Renamed to ${newName.trim()}`, "success");
-        } else if (activeListType === "watchlists" && activeWatchlist) {
-          renameWatchlist(activeWatchlist.id, newName.trim());
-          addNotification(`Renamed to ${newName.trim()}`, "success");
-        }
-      }
+      setRenameModalOpen(true);
     }
 
     setShowDropdown(false);
@@ -255,6 +248,23 @@ const Portfolio = () => {
         <NewPortfolioModal
           onCancel={() => setNewPortfolioModalOpen(false)}
           onSave={handleSaveNewPortfolio}
+        />
+      )}
+      {renameModalOpen && (
+        <RenameModal
+          currentName={activeTab}
+          itemType={activeListType === "portfolios" ? "portfolio" : "watchlist"}
+          onCancel={() => setRenameModalOpen(false)}
+          onSave={(newName) => {
+            if (activeListType === "portfolios" && activePortfolio) {
+              renamePortfolio(activePortfolio.id, newName);
+              addNotification(`Renamed to ${newName}`, "success");
+            } else if (activeListType === "watchlists" && activeWatchlist) {
+              renameWatchlist(activeWatchlist.id, newName);
+              addNotification(`Renamed to ${newName}`, "success");
+            }
+            setRenameModalOpen(false);
+          }}
         />
       )}
       <div className="portfolio-container">

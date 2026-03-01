@@ -6,6 +6,8 @@ import DemoBanner from "../DemoBanner";
 import FuelGauge from "../FuelGauge";
 import Search from "../search/Search";
 import { useDemoMode } from "../../context/DemoModeContext";
+import { useTheme } from "../../context/ThemeContext";
+import { BsSun, BsMoon } from "react-icons/bs";
 import "./Layout.css";
 
 /** Pages that render their own full-size Search bar */
@@ -14,6 +16,7 @@ const PAGES_WITH_SEARCH = ["/", "/news"];
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const { isDemoMode } = useDemoMode();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideHeaderSearch = PAGES_WITH_SEARCH.includes(pathname);
@@ -48,6 +51,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {!hideHeaderSearch && <Search compact onNavigate={() => {}} />}
         </div>
         <div className="top-banner-right">
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <BsSun size={16} /> : <BsMoon size={16} />}
+          </button>
           {isDemoMode && (
             <button
               className="demo-badge"

@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import Layout from "../components/layout/Layout";
 import Markets from "../components/markets/Markets";
 import Search from "../components/search/Search";
@@ -16,11 +14,7 @@ import MarketOverview from "../components/ai/MarketOverview";
 import ResearchChat from "../components/ai/ResearchChat";
 import Notification from "../components/Notification";
 
-interface HomeProps {
-  portfolios: [];
-}
-
-const Home: React.FC<HomeProps> = () => {
+const Home = () => {
   const { portfolios } = usePortfolios();
   return (
     <>
