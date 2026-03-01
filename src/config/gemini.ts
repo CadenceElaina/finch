@@ -1,6 +1,11 @@
 /**
  * Gemini API client configuration.
  * Uses Gemini 2.5 Flash via the @google/genai SDK.
+ *
+ * Two call modes:
+ *   askGemini()         — standalone prompt, no web access
+ *   askGeminiGrounded() — uses Google Search tool for real-time data
+ *   askGeminiChat()     — multi-turn chat with history + Google Search
  */
 
 import { GoogleGenAI } from "@google/genai";
@@ -27,8 +32,8 @@ CACHING BEHAVIOR: If providing a stock snapshot (not a user-initiated question),
 limit to: 3-sentence trend summary + 3 key metrics to watch + 1 risk factor.`;
 
 /**
- * Generate content from Gemini. Returns the text response.
- * Throws on failure — callers should handle errors.
+ * Generate content from Gemini (no web access).
+ * For prompts that only need the data we already have in-app.
  */
 export async function askGemini(prompt: string): Promise<string> {
   const response = await ai.models.generateContent({
@@ -45,9 +50,28 @@ export async function askGemini(prompt: string): Promise<string> {
 }
 
 /**
- * Generate content with chat history context.
- * Used for the research chat feature where follow-up context matters.
- * Builds a multi-turn contents array per the Gemini API spec.
+ * Generate content with Google Search grounding.
+ * Gemini can search the web for real-time market data, news, and prices.
+ * Use for market overviews and stock snapshots where current info matters.
+ */
+export async function askGeminiGrounded(prompt: string): Promise<string> {
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 0.4,
+      topP: 0.8,
+      maxOutputTokens: 1024,
+      tools: [{ googleSearch: {} }],
+    },
+  });
+  return response.text ?? "";
+}
+
+/**
+ * Generate content with chat history context + Google Search grounding.
+ * Used for the research chat on the Quote page.
  */
 export async function askGeminiChat(
   history: { role: "user" | "model"; text: string }[],
@@ -69,6 +93,7 @@ export async function askGeminiChat(
       temperature: 0.4,
       topP: 0.8,
       maxOutputTokens: 1024,
+      tools: [{ googleSearch: {} }],
     },
   });
   return response.text ?? "";

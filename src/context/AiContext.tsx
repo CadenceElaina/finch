@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { askGemini, askGeminiChat, isGeminiConfigured } from "../config/gemini";
+import { askGemini, askGeminiGrounded, askGeminiChat, isGeminiConfigured } from "../config/gemini";
 import {
   getCreditsRemaining,
   getMaxCredits,
@@ -27,9 +27,11 @@ interface AiContextValue {
   creditsRemaining: number;
   /** Max daily credits */
   maxCredits: number;
-  /** Send a standalone prompt (market overview, stock snapshot). Costs 1 credit. */
+  /** Send a standalone prompt (no web access). Costs 1 credit. */
   generate: (prompt: string) => Promise<string>;
-  /** Send a chat message with history context. Costs 1 credit. */
+  /** Send a grounded prompt with Google Search for real-time data. Costs 1 credit. */
+  generateGrounded: (prompt: string) => Promise<string>;
+  /** Send a chat message with history context + Google Search. Costs 1 credit. */
   chat: (symbol: string, message: string) => Promise<string>;
   /** Get chat history for a symbol */
   getChatHistory: (symbol: string) => ChatMessage[];
@@ -58,7 +60,18 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     try {
       return await askGemini(prompt);
     } catch (err) {
-      // Refund on failure would be complex — just let it stand
+      throw err;
+    }
+  }, [refreshCredits]);
+
+  const generateGrounded = useCallback(async (prompt: string): Promise<string> => {
+    if (!isGeminiConfigured()) throw new Error("Gemini API key not configured");
+    if (!hasCredits()) throw new Error("Daily AI credit limit reached. Resets at midnight.");
+    useCredit();
+    refreshCredits();
+    try {
+      return await askGeminiGrounded(prompt);
+    } catch (err) {
       throw err;
     }
   }, [refreshCredits]);
@@ -101,6 +114,7 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     creditsRemaining: credits,
     maxCredits: getMaxCredits(),
     generate,
+    generateGrounded,
     chat,
     getChatHistory,
     clearChat,

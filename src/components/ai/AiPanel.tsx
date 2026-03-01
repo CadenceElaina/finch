@@ -45,10 +45,13 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
       </div>
 
       {isOpen && (
-        <div className="ai-panel-body">
-          <StockSnapshot symbol={symbol} quotePageData={quotePageData} />
-          <ResearchChat symbol={symbol} />
-        </div>
+        <>
+          <div className="ai-panel-gradient-line" />
+          <div className="ai-panel-body">
+            <StockSnapshot symbol={symbol} quotePageData={quotePageData} />
+            <ResearchChat symbol={symbol} />
+          </div>
+        </>
       )}
     </div>
   );

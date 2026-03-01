@@ -20,6 +20,29 @@
   color: #1a73e8;
 }
 
+/* Animated gradient line — inspired by Google Finance Research */
+.market-overview-gradient-line {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 14px;
+  background: linear-gradient(
+    90deg,
+    #4285f4 0%,
+    #9b72cb 25%,
+    #d96570 50%,
+    #d7a66e 75%,
+    #4285f4 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .market-overview-content {
   font-size: 0.8rem;
   line-height: 1.6;
