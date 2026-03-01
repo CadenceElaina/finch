@@ -1,7 +1,7 @@
 .related-stocks {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--border);
 }
 
 .related-stocks-heading {
@@ -21,7 +21,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
@@ -29,7 +29,7 @@
 }
 
 .related-stock-card:hover {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--bg-hover);
 }
 
 .related-stock-symbol {
@@ -40,7 +40,7 @@
 
 .related-stock-name {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,11 +61,11 @@
 }
 
 .related-stock-change.positive {
-  color: rgb(19, 115, 51);
+  color: var(--positive);
 }
 
 .related-stock-change.negative {
-  color: rgb(165, 14, 14);
+  color: var(--negative);
 }
 
 @media (max-width: 768px) {

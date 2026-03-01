@@ -1,294 +1,374 @@
-.quote-container {
-  display: flex;
-  justify-content: space-between;
-  max-width: 1024px;
-  padding: 24px 48px;
+/* ─────────────────────────────────────────────
+   Quote Page — Design-token-based styles
+   ───────────────────────────────────────────── */
+
+/* Page wrapper */
+.quote-page {
+  max-width: 1200px;
   margin: 0 auto;
-}
-.quote-price-changes {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  padding: 0 24px 48px;
+  overflow-x: hidden;
 }
 
-.quote-price-changes .quote-price-positive,
-.quote-price-negative {
-  font-size: 2rem;
-  margin-right: 16px;
+/* ── Header ── */
+.quote-header {
+  margin-bottom: 8px;
 }
 
-.quote-price-change-positive {
-  color: var(--positive);
-  margin-right: 5px;
-}
-
-.quote-price-change-negative {
-  color: var(--negative);
-  margin-right: 5px;
-}
-.quote-price-interval-positive {
-  color: var(--positive);
-}
-.quote-price-interval-negative {
-  color: var(--negative);
-}
-.quote-percent-change-positive {
+.quote-header-top {
   display: flex;
   align-items: center;
-  letter-spacing: 0.00625em;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.5rem;
-  padding: 0 8px;
-  border-radius: var(--radius-sm);
-  width: min-content;
-  background-color: rgba(129, 201, 149, 0.15);
-  color: var(--positive);
-  font-size: 16px;
-  min-width: 40px;
-  margin-right: 5px;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.quote-percent-change-negative {
+.quote-breadcrumb {
   display: flex;
-  letter-spacing: 0.00625em;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.5rem;
-  padding: 0 8px;
-  border-radius: var(--radius-sm);
-  width: min-content;
-  background-color: rgba(242, 139, 130, 0.15);
-  color: var(--negative);
-  margin-right: 5px;
   align-items: center;
-}
-.quote-price-subheading {
-  padding: 10px 0 10px 0;
-  display: flex;
-  flex-direction: row;
+  gap: 6px;
+  font-size: 12px;
   color: var(--text-secondary);
 }
-.quote-price-subheading div:last-child {
-  margin-left: 5px;
-}
-.quote-price-subheading a {
-  color: var(--text-secondary);
+
+.quote-breadcrumb a {
+  color: var(--accent);
   text-decoration: none;
+  font-weight: 500;
 }
-.quote-price-subheading a:hover {
+
+.quote-breadcrumb a:hover {
   text-decoration: underline;
 }
-.button-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+
+.quote-breadcrumb-sep {
+  font-size: 10px;
+  color: var(--text-tertiary);
 }
-.button-group button:hover {
-  background-color: var(--blue);
+
+.quote-exchange {
+  color: var(--text-tertiary);
+  font-size: 12px;
 }
-.quote-data-buttons button:hover {
-  background-color: var(--bg-hover);
+
+.quote-meta-sep {
+  color: var(--text-tertiary);
+  margin: 0 2px;
 }
-.button-group button.active {
-  background: var(--blue);
-}
-.button-group button.active:hover {
-  background-color: var(--blue-hover);
+
+.quote-title {
+  font-size: 24px;
+  font-weight: 400;
   color: var(--text-primary);
+  margin: 4px 0 0;
+  line-height: 1.3;
 }
-.button-group button {
-  border: none;
-}
-.button-group button,
-.quote-data-buttons button {
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  letter-spacing: 0.25px;
-  font-weight: 500;
-  text-transform: none;
-  white-space: nowrap;
-  cursor: pointer;
-  box-sizing: content-box;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  padding: 8px;
-  cursor: pointer;
-  background-color: transparent;
-}
-.quote-data-buttons {
-  display: flex;
-  justify-self: center;
-  justify-content: space-evenly;
+
+/* ── Follow button ── */
+.quote-follow-btn {
+  display: inline-flex;
   align-items: center;
-  margin: 0 auto;
-  padding: 0.5rem;
-}
-.quote-data-buttons button {
+  gap: 6px;
+  padding: 6px 16px;
   border: 1px solid var(--border-strong);
-  border-radius: 24px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  box-shadow: none;
-}
-.quote-data-buttons button,
-.quote-data-buttons span {
-  display: flex;
-  align-items: center;
-  margin-right: 8px; /* Adjust the margin as needed */
+  border-radius: 20px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 
-.quote-data-buttons span:last-child {
-  margin-right: 0; /* Remove margin from the last span to prevent extra spacing */
-}
-.quote-main-column {
-  width: 66%;
-  margin-right: 24px;
-}
-.quote-side-column {
-  width: 32%;
-}
-.quote-top-container {
-  border-bottom: 1px solid var(--border);
-  margin: 0 auto;
-  padding-bottom: 8px;
-  max-width: 1024px;
-  justify-content: space-between;
-}
-.quote-links {
-  display: flex;
-  max-width: 1024px;
-  margin-top: 25px;
-  margin: 25px auto 0 auto;
-  a {
-    text-decoration: none;
-    color: var(--text-primary);
-  }
-  a:hover {
-    text-decoration: underline;
-  }
+.quote-follow-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
 }
 
-.quote-arrow {
-  display: flex;
-  align-items: center;
-  align-self: center;
-  margin: 0 5px 0 5px;
-}
-.quote-links-item {
-  margin: 0 5px 0 5px;
-}
-.quote-name {
-  display: flex;
-  max-width: 1024px;
-  font-size: 2rem;
-  margin: 5px auto 0 auto;
-  text-transform: uppercase;
-}
-.quote-data-list {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 10px;
-}
-.about-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center; /* Optional: align items vertically in the center */
-  /* Add any other styles you need */
+.quote-follow-btn.following {
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: default;
 }
 
-.about-heading span:first-child {
-  font-size: 1.2rem;
-  margin-right: 8px; /* Adjust the spacing between "About" and the arrow as needed */
-  margin-bottom: 10px;
-}
-.quote-about-text {
-  padding-bottom: 16px;
-  word-wrap: break-word;
-  font-size: 0.75rem;
-}
-.quote-data-row {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid var(--border);
-  padding: 8px 0;
+.quote-follow-btn.following:hover {
+  background: transparent;
+  border-color: var(--border);
 }
 
-.quote-about {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  margin-top: 20px;
-  padding: 15px;
+/* ── Two-column layout ── */
+.quote-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+  align-items: start;
 }
 
-.quote-about-row {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid var(--border);
-  padding: 8px 0;
-  min-height: 43px;
-  box-sizing: border-box;
-  align-items: center;
+.quote-layout--single {
+  grid-template-columns: 1fr;
+}
 
-  font-size: 0.875rem;
-}
-.quote-about-row span {
-  line-height: 1.25rem;
-  text-overflow: ellipsis;
-}
-.quote-about-row span:first-child {
-  text-transform: uppercase;
-}
-.quote-about-row span:nth-child(2) {
-  text-align: right;
+.quote-main {
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  word-wrap: break-word;
-  max-width: 60%;
 }
-.quote-about-row span a {
+
+.quote-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── Price block ── */
+.quote-price-block {
+  margin-bottom: 4px;
+}
+
+.quote-price-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quote-price {
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.quote-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.quote-badge.positive {
+  background: rgba(129, 201, 149, 0.15);
+  color: var(--positive);
+}
+
+.quote-badge.negative {
+  background: rgba(242, 139, 130, 0.15);
+  color: var(--negative);
+}
+
+.quote-change {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.quote-change.positive {
+  color: var(--positive);
+}
+
+.quote-change.negative {
+  color: var(--negative);
+}
+
+.quote-interval-label {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.quote-interval-label.positive {
+  color: var(--positive);
+}
+
+.quote-interval-label.negative {
+  color: var(--negative);
+}
+
+.quote-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.quote-meta-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.quote-meta-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Interval buttons ── */
+.quote-intervals {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 8px;
+  flex-wrap: wrap;
+}
+
+.quote-intervals button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.quote-intervals button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.quote-intervals button.active {
+  background: var(--accent);
+  color: #1f1f1f;
+}
+
+/* ── Generic collapsible section ── */
+.quote-section {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 24px;
+}
+
+.quote-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.quote-section-toggle:hover {
+  color: var(--accent);
+}
+
+/* ── Financials ── */
+.quote-financials-body {
+  margin-top: 12px;
+}
+
+.quote-financials-subheading {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Key-value row (reusable) ── */
+.quote-kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.quote-kv-row:last-child {
+  border-bottom: none;
+}
+
+.quote-kv-row > span:first-child {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.quote-kv-row > span:last-child {
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ── Sidebar stats card ── */
+.quote-stats-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+/* ── About card ── */
+.quote-about-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.quote-about-body {
+  margin-top: 12px;
+}
+
+.quote-about-summary {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.quote-about-body a {
   color: var(--accent);
   text-decoration: none;
 }
-.quote-about-row span a:hover {
+
+.quote-about-body a:hover {
   text-decoration: underline;
 }
-@media (max-width: 768px) {
-  .quote-container {
-    flex-direction: column; /* Switch to a single column on smaller screens */
-    padding: 16px;
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .quote-layout {
+    grid-template-columns: 1fr;
   }
 
-  .quote-main-column {
-    width: 100%;
-    margin-right: 0;
-    margin-bottom: 24px;
+  .quote-sidebar {
+    order: -1;
   }
 
-  .quote-side-column {
-    width: 100%;
-    flex: 1; /* Allow the side column to take full width on smaller screens */
+  .quote-page {
+    padding: 0 16px 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .quote-price {
+    font-size: 26px;
   }
 
-  .quote-top-container {
-    padding: 0 16px 8px;
+  .quote-title {
+    font-size: 20px;
   }
 
-  .quote-name {
-    font-size: 1.4rem;
+  .quote-intervals {
+    gap: 2px;
   }
 
-  .quote-price-changes .quote-price-positive,
-  .quote-price-changes .quote-price-negative {
-    font-size: 1.5rem;
-  }
-
-  .quote-data-buttons {
-    flex-wrap: wrap;
-    gap: 4px;
+  .quote-intervals button {
+    padding: 5px 8px;
+    font-size: 12px;
   }
 }
