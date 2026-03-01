@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
 import { FaSortUp, FaSortDown, FaSort, FaTimes } from "react-icons/fa";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -216,6 +217,18 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   const gainLabel = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
   const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // Allocation pie chart data
+  const PIE_COLORS = ["#4285f4", "#ea4335", "#fbbc04", "#34a853", "#ff6d01", "#46bdc6", "#a142f4", "#f538a0"];
+  const allocationData = useMemo(() => {
+    const totalValue = securityDetails.reduce((s, d) => s + d.currentValue, 0);
+    if (totalValue <= 0) return [];
+    return securityDetails.map((d) => ({
+      name: d.symbol,
+      value: d.currentValue,
+      pct: ((d.currentValue / totalValue) * 100).toFixed(1),
+    }));
+  }, [securityDetails]);
+
   return (
     <div className="portfolio-performance-container">
       <div className="top-row">
@@ -253,6 +266,50 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
           )}
         </div>
       </div>
+      {/* Allocation pie chart */}
+      {allocationData.length > 1 && (
+        <div className="allocation-section">
+          <div className="allocation-heading">Allocation</div>
+          <div className="allocation-chart-row">
+            <ResponsiveContainer width={220} height={220}>
+              <PieChart>
+                <Pie
+                  data={allocationData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  stroke="none"
+                >
+                  {allocationData.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name,
+                  ]}
+                  contentStyle={{ background: "#1e1e1e", border: "1px solid #444", borderRadius: 8, fontSize: "0.85rem" }}
+                  itemStyle={{ color: "#fff" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="allocation-legend">
+              {allocationData.map((d, i) => (
+                <div key={d.name} className="allocation-legend-item">
+                  <span className="allocation-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="allocation-symbol">{d.name}</span>
+                  <span className="allocation-pct">{d.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Detailed securities table */}
       {securityDetails.length > 0 && (
         <div className="bottom-row">
