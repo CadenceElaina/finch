@@ -12,6 +12,7 @@ import Footer from "../components/Footer";
 import { usePortfolios } from "../context/PortfoliosContext";
 import YourPortfolios from "../components/right-column/portfolio/YourPortfolios";
 import HomeNews from "../components/left-column/news/HomeNews";
+import MarketOverview from "../components/ai/MarketOverview";
 import Notification from "../components/Notification";
 
 interface HomeProps {
@@ -29,6 +30,7 @@ const Home: React.FC<HomeProps> = () => {
           <Search />
           <div className="main-content-container">
             <div className="main-content-left">
+              <MarketOverview />
               <Watchlist />
               <HomeNews />
             </div>
