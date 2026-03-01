@@ -20,7 +20,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./_kv";
+import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./lib/kv";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
 export const config = { runtime: "nodejs" };

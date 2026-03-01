@@ -2,7 +2,7 @@
 export const config = { runtime: "nodejs" };
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./_kv";
+import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./lib/kv";
 
 export default async function handler(_req: IncomingMessage, res: ServerResponse) {
   res.setHeader("Content-Type", "application/json");
