@@ -5,9 +5,7 @@ import QuoteChart from "../../components/quote-chart/QuoteChart";
 import "./Quote.css";
 import Footer from "../../components/Footer";
 import {
-  FaAngleDown,
   FaAngleRight,
-  FaAngleUp,
   FaArrowDown,
   FaArrowUp,
   FaCheck,
@@ -25,6 +23,8 @@ import Skeleton from "@mui/material/Skeleton";
 import ErrorState from "../../components/ErrorState";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { useNotification } from "../../context/NotificationContext";
+
+type QuoteTab = "overview" | "financials" | "about";
 
 interface QuoteProps {
   symbol?: string;
@@ -53,8 +53,7 @@ const Quote: React.FC<QuoteProps> = () => {
     : symbol;
 
   const [selectedInterval, setSelectedInterval] = useState("1D");
-  const [isAboutOpen, setIsAboutOpen] = useState(true);
-  const [isFinancialsOpen, setIsFinancialsOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<QuoteTab>("overview");
 
   /** Check if the symbol is already in any watchlist */
   const isFollowing = useMemo(() => {
@@ -264,11 +263,25 @@ const Quote: React.FC<QuoteProps> = () => {
   );
 
   const financialRows = [
-    { label: "Revenue", value: quoteFinancialData?.annualRevenue },
-    { label: "Net Income", value: quoteFinancialData?.netIncome },
+    { label: "Revenue (TTM)", value: quoteFinancialData?.annualRevenue },
+    { label: "Net Income (TTM)", value: quoteFinancialData?.netIncome },
     { label: "Net Profit Margin", value: quoteFinancialData?.netProfitMargin },
     { label: "EBITDA", value: quoteFinancialData?.ebitda },
   ].filter((r) => r.value);
+
+  const hasAbout = Boolean(
+    quoteSidebarAboutData?.summary ||
+    quoteSidebarAboutData?.ceo ||
+    quoteSidebarAboutData?.headquarters ||
+    quoteSidebarAboutData?.employees ||
+    quoteSidebarAboutData?.website
+  );
+
+  const tabs: { key: QuoteTab; label: string }[] = [
+    { key: "overview", label: "Overview" },
+    ...(hasFinancials ? [{ key: "financials" as QuoteTab, label: "Financials" }] : []),
+    ...(hasAbout ? [{ key: "about" as QuoteTab, label: "About" }] : []),
+  ];
 
   return (
     <Layout>
@@ -307,105 +320,124 @@ const Quote: React.FC<QuoteProps> = () => {
               previousClosePrice={quoteSidebarData?.previousClose || ""}
             />
 
-            {/* AI Research — compact, inline after chart */}
-            <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
-
-            {/* Financials */}
-            {hasFinancials && (
-              <section className="quote-section">
+            {/* Tab nav */}
+            <div className="quote-tabs" role="tablist">
+              {tabs.map(({ key, label }) => (
                 <button
-                  className="quote-section-toggle"
-                  onClick={() => setIsFinancialsOpen(!isFinancialsOpen)}
+                  key={key}
+                  role="tab"
+                  aria-selected={activeTab === key}
+                  className={`quote-tab-btn ${activeTab === key ? "active" : ""}`}
+                  onClick={() => setActiveTab(key)}
                 >
-                  <span>Financials</span>
-                  {isFinancialsOpen ? <FaAngleUp /> : <FaAngleDown />}
+                  {label}
                 </button>
-                {isFinancialsOpen && (
-                  <div className="quote-financials-body">
-                    <div className="quote-financials-subheading">Income Statement</div>
-                    {financialRows.map((row) => (
-                      <div key={row.label} className="quote-kv-row">
-                        <span>{row.label}</span>
-                        <span>{row.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* News */}
-            <QuoteNews />
-
-            {/* Related */}
-            <RelatedStocks currentSymbol={symbol} />
-          </div>
-
-          {/* Sidebar */}
-          <aside className="quote-sidebar">
-            <div className="quote-stats-card">
-              {sidebarEntries.map(({ label, key }) => {
-                const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
-                if (!value) return null;
-                return (
-                  <div key={key} className="quote-kv-row">
-                    <span>{label}</span>
-                    <span>{value}</span>
-                  </div>
-                );
-              })}
+              ))}
             </div>
 
-            {quoteSidebarAboutData?.summary && (
-              <div className="quote-about-card">
-                <button
-                  className="quote-section-toggle"
-                  onClick={() => setIsAboutOpen(!isAboutOpen)}
-                >
-                  <span>About</span>
-                  {isAboutOpen ? <FaAngleUp /> : <FaAngleDown />}
-                </button>
-                {isAboutOpen && (
-                  <div className="quote-about-body">
-                    <p className="quote-about-summary">
-                      {quoteSidebarAboutData.summary}
-                    </p>
-                    {quoteSidebarAboutData.ceo && (
-                      <div className="quote-kv-row">
-                        <span>CEO</span>
-                        <span>{quoteSidebarAboutData.ceo}</span>
-                      </div>
-                    )}
-                    {quoteSidebarAboutData.website && (
-                      <div className="quote-kv-row">
-                        <span>Website</span>
-                        <span>
-                          <a href={quoteSidebarAboutData.website} target="_blank" rel="noopener noreferrer">
-                            {quoteSidebarAboutData.website.replace(/(https?:\/\/)?(www\.)?/g, "").replace(/\/$/, "")}
-                          </a>
-                        </span>
-                      </div>
-                    )}
-                    {quoteSidebarAboutData.headquarters && (
-                      <div className="quote-kv-row">
-                        <span>Headquarters</span>
-                        <span>{quoteSidebarAboutData.headquarters}</span>
-                      </div>
-                    )}
-                    {quoteSidebarAboutData.employees && (
-                      <div className="quote-kv-row">
-                        <span>Employees</span>
-                        <span>
-                          {!isNaN(parseInt(quoteSidebarAboutData.employees, 10))
-                            ? parseInt(quoteSidebarAboutData.employees, 10).toLocaleString()
-                            : "N/A"}
-                        </span>
-                      </div>
-                    )}
+            {/* ── Overview ── */}
+            {activeTab === "overview" && (
+              <div className="quote-tab-content">
+                {/* Stats grid */}
+                {quoteSidebarData && (
+                  <div className="quote-stats-grid">
+                    {sidebarEntries.map(({ label, key }) => {
+                      const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
+                      if (!value) return null;
+                      return (
+                        <div key={key} className="quote-stat-item">
+                          <span className="quote-stat-label">{label}</span>
+                          <span className="quote-stat-value">{value}</span>
+                        </div>
+                      );
+                    })}
                   </div>
+                )}
+
+                {/* Related stocks */}
+                <RelatedStocks currentSymbol={symbol} />
+
+                {/* News */}
+                <QuoteNews />
+              </div>
+            )}
+
+            {/* ── Financials ── */}
+            {activeTab === "financials" && (
+              <div className="quote-tab-content">
+                {hasFinancials ? (
+                  <div className="quote-financials-section">
+                    <p className="quote-section-subheading">Income Statement (Annual)</p>
+                    <table className="quote-financials-table">
+                      <tbody>
+                        {financialRows.map((row) => (
+                          <tr key={row.label}>
+                            <td className="quote-fin-label">{row.label}</td>
+                            <td className="quote-fin-value">{row.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="quote-empty-state">Financial data not available for this symbol.</p>
                 )}
               </div>
             )}
+
+            {/* ── About ── */}
+            {activeTab === "about" && (
+              <div className="quote-tab-content">
+                {hasAbout ? (
+                  <div className="quote-about-section">
+                    {quoteSidebarAboutData?.summary && (
+                      <p className="quote-about-summary">{quoteSidebarAboutData.summary}</p>
+                    )}
+                    <div className="quote-about-details">
+                      {quoteSidebarAboutData?.ceo && (
+                        <div className="quote-about-row">
+                          <span className="quote-about-label">CEO</span>
+                          <span className="quote-about-value">{quoteSidebarAboutData.ceo}</span>
+                        </div>
+                      )}
+                      {quoteSidebarAboutData?.headquarters && (
+                        <div className="quote-about-row">
+                          <span className="quote-about-label">Headquarters</span>
+                          <span className="quote-about-value">{quoteSidebarAboutData.headquarters}</span>
+                        </div>
+                      )}
+                      {quoteSidebarAboutData?.employees && (
+                        <div className="quote-about-row">
+                          <span className="quote-about-label">Employees</span>
+                          <span className="quote-about-value">
+                            {!isNaN(parseInt(quoteSidebarAboutData.employees, 10))
+                              ? parseInt(quoteSidebarAboutData.employees, 10).toLocaleString()
+                              : quoteSidebarAboutData.employees}
+                          </span>
+                        </div>
+                      )}
+                      {quoteSidebarAboutData?.website && (
+                        <div className="quote-about-row">
+                          <span className="quote-about-label">Website</span>
+                          <span className="quote-about-value">
+                            <a href={quoteSidebarAboutData.website} target="_blank" rel="noopener noreferrer">
+                              {quoteSidebarAboutData.website.replace(/(https?:\/\/)?(www\.)?/g, "").replace(/\/$/, "")}
+                            </a>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="quote-empty-state">Company information not available for this symbol.</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar — AI only */}
+          <aside className="quote-sidebar">
+            <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
           </aside>
         </div>
         <Footer />

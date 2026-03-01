@@ -1,5 +1,7 @@
 .quote-news-container {
-  max-width: 675px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 .quote-news-heading {
   margin-top: 25px;
