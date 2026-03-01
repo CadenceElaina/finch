@@ -23,10 +23,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+  color: var(--text-tertiary);
   margin-bottom: 12px;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--border);
 }
 
 /* Rows */
@@ -39,7 +39,7 @@
 }
 
 .settings-row + .settings-row {
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-top: 1px solid var(--border);
 }
 
 .settings-row-info {
@@ -56,7 +56,7 @@
 
 .settings-row-desc {
   font-size: 0.82rem;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .settings-toggle.active {
-  background: #1a73e8;
+  background: var(--blue);
 }
 
 .settings-toggle-knob {
@@ -98,8 +98,8 @@
 .settings-credits-pill {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
-  background: var(--bg-tertiary, rgba(128, 128, 128, 0.12));
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
   padding: 4px 10px;
   border-radius: 12px;
   white-space: nowrap;

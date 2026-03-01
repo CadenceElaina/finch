@@ -27,7 +27,7 @@
 }
 
 .stock-snapshot-locked {
-  color: var(--text-tertiary, rgba(255,255,255,0.35));
+  color: var(--text-tertiary));
   cursor: help;
   display: flex;
   align-items: center;
@@ -55,7 +55,7 @@
 
 .stock-snapshot-btn {
   background: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   padding: 8px 18px;
@@ -82,6 +82,6 @@
 
 .stock-snapshot-error {
   font-size: 0.78rem;
-  color: #e74c3c;
+  color: var(--negative);
   margin-top: 8px;
 }

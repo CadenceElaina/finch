@@ -1,50 +1,76 @@
+/* ── Design Tokens ────────────────────────────────────── */
+:root {
+  /* Surface colors — Google Finance Beta dark palette */
+  --bg-primary: #1f1f1f;
+  --bg-secondary: #292929;
+  --bg-tertiary: #333333;
+  --bg-elevated: #303134;
+  --bg-hover: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-tertiary: #5f6368;
+  --text-muted: rgba(255, 255, 255, 0.35);
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --divider: rgba(255, 255, 255, 0.08);
+
+  /* Accent */
+  --accent: #8ab4f8;
+  --accent-hover: #aecbfa;
+  --accent-bg: rgba(138, 180, 248, 0.08);
+  --blue: #1a73e8;
+  --blue-hover: #1565c0;
+
+  /* Semantic */
+  --positive: #81c995;
+  --positive-bg: rgba(129, 201, 149, 0.12);
+  --negative: #f28b82;
+  --negative-bg: rgba(242, 139, 130, 0.12);
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Typography */
+  --font-sans: "Google Sans", Roboto, Arial, sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+}
+
 html {
-  background-color: #040507;
+  background-color: var(--bg-primary);
 }
 body {
-  /*   background-color: #262626; */
-  color: #ffffff;
-  font-family: "Google Sans", Roboto, Arial, sans-serif;
-  background-color: #040507;
-  background: linear-gradient(
-    180deg,
-    #142033 25%,
-    #0e1a26 50%,
-    #070b0e 75%,
-    #040507 100%
-  );
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  background: var(--bg-primary);
   background-attachment: fixed;
-  /*   background: linear-gradient(
-    180deg,
-    #142033 20%,
-    #0e1a26 40%,
-    #0a121a 60%,
-    #070b0e 80%,
-    #040507 100%
-  ); */
-  /*   background: linear-gradient(to right, #262626, #1a1a1a); */
   transition: background-color 0.3s ease;
+  margin: 0;
 }
 .content-wrapper {
-  padding: 20px; /* Add padding for spacing */
+  padding: 20px;
   display: flex;
-  flex-direction: column; /* Stack children vertically */
+  flex-direction: column;
 }
 .main-content-container {
   display: flex;
   flex: 1;
   margin-bottom: 25px;
-  /*   box-shadow: 0 0 50px black; */
+  gap: 24px;
 }
 
 .main-content-left {
   width: 63%;
-  /*   flex: 2; */
 }
 
 .main-content-right {
-  width: 38%;
-  /*   flex: 1; */
+  width: 37%;
 }
 
 /* Media query for responsiveness */
@@ -81,8 +107,7 @@ body {
 
 .main-content-left,
 .main-content-right {
-  /* Add background color for better separation */
-  padding: 24px 0 0 0; /* Add padding to the columns */
+  padding: 24px 0 0 0;
 }
 
 .auth {
@@ -91,78 +116,69 @@ body {
 .button {
   display: flex;
   justify-content: center;
-  text-size-adjust: 100%;
-  /*   width: 5%; */
-  line-height: inherit;
-  user-select: none;
-  -webkit-font-smoothing: antialiased;
-  font-family: "Google Sans", Roboto, Arial, sans-serif;
-  font-size: 16px; /* You can adjust the font size */
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 14px;
   letter-spacing: 0.25px;
   font-weight: 500;
-  text-transform: none;
   white-space: nowrap;
   cursor: pointer;
-  color: var(--gm-fillbutton-ink-color, #fff);
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: content-box;
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
-  z-index: 0;
-  background: #1a73e8;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  background: var(--blue);
   border: 1px solid transparent;
   text-decoration: none;
-  transition: background-color 0.3s ease; /* Add a smooth transition for hover effect */
+  transition: background-color 0.15s ease;
+  padding: 8px 16px;
 }
 
 .button:hover {
-  background-color: #1565c0;
+  background-color: var(--blue-hover);
 }
 .primary {
   min-width: 96px;
   min-height: 36px;
 }
 .disabled {
-  color: rgba(60, 64, 67, 0.38);
-  background: rgba(60, 64, 67, 0.12);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
   cursor: default;
   pointer-events: none;
 }
 .tertiary {
-  background: #142033;
+  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   padding: 10px;
   margin-bottom: 16px;
   width: 15%;
-  border: 1px solid white;
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 .tertiary.active {
-  background-color: #1565c0;
+  background-color: var(--blue);
 }
 .tertiary:hover {
-  background-color: inherit;
-  color: rgb(24, 90, 188);
+  background-color: var(--bg-hover);
+  color: var(--accent);
 }
 .button,
 .secondary {
-  /* ... other styles ... */
   align-items: center;
 }
 .secondary {
   display: flex;
   justify-items: center;
   cursor: pointer;
-  color: white; /* Black text color for the secondary button */
-  padding: 6px;
-  font-size: 1rem;
-  background: inherit; /* White background for the secondary button */
-  border: 1px solid white;
+  color: var(--text-primary);
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  background: transparent;
+  border: 1px solid var(--border-strong);
   border-radius: 24px;
   text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease; /* Add a smooth transition for hover effect */
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 .secondary .button-icon {
   display: flex;
@@ -172,58 +188,38 @@ body {
 }
 
 .secondary:hover {
-  background-color: #f0f0f0; /* Adjust the hover background color as needed */
-  color: #000; /* Adjust the hover text color as needed */
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .full-width {
   width: 100%;
 }
-.secondary {
-  cursor: "pointer";
-  margin-right: "8px";
-  border-radius: "12px";
-  padding: "2px 8px";
-  font-size: "0.875rem";
-  font-weight: 500;
-  line-height: "1.25rem";
-  letter-spacing: "0.0178571429em";
-  font-family: '"Google Sans", Roboto, Arial, sans-serif';
-  transition: "background-color 0.3s ease";
-}
 .secondary .active {
-  color: white;
+  color: var(--text-primary);
   background-color: inherit;
 }
 
-/* .secondary {
-  background: #fff;
-  color: #1a73e8;
-  border: 1px solid #1a73e8;
-}
- */
 .large {
   padding: 12px 26px; /* You can adjust the padding for a larger button */
 }
 
 .button-outline {
   background: transparent;
-  border: 1px solid #1a73e8;
-  color: #1a73e8;
+  border: 1px solid var(--accent);
+  color: var(--accent);
 }
 
 .button-outline:hover {
-  background-color: #1a73e8;
-  color: #fff;
+  background-color: var(--accent-bg);
 }
 
 /*main layout */
 
 .header {
-  background-color: #2d2d2d;
+  background-color: var(--bg-secondary);
   padding: 20px;
-  border-radius: 12px 12px 0 0; /* Rounded top corners for the header */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -234,19 +230,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 
 .market-trends-container {
-  background: #142033;
+  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 16px;
   margin-bottom: 16px;
   margin-left: 24px;
-  border: 1px solid white;
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   max-width: 360px;
   min-width: 255px;
 }
@@ -271,7 +267,7 @@ body {
   line-height: 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  border-top: 1px solid rgb(218, 220, 224);
+  border-top: 1px solid var(--border);
   padding: 36px 0 12px 0;
   margin-top: 25px;
   text-align: center;
@@ -294,20 +290,16 @@ body {
   align-items: center;
 }
 
-.footer-item span {
-  /* Adjust as needed for vertical spacing */
-}
-
 .footer-list a {
   text-decoration: none;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: bold;
   font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .footer-list a:hover {
-  color: #1a73e8; /* Change the color on hover as needed */
+  color: var(--accent);
 }
 .watchlist-heading {
   font-size: 1.3rem;
@@ -319,16 +311,16 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  color: rgb(32, 33, 36);
+  color: var(--text-primary);
 }
 
 .sign-in-inner,
 .register-inner {
   width: 25%;
-  background-color: #f4f4f4;
-  border-radius: 10px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .form-container {
@@ -346,16 +338,15 @@ body {
   margin: 0 auto;
   display: flex;
   align-items: center;
-
   justify-content: center;
 }
 .sign-in-logo a {
   font-size: 18px;
   margin-top: 2px;
   text-decoration: none !important;
-  color: #2196f3;
+  color: var(--accent);
   &:hover {
-    color: #0d5cb6;
+    color: var(--blue);
   }
 }
 
@@ -381,8 +372,10 @@ body {
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
   }
 
   .checkbox-container {
@@ -397,21 +390,21 @@ body {
   }
 
   .checkbox-container label {
-    margin: 0; /* Reset margin to eliminate default spacing */
+    margin: 0;
   }
   button {
-    background-color: #2196f3;
+    background-color: var(--blue);
     color: #fff;
     padding: 10px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease;
     margin: 0 auto;
     width: 100%;
     &:hover {
-      background-color: #0d5cb6;
+      background-color: var(--accent);
     }
   }
 }
@@ -424,19 +417,19 @@ body {
 
   a {
     margin-right: 10px;
-    color: #2196f3;
+    color: var(--accent);
     text-decoration: none;
     font-size: 14px;
     transition: color 0.3s ease;
 
     &:hover {
-      color: #0d5cb6;
+      color: var(--blue);
     }
   }
 
   span {
     font-size: 14px;
-    color: #555;
+    color: var(--text-secondary);
   }
 }
 .home-market-trends-heading {
@@ -464,7 +457,7 @@ body {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: #1a73e8;
+  color: var(--accent);
 }
 .home-market-trends-buttons-more a:hover {
   text-decoration: underline;

@@ -13,7 +13,7 @@
   flex: 1;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin-right: 4px;
 }
 
@@ -28,8 +28,8 @@
   padding: 1rem;
   flex: 1;
   cursor: pointer;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 8px;
   font-size: 1rem;
   font-weight: 500;
@@ -38,8 +38,8 @@
 }
 
 .chip.active {
-  background-color: rgb(24, 90, 188);
-  color: #fff;
+  background-color: var(--blue);
+  color: var(--text-primary);
 }
 .markets-article {
   padding: 1rem;
@@ -55,16 +55,16 @@
   margin-bottom: 2px;
 }
 .markets-article-link a {
-  color: var(--accent, rgba(28, 116, 233, 0.9));
+  color: var(--accent);
   text-decoration: none;
 }
 .markets-article-link a:hover {
-  color: var(--accent-hover, rgb(24, 90, 188));
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 .markets-article-source {
   font-size: 0.78rem;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
@@ -88,18 +88,17 @@
   display: flex;
   flex-direction: row !important;
   align-items: center;
-  background-color: var(--bg-secondary, #1e1e1e);
-  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-sm);
   padding: 6px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
   white-space: nowrap;
 }
 .currencies:hover {
   cursor: default !important;
 }
 .index-card-content:hover {
-  background-color: var(--bg-tertiary, rgba(128, 128, 128, 0.1));
+  background-color: var(--bg-tertiary);
   cursor: pointer;
 }
 .index-card-link {
@@ -134,7 +133,7 @@
 }
 
 .index-card-price {
-  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--text-secondary);
 }
 
 .index-card-change {
@@ -156,7 +155,7 @@
 
 .card-content.neutral .card-percent-change,
 .card-content.neutral .card-price-change {
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+  color: var(--text-tertiary);
 }
 
 /* Index card skeletons */
@@ -169,10 +168,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: var(--bg-secondary, #1e1e1e);
-  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-sm);
   padding: 6px 12px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--border);
   min-width: 160px;
   height: 44px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;

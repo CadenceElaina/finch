@@ -15,9 +15,9 @@
 .portfolio-inner {
   display: flex;
   justify-content: space-between;
-  background-color: #333;
+  background-color: var(--bg-tertiary);
   padding: 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .portfolio-link {
@@ -34,7 +34,7 @@
 
 .portfolio-value,
 .portfolio-percent-change {
-  color: #ccc;
+  color: var(--text-secondary);
   margin-right: 10px;
 }
 
@@ -43,7 +43,7 @@
 }
 .border-top {
   margin-top: 10px;
-  background-color: rgb(232, 234, 237);
+  background-color: var(--border);
   height: 1px;
   width: 100%;
 }
@@ -56,10 +56,10 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: white;
-  color: black;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
   padding: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   white-space: nowrap;
   visibility: hidden;
@@ -70,11 +70,11 @@
 .tooltip::before {
   content: "";
   position: absolute;
-  top: 100%; /* Change 'top' to 'bottom' */
-  left: 8px; /* Adjust the value to position the arrow */
-  border-width: 8px 8px 0; /* Adjust border-width to create upward arrow */
+  top: 100%;
+  left: 8px;
+  border-width: 8px 8px 0;
   border-style: solid;
-  border-color: white transparent transparent;
+  border-color: var(--bg-elevated) transparent transparent;
 }
 .add-portfolio-button:hover .tooltip {
   visibility: visible;
@@ -82,8 +82,8 @@
 }
 
 .p-negative {
-  color: red;
+  color: var(--negative);
 }
 .p-positive {
-  color: green;
+  color: var(--positive);
 }

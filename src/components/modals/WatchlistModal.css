@@ -2,15 +2,13 @@
   position: absolute;
   max-width: 192px;
   max-height: 189px;
-  /*   left: 1510px;
-  top: 1030px;
-  transform: translateX(-50%); */
-  color: #222;
-  background-color: #fff; /* Background color */
-  border: 1px solid #ddd; /* Border color */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle lift effect */
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   padding: 10px;
-  z-index: 1000; /* Ensure the dropdown is above other elements */
+  border-radius: var(--radius-sm);
+  z-index: 1000;
 }
 
 .watchlist-modal h2 {
@@ -26,13 +24,14 @@
 }
 
 .watchlist-modal button {
-  background-color: #3498db; /* Button background color */
-  color: #fff; /* Button text color */
+  background-color: var(--blue);
+  color: var(--text-primary);
   border: none;
   padding: 8px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .watchlist-modal button:hover {
-  background-color: #2980b9; /* Hover state color */
+  background-color: var(--blue-hover);
 }

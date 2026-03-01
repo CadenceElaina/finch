@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import DemoBanner from "../DemoBanner";
 import FuelGauge from "../FuelGauge";
+import Search from "../search/Search";
 import { useDemoMode } from "../../context/DemoModeContext";
 import "./Layout.css";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { isDemoMode } = useDemoMode();
   const navigate = useNavigate();
 
@@ -39,6 +42,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </span>
         </div>
         <div className="top-banner-right">
+          <button
+            className="header-search-toggle"
+            onClick={() => setSearchOpen((prev) => !prev)}
+            aria-label="Toggle search"
+            title="Search"
+          >
+            <FiSearch size={18} />
+          </button>
           {isDemoMode && (
             <button
               className="demo-badge"
@@ -51,6 +62,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <FuelGauge />
         </div>
       </div>
+
+      {searchOpen && (
+        <div className="header-search-bar">
+          <Search compact onNavigate={() => setSearchOpen(false)} />
+        </div>
+      )}
 
       <div className="container">
         {open && (

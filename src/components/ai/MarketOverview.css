@@ -1,9 +1,9 @@
 .market-overview {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 16px;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.06) 0%, transparent 100%);
 }
 
 .market-overview-header {
@@ -13,11 +13,11 @@
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
 }
 
 .market-overview-header svg {
-  color: #1a73e8;
+  color: var(--accent);
 }
 
 /* Animated gradient line — inspired by Google Finance Research */
@@ -46,7 +46,7 @@
 .market-overview-content {
   font-size: 0.8rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-secondary);
 }
 
 .market-overview-content p {
@@ -60,7 +60,7 @@
 .market-overview-empty {
   text-align: center;
   padding: 12px 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-tertiary);
   font-size: 0.8rem;
 }
 
@@ -70,8 +70,8 @@
   padding: 8px 20px;
   border: none;
   border-radius: 20px;
-  background: #1a73e8;
-  color: white;
+  background: var(--blue);
+  color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -80,7 +80,7 @@
 
 .market-overview-generate:hover,
 .market-overview-refresh:hover {
-  background: #1565c0;
+  background: var(--blue-hover);
 }
 
 .market-overview-generate:disabled,
@@ -91,13 +91,13 @@
 
 .market-overview-refresh {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-strong);
   font-size: 0.7rem;
   padding: 4px 12px;
 }
 
 .market-overview-refresh:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-hover);
 }
 
 .market-overview-loading {
@@ -108,12 +108,12 @@
 
 .market-overview-limit {
   margin-top: 8px;
-  color: #ef9a9a;
+  color: var(--negative);
   font-size: 0.7rem;
 }
 
 .market-overview-error {
   margin-top: 8px;
-  color: #ef9a9a;
+  color: var(--negative);
   font-size: 0.75rem;
 }

@@ -18,54 +18,50 @@
 }
 
 .quote-price-change-positive {
-  color: green;
+  color: var(--positive);
   margin-right: 5px;
 }
 
 .quote-price-change-negative {
-  color: rgb(165, 14, 14);
+  color: var(--negative);
   margin-right: 5px;
 }
 .quote-price-interval-positive {
-  color: rgb(19, 115, 51);
+  color: var(--positive);
 }
 .quote-price-interval-negative {
-  color: rgb(165, 14, 14);
+  color: var(--negative);
 }
 .quote-percent-change-positive {
   display: flex;
   align-items: center;
   letter-spacing: 0.00625em;
-  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5rem;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   width: min-content;
-
-  background-color: rgba(69, 253, 69, 0.9);
-  color: rgba(19, 115, 51, 1);
-  /*   background: rgba(230, 244, 234, 0.); */
-
+  background-color: rgba(129, 201, 149, 0.15);
+  color: var(--positive);
   font-size: 16px;
   min-width: 40px;
-
   margin-right: 5px;
 }
 
 .quote-percent-change-negative {
   display: flex;
   letter-spacing: 0.00625em;
-  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5rem;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   width: min-content;
-  background-color: rgba(255, 0, 0, 0.2);
-  color: rgb(165, 14, 14);
+  background-color: rgba(242, 139, 130, 0.15);
+  color: var(--negative);
   margin-right: 5px;
   align-items: center;
 }
@@ -73,13 +69,13 @@
   padding: 10px 0 10px 0;
   display: flex;
   flex-direction: row;
-  color: rgb(95, 99, 104);
+  color: var(--text-secondary);
 }
 .quote-price-subheading div:last-child {
   margin-left: 5px;
 }
 .quote-price-subheading a {
-  color: rgb(95, 99, 104);
+  color: var(--text-secondary);
   text-decoration: none;
 }
 .quote-price-subheading a:hover {
@@ -91,25 +87,25 @@
   margin-bottom: 10px;
 }
 .button-group button:hover {
-  background-color: rgba(26, 115, 232, 0.9);
+  background-color: var(--blue);
 }
 .quote-data-buttons button:hover {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--bg-hover);
 }
 .button-group button.active {
-  background: #1a73e8;
+  background: var(--blue);
 }
 .button-group button.active:hover {
-  background-color: #1565c0;
-  color: rgba(255, 255, 255, 1);
+  background-color: var(--blue-hover);
+  color: var(--text-primary);
 }
 .button-group button {
   border: none;
 }
 .button-group button,
 .quote-data-buttons button {
-  color: rgba(255, 255, 255, 0.85);
-  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
   font-size: 16px;
   letter-spacing: 0.25px;
   font-weight: 500;
@@ -133,12 +129,11 @@
   padding: 0.5rem;
 }
 .quote-data-buttons button {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-strong);
   border-radius: 24px;
-  background-color: aliceblue;
-  color: black;
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
-    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: none;
 }
 .quote-data-buttons button,
 .quote-data-buttons span {
@@ -158,7 +153,7 @@
   width: 32%;
 }
 .quote-top-container {
-  border-bottom: 1px solid rgb(232, 234, 237);
+  border-bottom: 1px solid var(--border);
   margin: 0 auto;
   padding-bottom: 8px;
   max-width: 1024px;
@@ -171,7 +166,7 @@
   margin: 25px auto 0 auto;
   a {
     text-decoration: none;
-    color: white;
+    color: var(--text-primary);
   }
   a:hover {
     text-decoration: underline;
@@ -195,8 +190,8 @@
   text-transform: uppercase;
 }
 .quote-data-list {
-  border: 1px solid white;
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 10px;
 }
 .about-heading {
@@ -219,21 +214,21 @@
 .quote-data-row {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid white;
+  border-top: 1px solid var(--border);
   padding: 8px 0;
 }
 
 .quote-about {
-  border: 1px solid white;
-  border-radius: 12px;
-  margin-top: 20px; /* Adjust the margin as needed */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-top: 20px;
   padding: 15px;
 }
 
 .quote-about-row {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid rgb(218, 220, 224);
+  border-top: 1px solid var(--border);
   padding: 8px 0;
   min-height: 43px;
   box-sizing: border-box;
@@ -256,7 +251,7 @@
   max-width: 60%;
 }
 .quote-about-row span a {
-  color: rgb(25, 103, 210);
+  color: var(--accent);
   text-decoration: none;
 }
 .quote-about-row span a:hover {

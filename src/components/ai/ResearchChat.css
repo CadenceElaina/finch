@@ -37,7 +37,7 @@
 }
 
 .research-chat-clear:hover {
-  color: #e74c3c;
+  color: var(--negative);
 }
 
 /* Messages */
@@ -73,12 +73,12 @@
 
 .research-chat-msg.user .research-chat-bubble {
   background: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border-bottom-right-radius: 4px;
 }
 
 .research-chat-msg.model .research-chat-bubble {
-  background: var(--bg-tertiary, var(--border));
+  background: var(--bg-tertiary));
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
 }
@@ -140,7 +140,7 @@
 
 .research-chat-send {
   background: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
@@ -161,6 +161,6 @@
 
 .research-chat-error {
   font-size: 0.78rem;
-  color: #e74c3c;
+  color: var(--negative);
   margin: 4px 0 8px;
 }

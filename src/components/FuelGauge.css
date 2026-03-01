@@ -6,8 +6,8 @@
   border-radius: 16px;
   font-size: 0.75rem;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
   user-select: none;
   white-space: nowrap;
 }
@@ -24,7 +24,7 @@
   width: 40px;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border);
   overflow: hidden;
 }
 
@@ -35,11 +35,11 @@
 }
 
 .fuel-high .fuel-fill {
-  background: #4caf50;
+  background: var(--positive);
 }
 
 .fuel-high .fuel-count {
-  color: #81c784;
+  color: var(--positive);
 }
 
 .fuel-medium .fuel-fill {
@@ -51,16 +51,16 @@
 }
 
 .fuel-low .fuel-fill {
-  background: #f44336;
+  background: var(--negative);
 }
 
 .fuel-low .fuel-count {
-  color: #ef9a9a;
+  color: var(--negative);
 }
 
 .fuel-info {
   display: flex;
   align-items: center;
-  color: var(--text-tertiary, rgba(255,255,255,0.4));
+  color: var(--text-tertiary);
   cursor: help;
 }

@@ -17,25 +17,25 @@
   display: flex;
 }
 .card {
-  background-color: var(--bg-secondary, #1a1a1a);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
   padding: 16px;
   text-align: center;
   box-sizing: border-box;
   height: 150px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 .card a {
   text-decoration: none;
-  color: #1a73e8;
+  color: var(--accent);
 }
 .card a:hover {
   text-decoration: underline;
 }
 .card:hover {
-  box-shadow: 0 0 8px rgba(154, 160, 166, 0.3);
+  box-shadow: 0 0 8px rgba(154, 160, 166, 0.15);
 }
 
 .card-content {
@@ -48,12 +48,12 @@
 .card-symbol {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1a73e8;
+  color: var(--accent);
 }
 
 .card-name {
   font-size: 0.8rem;
-  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -71,11 +71,11 @@
 }
 
 .card-change.positive {
-  color: #34a853;
+  color: var(--positive);
 }
 
 .card-change.negative {
-  color: #d93025;
+  color: var(--negative);
 }
 
 .arrow {
@@ -84,9 +84,9 @@
   transform: translateY(-50%);
   cursor: pointer;
   font-size: 24px;
-  color: var(--text-primary, #333);
-  background-color: var(--bg-secondary, #fff);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   padding: 8px;
   z-index: 1;
@@ -94,7 +94,7 @@
 }
 
 .arrow:hover {
-  background-color: var(--bg-tertiary, #ddd);
+  background-color: var(--bg-tertiary);
 }
 
 .next {
@@ -263,14 +263,14 @@
   text-align: center;
 
   opacity: 0.25;
-  color: black;
+  color: var(--text-secondary);
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 .slick-dots li.slick-active button:before {
   opacity: 0.75;
-  color: black;
+  color: var(--text-primary);
 }
 /* Slider */
 .slick-slider {

@@ -5,7 +5,48 @@ import { quoteType, suggestionType, utils } from "./types";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS, yhFetch } from "../../config/api";
 
-const Search = () => {
+const POPULAR_SEARCHES = [
+  { symbol: "AAPL", name: "Apple Inc." },
+  { symbol: "MSFT", name: "Microsoft Corporation" },
+  { symbol: "GOOGL", name: "Alphabet Inc." },
+  { symbol: "AMZN", name: "Amazon.com, Inc." },
+  { symbol: "TSLA", name: "Tesla, Inc." },
+  { symbol: "NVDA", name: "NVIDIA Corporation" },
+];
+
+const RECENT_SEARCHES_KEY = "finch_recent_searches";
+const MAX_RECENT = 5;
+
+/** Load recent searches from localStorage */
+const getRecentSearches = (): { symbol: string; name: string }[] => {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+/** Save a search to recent history */
+const saveRecentSearch = (symbol: string, name?: string) => {
+  const upper = symbol.toUpperCase();
+  const recent = getRecentSearches().filter(
+    (r) => r.symbol.toUpperCase() !== upper
+  );
+  recent.unshift({ symbol: upper, name: name || upper });
+  localStorage.setItem(
+    RECENT_SEARCHES_KEY,
+    JSON.stringify(recent.slice(0, MAX_RECENT))
+  );
+};
+
+interface SearchProps {
+  /** Compact mode for header bar (smaller, no Search button) */
+  compact?: boolean;
+  /** Callback after navigating to a quote */
+  onNavigate?: () => void;
+}
+
+const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -13,13 +54,10 @@ const Search = () => {
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchInput, setSearchInput] = React.useState<string>("");
-  const [searchedQuote, setSearchedQuote] = React.useState("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [fetchDataClicked, setFetchDataClicked] =
-    React.useState<boolean>(false);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
 
-  const queryClient = useQueryClient(); // Step 2
+  const queryClient = useQueryClient();
 
   queryClient.setQueryDefaults(["quote"], { gcTime: 1000 * 60 * 15 });
 
@@ -58,8 +96,7 @@ const Search = () => {
       queryClient.setQueryData(["matches", searchInput], matches);
 
       return matches;
-    } catch (error) {
-      console.error(error);
+    } catch {
       return [];
     }
   };
@@ -71,112 +108,46 @@ const Search = () => {
     enabled: searchInput !== "" && !isTyping, //Only enable query when the user is not typing and searchInput is not empty
   });
 
-  const getQuote = async (): Promise<quoteType[]> => {
-    if (fetchDataClicked) {
-      try {
-        const cachedQuote = queryClient.getQueryData(["quote", searchInput]);
-        if (cachedQuote) {
-          const newCachedQuote = utils.checkCachedQuoteType(cachedQuote);
-          return [newCachedQuote];
-        }
-        const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
-          region: "US",
-          symbols: searchInput,
-        });
+  /** Batch-fetch quotes for autocomplete matches to show prices in dropdown */
+  const getQuotesForMatches = async (): Promise<quoteType[]> => {
+    await queryClient.refetchQueries({ queryKey: ["matches", searchInput] });
+    const bestMatches =
+      queryClient.getQueryData<suggestionType[]>(["matches", searchInput]) ?? [];
 
-        const q = response.data?.quoteResponse?.result?.[0];
-        if (!q) throw new Error("Incomplete or missing data in the API response");
+    if (bestMatches.length === 0) return [];
 
-        const quoteData: quoteType = {
-          symbol: (q.symbol ?? searchInput).toLowerCase(),
-          price: q.regularMarketPrice ?? 0,
-          name: q.shortName ?? "",
-          priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
-          percentChange: q.regularMarketChangePercent ?? 0,
-        };
-        return [quoteData];
-      } catch (error) {
-        console.error(error);
-        throw new Error("Failed to fetch quote data");
-      }
-    } else {
-      // if we do not click the button we should fetch data for each item in bestMatchesQuery.data to display in the dropdown
-      await queryClient.refetchQueries({ queryKey: ["matches", searchInput] });
-      const bestMatches =
-        queryClient.getQueryData<suggestionType[]>(["matches", searchInput]) ??
-        [];
-      if (bestMatches !== undefined) {
-        const matchesSymbols = utils.getSymbols(bestMatches);
-        // Batch fetch quotes for all matched symbols in one call
-        const symbolsStr = matchesSymbols.join(",");
-        const quotePromises = [async () => {
-          try {
-            const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
-              region: "US",
-              symbols: symbolsStr,
-            });
-            const data = response.data?.quoteResponse?.result ?? [];
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (Array.isArray(data) ? data : [data]).map((q: any) => ({
-              symbol: (q.symbol ?? "").toLowerCase(),
-              price: q.regularMarketPrice ?? 0,
-              name: q.shortName ?? "",
-              priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
-              percentChange: q.regularMarketChangePercent ?? 0,
-            }));
-          } catch {
-            return [];
-          }
-        }];
+    const symbolsStr = utils.getSymbols(bestMatches).join(",");
+    try {
+      const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+        region: "US",
+        symbols: symbolsStr,
+      });
+      const data = response.data?.quoteResponse?.result ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const quotes = (Array.isArray(data) ? data : [data]).map((q: any) => ({
+        symbol: (q.symbol ?? "").toLowerCase(),
+        price: q.regularMarketPrice ?? 0,
+        name: q.shortName ?? "",
+        priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
+        percentChange: q.regularMarketChangePercent ?? 0,
+      }));
 
-        // Wait for batch call to complete
-        const batchResults = await Promise.all(quotePromises.map(fn => fn()));
-        const quotes = batchResults.flat();
-        // Filter out potential null and empty values
-        const validNonEmptyQuotes = quotes.filter(
-          (quote) =>
-            quote !== null &&
-            (quote.symbol !== "" ||
-              quote.name !== "" ||
-              quote.price !== 0 ||
-              quote.priceChange !== 0 ||
-              quote.percentChange !== 0)
-        );
-        const validQuotesType =
-          utils.checkCachedQuotesType(validNonEmptyQuotes);
-        return validQuotesType;
-      }
-
-      try {
-        return [
-          {
-            symbol: "",
-            name: "",
-            price: 0,
-            priceChange: 0,
-            percentChange: 0,
-          },
-        ];
-      } catch (error) {
-        console.error(error);
-        throw new Error("Failed to fetch quote data");
-      }
+      return utils.checkCachedQuotesType(
+        quotes.filter(
+          (q) => q.symbol !== "" || q.name !== "" || q.price !== 0
+        )
+      );
+    } catch {
+      return [];
     }
   };
 
   const quoteQuery = useQuery<quoteType[], Error>({
-    queryKey: ["quote", searchInput, searchedQuote],
-    queryFn: getQuote,
+    queryKey: ["quote", searchInput],
+    queryFn: getQuotesForMatches,
     staleTime: 1000 * 60 * 15,
-    enabled: fetchDataClicked || (!isTyping && searchInput !== ""), // Only enable the query when fetchDataClicked is true
+    enabled: !isTyping && searchInput !== "",
   });
-
-  // Handle onSuccess separately
-  React.useEffect(() => {
-    if (quoteQuery.isSuccess) {
-      setFetchDataClicked(false);
-    }
-  }, [quoteQuery.isSuccess]);
 
   useEffect(() => {
     if (searchInput !== "") {
@@ -236,16 +207,8 @@ const Search = () => {
 
   const handleClick = () => {
     if (searchInput.trim() !== "") {
-      setSearchedQuote(searchInput);
-      setFetchDataClicked(true);
-      setShowDropdown(true);
-      // Check if data is available in the cache
-      const cachedQuote = queryClient.getQueryData(["quote", searchedQuote]);
-
-      if (!cachedQuote && quoteQuery.isStale) {
-        // If data is not in the cache or stale, trigger the query
-        quoteQuery.refetch();
-      }
+      // Navigate directly to the quote page
+      handleClickQuote(searchInput.trim());
     }
   };
 
@@ -274,25 +237,27 @@ const Search = () => {
     }
 
     if (e.key === "Enter") {
+      e.preventDefault();
       // If an option is highlighted via arrow keys, navigate to it
       if (activeIndex >= 0 && allResults[activeIndex]) {
         handleClickQuote(allResults[activeIndex]);
         return;
       }
-      setSearchedQuote(searchInput);
-      setFetchDataClicked(true);
-      setShowDropdown(true);
-      const cachedQuote = queryClient.getQueryData(["quote", searchedQuote]);
-
-      if (!cachedQuote && quoteQuery.isStale) {
-        // If data is not in the cache or stale, trigger the query
-        quoteQuery.refetch();
+      // Navigate directly to the quote page for whatever the user typed
+      if (searchInput.trim() !== "") {
+        handleClickQuote(searchInput.trim());
       }
     }
   };
 
   /** Returns an ordered list of symbols currently visible in the dropdown. */
   const getVisibleResults = (): string[] => {
+    // When input is empty, show recent + popular
+    if (searchInput.trim() === "") {
+      const recent = getRecentSearches().map((r) => r.symbol);
+      const popular = POPULAR_SEARCHES.map((p) => p.symbol);
+      return [...recent, ...popular];
+    }
     if (quoteQuery.data && quoteQuery.data.length >= 1) {
       return quoteQuery.data.map((q) => q.symbol);
     }
@@ -303,16 +268,77 @@ const Search = () => {
   };
 
   const handleClickQuote = (quote: string) => {
-    const newState = [false, quote];
+    // Save to recent searches
+    const matchData = bestMatchesQuery.data?.find(
+      (m) => m.symbol.toLowerCase() === quote.toLowerCase()
+    );
+    saveRecentSearch(quote, matchData?.name);
+
     // Clear search state so dropdown doesn't persist on navigation
     localStorage.removeItem("searchState");
     setShowDropdown(false);
     setSearchInput("");
-    //quote
-    navigate(`quote/${quote}`, { state: newState });
+    navigate(`/quote/${quote}`, { state: [false, quote] });
+    onNavigate?.();
+  };
+
+  /** Render popular/recent suggestions when input is empty */
+  const renderEmptyStateSuggestions = () => {
+    const recent = getRecentSearches();
+
+    return (
+      <div className="result-container" role="listbox" id="search-listbox">
+        {recent.length > 0 && (
+          <>
+            <div className="search-section-label">Recent searches</div>
+            {recent.map((item, i) => (
+              <div
+                key={`recent-${item.symbol}`}
+                id={`search-option-${i}`}
+                role="option"
+                tabIndex={-1}
+                aria-selected={i === activeIndex}
+                className={`quote-row suggestion-row${i === activeIndex ? " active" : ""}`}
+                onClick={() => handleClickQuote(item.symbol)}
+              >
+                <div className="left-column">
+                  <div className="stock-name">{item.symbol}</div>
+                  <div className="stock-details">{item.name}</div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+        <div className="search-section-label">Popular</div>
+        {POPULAR_SEARCHES.map((item, i) => {
+          const idx = recent.length + i;
+          return (
+            <div
+              key={`popular-${item.symbol}`}
+              id={`search-option-${idx}`}
+              role="option"
+              tabIndex={-1}
+              aria-selected={idx === activeIndex}
+              className={`quote-row suggestion-row${idx === activeIndex ? " active" : ""}`}
+              onClick={() => handleClickQuote(item.symbol)}
+            >
+              <div className="left-column">
+                <div className="stock-name">{item.symbol}</div>
+                <div className="stock-details">{item.name}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const renderQuoteResults = () => {
+    // If input is empty, show recent + popular suggestions
+    if (searchInput.trim() === "") {
+      return renderEmptyStateSuggestions();
+    }
+
     let optionIndex = 0;
 
     const renderRow = (
@@ -417,7 +443,7 @@ const Search = () => {
 
   return (
     <>
-      <div className="app-container" role="search">
+      <div className={`app-container${compact ? " compact" : ""}`} role="search">
         <div className="search-container" ref={inputRef}>
           <input
             className="search-input"
@@ -435,14 +461,17 @@ const Search = () => {
               activeIndex >= 0 ? `search-option-${activeIndex}` : undefined
             }
             autoComplete="off"
+            autoFocus={compact}
           />
-          <button
-            className="search-button"
-            onClick={handleClick}
-            aria-label="Search"
-          >
-            Search
-          </button>
+          {!compact && (
+            <button
+              className="search-button"
+              onClick={handleClick}
+              aria-label="Search"
+            >
+              Search
+            </button>
+          )}
         </div>
         {showDropdown && (
           <div className="data" ref={dropdownRef}>

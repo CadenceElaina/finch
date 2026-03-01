@@ -7,8 +7,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background: rgb(248, 249, 250);
-  color: black;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   width: 100%;
 }
 
@@ -19,7 +19,7 @@
   margin-top: 10px;
   align-self: flex-start;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 .portfolio-performance-container {
   min-width: 1000px;
@@ -36,11 +36,11 @@
 }
 
 .portfolio-highlights {
-  border: 1px solid white;
+  border: 1px solid var(--border);
   min-width: 255px;
   max-width: 324px;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   align-self: center;
   text-align: center;
   margin: 0 auto;
@@ -56,9 +56,9 @@
   min-width: 60px;
   min-height: 6ch;
   margin: 10px;
-  background-color: rgb(19, 115, 51);
-  color: #00ff00;
-  border-radius: 8px;
+  background-color: rgba(129, 201, 149, 0.15);
+  color: var(--positive);
+  border-radius: var(--radius-sm);
   padding: 8px;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -68,9 +68,9 @@
   min-width: 60px;
   min-height: 60px;
   margin: 10px;
-  background-color: #660000;
-  color: rgb(217, 48, 37);
-  border-radius: 8px;
+  background-color: rgba(242, 139, 130, 0.15);
+  color: var(--negative);
+  border-radius: var(--radius-sm);
   padding: 8px;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -89,7 +89,7 @@
 
 .portfolio-header-item a {
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
 }
@@ -105,17 +105,17 @@
   margin-right: 15px;
   padding: 5px;
   height: 40px;
-  border: 2px solid rgb(218, 220, 224);
-  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .tab:hover {
-  box-shadow: 0 0 5px rgb(154, 160, 166);
+  box-shadow: 0 0 5px rgba(154, 160, 166, 0.3);
 }
 .active-tab {
-  border-bottom: 5px solid rgb(26, 115, 232);
+  border-bottom: 5px solid var(--blue);
   height: 37px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .count {
   margin-left: 5px;
@@ -128,23 +128,23 @@
   align-items: center;
   padding: 8px 12px;
   margin-top: 10px;
-  background-color: #007bff;
-  color: #fff;
+  background-color: var(--blue);
+  color: var(--text-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .add-list:hover,
 .add-investment:hover {
-  background-color: #0056b3;
+  background-color: var(--blue-hover);
 }
 
 .chart {
   margin-top: 20px;
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .chart-header {
@@ -159,11 +159,11 @@
 }
 
 .settings {
-  background-color: white;
+  background-color: transparent;
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #333;
+  color: var(--text-secondary);
 }
 
 .settings-dropdown {
@@ -176,17 +176,17 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .dropdown-content {
   display: block;
   position: absolute;
-  background-color: white;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-elevated);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.3);
   min-width: 160px;
-  border-radius: 4px;
-  color: black;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
 }
 
 .dropdown-option {
@@ -195,29 +195,29 @@
   transition: background-color 0.3s;
 }
 .dropdown-option:hover {
-  background-color: #777;
+  background-color: var(--bg-hover);
 }
 
 .settings:hover {
-  color: #007bff;
+  color: var(--accent);
 }
 
 .toggle-type {
   cursor: pointer;
   padding: 0.75rem;
   transition: background-color 0.3s;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 .active-list {
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 0.75rem;
   transition: background-color 0.3s;
-  background: #007bff;
-  color: white;
+  background: var(--blue);
+  color: var(--text-primary);
 }
 .toggle-type:hover {
-  border-radius: 12px;
-  background: #f1f1f1;
+  border-radius: var(--radius-md);
+  background: var(--bg-hover);
 }
 .add-list-div:hover .tooltip-lists {
   visibility: visible;
@@ -280,7 +280,7 @@
 .security-remove-btn {
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -288,7 +288,7 @@
 }
 
 .security-remove-btn:hover {
-  color: #e53935;
+  color: var(--negative);
 }
 
 /* Security details table (portfolio) */
@@ -308,7 +308,7 @@
 }
 
 .security-details-table th {
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -321,7 +321,7 @@
 }
 
 .sortable-th:hover {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 .clickable-cell {
@@ -337,11 +337,11 @@
 }
 
 .security-details-table .gain {
-  color: #00c853;
+  color: var(--positive);
 }
 
 .security-details-table .loss {
-  color: #e53935;
+  color: var(--negative);
 }
 
 .portfolio-summary-row div {
@@ -358,7 +358,7 @@
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 .allocation-chart-row {
@@ -393,7 +393,7 @@
 }
 
 .allocation-pct {
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
 }
 
 /* Sparkline cells in watchlist table */
@@ -417,20 +417,20 @@
 }
 
 .benchmark-label {
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .benchmark-value.gain {
-  color: #00c853;
+  color: var(--positive);
 }
 
 .benchmark-value.loss {
-  color: #e53935;
+  color: var(--negative);
 }
 
 .benchmark-vs {
-  color: var(--text-secondary, #888);
+  color: var(--text-secondary);
   font-size: 0.78rem;
 }
 
@@ -452,13 +452,13 @@
 .empty-state-text {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   margin: 0 0 0.25rem;
 }
 
 .empty-state-subtext {
   font-size: 0.85rem;
-  color: var(--text-secondary, #999);
+  color: var(--text-secondary);
   margin: 0 0 1rem;
   max-width: 320px;
 }
