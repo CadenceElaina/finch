@@ -97,7 +97,7 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
               "Generate Overview"
             )}
           </button>
-          {creditsRemaining <= 0 && (
+          {creditsRemaining <= 0 && !loading && (
             <p className="market-overview-limit">
               Daily AI credits used. Resets at midnight.
             </p>

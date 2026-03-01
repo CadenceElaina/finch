@@ -31,12 +31,12 @@ interface AiContextValue {
   generate: (prompt: string) => Promise<string>;
   /** Send a grounded prompt with Google Search for real-time data. Costs 1 credit. */
   generateGrounded: (prompt: string) => Promise<string>;
-  /** Send a chat message with history context + Google Search. Costs 1 credit. */
-  chat: (symbol: string, message: string) => Promise<string>;
-  /** Get chat history for a symbol */
-  getChatHistory: (symbol: string) => ChatMessage[];
-  /** Clear chat history for a symbol */
-  clearChat: (symbol: string) => void;
+  /** Send a chat message in the unified thread + Google Search. Costs 1 credit. */
+  chat: (message: string) => Promise<string>;
+  /** Get the unified chat history */
+  getChatHistory: () => ChatMessage[];
+  /** Clear the entire chat history */
+  clearChat: () => void;
 }
 
 const AiContext = createContext<AiContextValue | undefined>(undefined);
@@ -45,8 +45,8 @@ const AiContext = createContext<AiContextValue | undefined>(undefined);
 
 export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [credits, setCredits] = useState(getCreditsRemaining);
-  // Chat histories keyed by symbol
-  const [chatHistories, setChatHistories] = useState<Record<string, ChatMessage[]>>({});
+  // Unified chat history — single thread across all pages
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   const refreshCredits = useCallback(() => {
     setCredits(getCreditsRemaining());
@@ -76,37 +76,32 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   }, [refreshCredits]);
 
-  const chat = useCallback(async (symbol: string, message: string): Promise<string> => {
+  const chat = useCallback(async (message: string): Promise<string> => {
     if (!isGeminiConfigured()) throw new Error("Gemini API key not configured");
     if (!hasCredits()) throw new Error("Daily AI credit limit reached. Resets at midnight.");
     useCredit();
     refreshCredits();
 
-    const history = chatHistories[symbol] ?? [];
-    const response = await askGeminiChat(history, message);
+    // Add user message immediately so the UI shows it while waiting
+    setChatHistory((prev) => [...prev, { role: "user" as const, text: message }]);
 
-    setChatHistories((prev) => ({
-      ...prev,
-      [symbol]: [
-        ...(prev[symbol] ?? []),
-        { role: "user" as const, text: message },
-        { role: "model" as const, text: response },
-      ],
-    }));
+    try {
+      const response = await askGeminiChat(chatHistory, message);
+      setChatHistory((prev) => [...prev, { role: "model" as const, text: response }]);
+      return response;
+    } catch (err) {
+      // Remove the optimistic user message on failure
+      setChatHistory((prev) => prev.slice(0, -1));
+      throw err;
+    }
+  }, [chatHistory, refreshCredits]);
 
-    return response;
-  }, [chatHistories, refreshCredits]);
+  const getChatHistory = useCallback((): ChatMessage[] => {
+    return chatHistory;
+  }, [chatHistory]);
 
-  const getChatHistory = useCallback((symbol: string): ChatMessage[] => {
-    return chatHistories[symbol] ?? [];
-  }, [chatHistories]);
-
-  const clearChat = useCallback((symbol: string) => {
-    setChatHistories((prev) => {
-      const next = { ...prev };
-      delete next[symbol];
-      return next;
-    });
+  const clearChat = useCallback(() => {
+    setChatHistory([]);
   }, []);
 
   const value = useMemo<AiContextValue>(() => ({

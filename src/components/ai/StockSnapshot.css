@@ -26,24 +26,11 @@
   gap: 6px;
 }
 
-.stock-snapshot-refresh {
-  background: transparent;
-  border: none;
+.stock-snapshot-locked {
   color: var(--text-tertiary, rgba(255,255,255,0.35));
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 2px;
-  line-height: 1;
-  transition: color 0.15s;
-}
-
-.stock-snapshot-refresh:hover {
-  color: var(--text-secondary);
-}
-
-.stock-snapshot-refresh:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  cursor: help;
+  display: flex;
+  align-items: center;
 }
 
 .stock-snapshot-content p {

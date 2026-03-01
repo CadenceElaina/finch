@@ -50,3 +50,8 @@
 2. Integrate Gemini API for analysis features
 3. UI/UX revamp to match this vision
 4. Additional features & testing
+
+--- consistent $ formatting 000,000.00 / normalizing
+--- fix search bar not doing anything on click / showing options like google finance does + not showing like recent searches and/or popular searches etc.
+--- search should be on every page at bottom - but user can hide it.
+--- consider using a different slider if its worth the change (I am imagining two moving onese like how open claws sliders work on their homepage https://openclaw.ai/)

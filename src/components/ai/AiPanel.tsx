@@ -9,7 +9,7 @@ import { useAi } from "../../context/AiContext";
 import StockSnapshot from "./StockSnapshot";
 import ResearchChat from "./ResearchChat";
 import { QuotePageData } from "../search/types";
-import { FaRobot, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaRobot, FaChevronDown, FaChevronUp, FaInfoCircle } from "react-icons/fa";
 import "./AiPanel.css";
 
 interface AiPanelProps {
@@ -39,6 +39,13 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
         <div className="ai-panel-toggle-right">
           <span className="ai-panel-credits">
             ⚡ {creditsRemaining}/{maxCredits}
+            {creditsRemaining <= 0 && (
+              <FaInfoCircle
+                size={10}
+                style={{ marginLeft: 4, cursor: "help" }}
+                title="Credits reset at midnight"
+              />
+            )}
           </span>
           {isOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
         </div>
@@ -49,7 +56,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
           <div className="ai-panel-gradient-line" />
           <div className="ai-panel-body">
             <StockSnapshot symbol={symbol} quotePageData={quotePageData} />
-            <ResearchChat symbol={symbol} />
+            <ResearchChat contextHint={symbol} />
           </div>
         </>
       )}
