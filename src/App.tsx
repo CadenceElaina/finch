@@ -11,6 +11,7 @@ import {
   Link,
 } from "react-router-dom";
 import Home from "./pages/Home";
+import News from "./pages/News";
 import Portfolio from "./components/portfolio/Portfolio";
 import Help from "./pages/footer/Help";
 import Feedback from "./pages/footer/Feedback";
@@ -42,6 +43,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home portfolios={[]} />} />
+        <Route path="/news" element={<News />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/portfolio/:id" element={<Portfolio />} />
         <Route path="/watchlist" element={<Watchlist />} />

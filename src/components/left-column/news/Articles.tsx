@@ -1,12 +1,10 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { articleProps } from "../../../types/types";
+import ArticleCard from "../../news/ArticleCard";
 import "./news.css";
 import { Skeleton } from "@mui/material";
 
 const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
-  /*   const [isLoading, setIsLoading] = useState(true); */
-  const navigate = useNavigate();
   const loadingSkeleton = (
     <div className="story-container">
       <div className="story-row">
@@ -35,15 +33,7 @@ const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
       </div>
     </div>
   );
-  /*   useEffect(() => {
-    // Simulate a delay of 2 seconds before setting isLoading to false
-    const delay = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
 
-    // Clean up the timeout on component unmount
-    return () => clearTimeout(delay);
-  }, []); */
   // Filter stories based on the current segment
   let filteredArticles = [];
   if (currNewsSegment) {
@@ -55,56 +45,15 @@ const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
   } else {
     filteredArticles = articles;
   }
-  const handleArticleClick = (link: string) => {
-    location.href = `${link}`;
-  };
-  const handleSymbolClick = (symbol: string) => {
-    navigate(`/quote/${symbol}`);
-  };
+
   return (
     <div>
       {filteredArticles.length < 1
-        ? // Display loading skeletons when articles are not loaded
-          Array.from({ length: 3 }).map((_, index) => (
+        ? Array.from({ length: 3 }).map((_, index) => (
             <React.Fragment key={index}>{loadingSkeleton}</React.Fragment>
           ))
-        : // Display actual articles when loaded
-          filteredArticles.map((article) => (
-            <div key={article.id} className="story-container">
-              <div className="story-row">
-                <div className="story-column">
-                  <div
-                    className="story-source-time"
-                    onClick={() => handleArticleClick(article.link)}
-                  >
-                    <div className="source">{article.source}</div>
-                    <div className="time">{article.time}</div>
-                  </div>
-                  <div
-                    className="title"
-                    onClick={() => handleArticleClick(article.link)}
-                  >
-                    {article.title}
-                  </div>
-                  {article.relatedSymbol && (
-                    <div
-                      className="related-symbol"
-                      onClick={() => handleSymbolClick(article.relatedSymbol)}
-                    >
-                      {article.relatedSymbol}
-                    </div>
-                  )}
-                </div>
-                <div className="story-column-image">
-                  <img
-                    src={article.img}
-                    alt={article.title}
-                    className="story-image"
-                    onClick={() => handleArticleClick(article.link)}
-                  />
-                </div>
-              </div>
-            </div>
+        : filteredArticles.map((article) => (
+            <ArticleCard key={article.id} article={article} />
           ))}
     </div>
   );

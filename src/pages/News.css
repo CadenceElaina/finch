@@ -1,0 +1,33 @@
+/* News page — full-width article list */
+
+.news-page-container {
+  margin-top: 50px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
+}
+
+.news-page-heading {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.news-page-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.news-page-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  font-size: 0.95rem;
+}
+
+.news-page-empty p {
+  margin: 0.5rem 0;
+}

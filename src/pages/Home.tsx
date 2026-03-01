@@ -13,6 +13,7 @@ import { usePortfolios } from "../context/PortfoliosContext";
 import YourPortfolios from "../components/right-column/portfolio/YourPortfolios";
 import HomeNews from "../components/left-column/news/HomeNews";
 import MarketOverview from "../components/ai/MarketOverview";
+import ResearchChat from "../components/ai/ResearchChat";
 import Notification from "../components/Notification";
 
 interface HomeProps {
@@ -31,6 +32,7 @@ const Home: React.FC<HomeProps> = () => {
           <div className="main-content-container">
             <div className="main-content-left">
               <MarketOverview />
+              <ResearchChat />
               <Watchlist />
               <HomeNews />
             </div>

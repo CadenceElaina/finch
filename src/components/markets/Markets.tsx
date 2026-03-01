@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Exchange, IndexCard } from "./types";
 import IndexCards from "./IndexCards";
 import "./markets.css";
-import { Link } from "react-router-dom";
 import { useNews } from "../../context/NewsContext";
 import { getBatchQuotes } from "../search/quoteUtils";
 import { quoteType } from "../search/types";
@@ -16,7 +15,8 @@ const Markets = () => {
   const queryClient = useQueryClient();
   const [symbolQuotes, setSymbolQuotes] = useState<IndexCard[]>([]);
   const [currExchange, setCurrExchange] = useState(Exchange.US);
-  const newsData = useNews();
+  const [fetchError, setFetchError] = useState(false);
+  const { newsData } = useNews();
   // Generate 9 random articles
   const numRandomArticles = 1;
   const randomIndexes = Array.from(
@@ -66,11 +66,17 @@ const Markets = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const apiResponse = await fetchSymbolQuotes();
-      const formattedData = formatApiResponse(apiResponse, currExchange);
-      const formattedDataForContext = transformQuotesToData(apiResponse);
-      setSymbolQuotes(formattedData);
-      updateIndexQuotesData(formattedDataForContext);
+      try {
+        setFetchError(false);
+        const apiResponse = await fetchSymbolQuotes();
+        const formattedData = formatApiResponse(apiResponse, currExchange);
+        const formattedDataForContext = transformQuotesToData(apiResponse);
+        setSymbolQuotes(formattedData);
+        updateIndexQuotesData(formattedDataForContext);
+      } catch (err) {
+        console.error("Error fetching market data:", err);
+        setFetchError(true);
+      }
     };
 
     fetchData();
@@ -94,22 +100,28 @@ const Markets = () => {
           ))}
         </div>{" "}
         <div className="markets-article">
-          <div className="markets-article-link">
-            <Link
-              to={`${randomArticles[0]?.link ?? ""}`}
-              className="linkToArticle"
-            >
-              {`${randomArticles[0]?.title ?? ""}`}
-            </Link>
-          </div>
-          <div className="markets-article-source">
-            {`${randomArticles[0]?.source ?? ""}`}{" "}
-            {`${randomArticles[0]?.time ?? ""}`}
-          </div>
+          {randomArticles[0] && (
+            <>
+              <div className="markets-article-link">
+                <a
+                  href={randomArticles[0].link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="linkToArticle"
+                >
+                  {randomArticles[0].title}
+                </a>
+              </div>
+              <div className="markets-article-source">
+                {randomArticles[0].source}{" "}
+                {randomArticles[0].time}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      <IndexCards cards={symbolQuotes} currExchange={currExchange} />
+      <IndexCards cards={symbolQuotes} currExchange={currExchange} hasError={fetchError} />
     </>
   );
 };

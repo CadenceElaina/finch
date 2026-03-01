@@ -1,22 +1,47 @@
 import { useState } from "react";
-import { newsSegmentType } from "../../../types/types";
+import { useNavigate } from "react-router-dom";
+import { NewsSegmentType } from "../../../types/types";
 import CustomButton from "../../CustomButton";
 import Articles from "./Articles";
 import { useNews } from "../../../context/NewsContext";
+import "./news.css";
+import ErrorState from "../../ErrorState";
 
-const News = () => {
+const HomeNews = () => {
   const [currNewsSegment, setCurrNewsSegment] =
-    useState<newsSegmentType>("Top");
-  const newsData = useNews();
-  const newsSegmentValues: newsSegmentType[] = ["Top", "Local", "World"];
-  /*   const [isLoading, setIsLoading] = useState(true); */
+    useState<NewsSegmentType>("Top");
+  const { newsData, isLoading } = useNews();
+  const navigate = useNavigate();
+  const newsSegmentValues: NewsSegmentType[] = ["Top", "Local", "World"];
 
-  const handleButtonClick = (segment: newsSegmentType) => {
+  const handleButtonClick = (segment: NewsSegmentType) => {
     setCurrNewsSegment(segment);
   };
+
+  // Finished loading but got nothing — show empty state
+  if (!isLoading && newsData.length === 0) {
+    return (
+      <div>
+        <div role="heading" className="news-heading">
+          Today's financial news
+        </div>
+        <ErrorState
+          message="Unable to load news right now."
+          onRetry={() => window.location.reload()}
+          compact
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div role="heading" className="news-heading">
+      <div
+        role="heading"
+        className="news-heading"
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/news")}
+      >
         Today's financial news
       </div>
       <div style={{ display: "flex", gap: "8px" }}>
@@ -37,4 +62,4 @@ const News = () => {
   );
 };
 
-export default News;
+export default HomeNews;
