@@ -33,8 +33,8 @@ const Home: React.FC<HomeProps> = () => {
             <div className="main-content-left">
               <Watchlist />
               <MarketOverview />
-              <HomeNews />
               <ResearchChat />
+              <HomeNews />
             </div>
             <div className="main-content-right">
               {portfolios.length > 0 ? <YourPortfolios /> : <AddPortfolio />}

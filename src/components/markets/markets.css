@@ -82,9 +82,9 @@
 
 .index-cards-inner {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   width: 100%;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
   margin-top: 6px;
   margin-bottom: 4px;
@@ -96,10 +96,12 @@
   align-items: center;
   background-color: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  padding: 5px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--border);
   white-space: nowrap;
-  gap: 4px;
+  gap: 2px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 .currencies:hover {
   cursor: default !important;
@@ -110,26 +112,27 @@
 }
 .index-card-link {
   text-decoration: none;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .index-card-icon {
   display: flex;
-  height: 32px;
-  min-width: 32px;
-  overflow: hidden;
+  align-items: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
 }
 
 .index-card-name-price {
   display: flex;
   flex-direction: column;
   line-height: 1rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.025em;
   font-weight: 400;
-  margin-right: 8px;
-  max-width: 120px;
-  min-width: 64px;
-  text-align: center;
+  margin-right: 4px;
+  min-width: 0;
+  overflow: hidden;
 }
 .index-card-name {
   color: var(--text-primary);
@@ -174,13 +177,14 @@
 .index-card-skeleton {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background-color: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  padding: 6px 12px;
+  padding: 4px 8px;
   border: 1px solid var(--border);
-  min-width: 160px;
-  height: 44px;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
@@ -216,6 +220,7 @@
   }
 
   .index-cards-inner {
+    flex-wrap: wrap;
     gap: 6px;
   }
 
@@ -224,8 +229,11 @@
     flex: 1 1 calc(50% - 6px);
   }
 
+  .index-card-link {
+    flex: 1 1 calc(50% - 6px);
+  }
+
   .index-card-name-price {
-    max-width: none;
     min-width: 0;
   }
 

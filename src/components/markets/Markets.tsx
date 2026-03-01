@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Exchange, IndexCard } from "./types";
 import IndexCards from "./IndexCards";
 import "./markets.css";
@@ -9,6 +9,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { formatApiResponse } from "./marketsUtils";
 import { transformQuotesToData } from "../market-trends/utils";
 import { useIndexQuotes } from "../../context/IndexQuotesContext";
+import { useSnapshot } from "../../context/SnapshotContext";
+import { extractIndicesFromSnapshot } from "../../services/marketSnapshot";
 
 const Markets = () => {
   const { updateIndexQuotesData } = useIndexQuotes();
@@ -17,6 +19,8 @@ const Markets = () => {
   const [currExchange, setCurrExchange] = useState(Exchange.US);
   const [fetchError, setFetchError] = useState(false);
   const { newsData } = useNews();
+  const { snapshot, isStale } = useSnapshot();
+  const snapshotApplied = useRef(false);
 
   // Pick a stable random article (only changes when newsData array changes)
   const spotlightArticle = useMemo(() => {
@@ -29,6 +33,28 @@ const Markets = () => {
   const symbolsCUR = ["EURUSD=X", "JPY=X", "GBPUSD=X", "CAD=X"];
   const symbolsCRYPTO = ["BTC-USD", "ETH-USD", "BAT-USD"];
   queryClient.setQueryDefaults(["quote"], { gcTime: 1000 * 60 * 15 });
+
+  // ── Use KV snapshot for US indices if available ────────
+  useEffect(() => {
+    if (
+      currExchange === Exchange.US &&
+      snapshot?.indices &&
+      !snapshotApplied.current
+    ) {
+      const indicesMap = extractIndicesFromSnapshot(snapshot);
+      if (Object.keys(indicesMap).length > 0) {
+        const formattedData = formatApiResponse(indicesMap, Exchange.US);
+        const formattedDataForContext = transformQuotesToData(indicesMap);
+        setSymbolQuotes(formattedData);
+        updateIndexQuotesData(formattedDataForContext);
+        snapshotApplied.current = true;
+
+        // If snapshot is stale, still do a live fetch in the background
+        if (!isStale) return;
+      }
+    }
+  }, [snapshot, currExchange]);
+
   const fetchSymbolQuotes = async () => {
     let symbols;
 
@@ -63,6 +89,15 @@ const Markets = () => {
   };
 
   useEffect(() => {
+    // Skip live fetch for US if snapshot was fresh
+    if (
+      currExchange === Exchange.US &&
+      snapshotApplied.current &&
+      !isStale
+    ) {
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setFetchError(false);
@@ -78,7 +113,7 @@ const Markets = () => {
     };
 
     fetchData();
-  }, [currExchange]);
+  }, [currExchange, isStale]);
 
   return (
     <>

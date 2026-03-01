@@ -9,6 +9,7 @@ import { IndexQuotesProvider } from "./context/IndexQuotesContext.tsx";
 import { NotificationProvider } from "./context/NotificationContext.tsx";
 import { DemoModeProvider } from "./context/DemoModeContext.tsx";
 import { AiProvider } from "./context/AiContext.tsx";
+import { SnapshotProvider } from "./context/SnapshotContext.tsx";
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -19,11 +20,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <PortfoliosProvider>
             <WatchlistsProvider>
               <QueryClientProvider client={queryClient}>
+                <SnapshotProvider>
                 <IndexQuotesProvider>
                   <NewsProvider>
                     <App />
                   </NewsProvider>
                 </IndexQuotesProvider>
+                </SnapshotProvider>
                 {/*      <ReactQueryDevtools /> */}
               </QueryClientProvider>
             </WatchlistsProvider>

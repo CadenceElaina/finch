@@ -17,6 +17,10 @@
     {
       "source": "/api/seeking-alpha",
       "destination": "/api/seeking-alpha"
+    },
+    {
+      "source": "/api/snapshot",
+      "destination": "/api/snapshot"
     }
   ]
 }

@@ -5,23 +5,27 @@
  * Pre-fetches market indices, movers, and trending tickers,
  * so the first user of the day gets instant data.
  *
- * Data is stored in Vercel KV (or returned for Vercel Edge Cache).
+ * Data flow:
+ *   1. Fetches indices, movers, trending from YH Finance (3 API calls)
+ *   2. Stores the combined snapshot in Redis Cloud (KV) with 15-min TTL
+ *   3. Client reads from /api/snapshot → KV → instant response
+ *
  * When KV is not configured, the cron still warms the Vercel Edge
  * Cache via Cache-Control headers on the proxy endpoints.
  *
  * Schedule: "0 13 * * 1-5" (Mon-Fri 9 AM ET = 1 PM UTC)
  */
 
-export const config = {
-  runtime: "edge",
-};
+import { getKv, disconnectKv, KV_SNAPSHOT_KEY, KV_SNAPSHOT_TTL } from "../_kv";
+
+// Node.js runtime (not Edge) — required for TCP Redis connection
 
 const YH_HOST = "yh-finance.p.rapidapi.com";
 
 // US market indices we pre-fetch
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
 
-interface SnapshotResult {
+export interface MarketSnapshot {
   timestamp: string;
   indices: unknown;
   movers: unknown;
@@ -52,7 +56,7 @@ export default async function handler(request: Request): Promise<Response> {
     "X-RapidAPI-Host": YH_HOST,
   };
 
-  const snapshot: SnapshotResult = {
+  const snapshot: MarketSnapshot = {
     timestamp: new Date().toISOString(),
     indices: null,
     movers: null,
@@ -94,16 +98,31 @@ export default async function handler(request: Request): Promise<Response> {
     snapshot.errors.push("trending fetch failed");
   }
 
-  // If Vercel KV is configured, store the snapshot
-  // (KV integration added separately when @vercel/kv is installed)
-  // For now, returning the snapshot so the Edge Cache caches it.
+  // Write to Redis if configured
+  let kvWritten = false;
+  try {
+    const kv = await getKv();
+    if (kv) {
+      await kv.set(KV_SNAPSHOT_KEY, JSON.stringify(snapshot), {
+        EX: KV_SNAPSHOT_TTL,
+      });
+      kvWritten = true;
+    }
+  } catch (err) {
+    snapshot.errors.push(`KV write failed: ${String(err)}`);
+  } finally {
+    await disconnectKv();
+  }
 
-  return new Response(JSON.stringify(snapshot), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      // Cache for 15 minutes — subsequent reads get cached data
-      "Cache-Control": "s-maxage=900, stale-while-revalidate=600",
-    },
-  });
+  return new Response(
+    JSON.stringify({ ...snapshot, kvWritten }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        // Also cache at the Edge as a fallback
+        "Cache-Control": "s-maxage=900, stale-while-revalidate=600",
+      },
+    }
+  );
 }
