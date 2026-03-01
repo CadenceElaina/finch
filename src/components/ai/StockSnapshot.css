@@ -1,0 +1,74 @@
+/* StockSnapshot — AI summary card on Quote page */
+
+.stock-snapshot {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  background: var(--bg-secondary);
+}
+
+.stock-snapshot-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.stock-snapshot-content p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.stock-snapshot-content p:empty {
+  display: none;
+}
+
+.stock-snapshot-content strong {
+  color: var(--text-primary);
+}
+
+.stock-snapshot-empty {
+  text-align: center;
+  padding: 6px 0;
+}
+
+.stock-snapshot-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.stock-snapshot-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.stock-snapshot-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stock-snapshot-limit {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.stock-snapshot-error {
+  font-size: 0.78rem;
+  color: #e74c3c;
+  margin-top: 8px;
+}
