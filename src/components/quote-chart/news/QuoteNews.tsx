@@ -1,18 +1,15 @@
-import { useEffect } from "react";
 import QuoteArticles from "./QuoteArticles";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSymbolsNews } from "../../left-column/news/newsUtils"; // Replace with the actual path
+import { useQuery } from "@tanstack/react-query";
+import { getSymbolsNews } from "../../left-column/news/newsUtils";
 import { useLocation } from "react-router-dom";
 import "./QuoteNews.css";
 
 import { CACHE_POLICY } from "../../../config/api";
 
 const QuoteNews = () => {
-  const queryClient = useQueryClient();
   const location = useLocation();
   const symbol = location.pathname.split("/").pop() || "";
 
-  // Use react-query to fetch data for news articles
   const {
     data: newsData,
     isLoading,
@@ -25,29 +22,29 @@ const QuoteNews = () => {
     gcTime: CACHE_POLICY.newsRefreshInterval * 2,
   });
 
-  useEffect(() => {
-    // Prefetch news data for better user experience
-    if (symbol) {
-      queryClient.prefetchQuery({
-        queryKey: ["symbolNews", symbol],
-        queryFn: () => getSymbolsNews(symbol),
-      });
-    }
-  }, [queryClient, symbol]);
-
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="quote-news-container">
+        <div className="quote-news-skeleton">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="quote-news-skeleton-row">
+              <div className="quote-news-skeleton-line short" />
+              <div className="quote-news-skeleton-line" />
+              <div className="quote-news-skeleton-line medium" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  if (isError) {
-    return <div>Error loading news data.</div>;
+  if (isError || !newsData || newsData.length === 0) {
+    return null; // Don't show empty news section
   }
 
   return (
     <div className="quote-news-container">
-      <div>
-        <QuoteArticles articles={newsData || []} symbol={symbol} />
-      </div>
+      <QuoteArticles articles={newsData} symbol={symbol} />
     </div>
   );
 };
