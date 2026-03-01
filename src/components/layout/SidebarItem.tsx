@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { SidebarItemProps } from "./types";
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -10,6 +10,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
 }) => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const isActive =
+    href === "/"
+      ? pathname === "/"
+      : href
+        ? pathname.startsWith(href)
+        : false;
 
   const handleClick = useCallback(() => {
     if (href === "/") {
@@ -26,10 +34,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   }, [onClick, auth, href, navigate]);
 
   return (
-    <li key={label} className="sidebar-item">
+    <li key={label} className={`sidebar-item${isActive ? " sidebar-item-active" : ""}`}>
       <button className="sidebar-item-button" onClick={handleClick}>
         <div className="sidebar-button-icon">
-          <Icon size={28} color="white" />
+          <Icon size={22} />
         </div>
         <div className="sidebar-button-label">{label}</div>
       </button>

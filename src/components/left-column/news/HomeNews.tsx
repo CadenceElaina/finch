@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { NewsSegmentType } from "../../../types/types";
 import CustomButton from "../../CustomButton";
 import Articles from "./Articles";
@@ -56,8 +56,13 @@ const HomeNews = () => {
         ))}
       </div>
       <div>
-        <Articles articles={newsData} currNewsSegment={currNewsSegment} />
+        <Articles articles={newsData} currNewsSegment={currNewsSegment} limit={6} />
       </div>
+      {newsData.length > 6 && (
+        <Link to="/news" className="home-news-see-all">
+          See all news &rsaquo;
+        </Link>
+      )}
     </div>
   );
 };

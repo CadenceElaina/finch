@@ -4,7 +4,7 @@ import ArticleCard from "../../news/ArticleCard";
 import "./news.css";
 import { Skeleton } from "@mui/material";
 
-const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
+const Articles: React.FC<articleProps & { limit?: number }> = ({ articles, currNewsSegment, limit }) => {
   const loadingSkeleton = (
     <div className="story-container">
       <div className="story-row">
@@ -52,7 +52,7 @@ const Articles: React.FC<articleProps> = ({ articles, currNewsSegment }) => {
         ? Array.from({ length: 3 }).map((_, index) => (
             <React.Fragment key={index}>{loadingSkeleton}</React.Fragment>
           ))
-        : filteredArticles.map((article) => (
+        : (limit ? filteredArticles.slice(0, limit) : filteredArticles).map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
     </div>

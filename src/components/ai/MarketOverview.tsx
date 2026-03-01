@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useAi } from "../../context/AiContext";
 import { cacheStorage } from "../../services/storage";
-import { FaRobot } from "react-icons/fa";
+import { FaRobot, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import "./MarketOverview.css";
 
 const CACHE_KEY = "ai_market_overview";
@@ -18,6 +18,7 @@ const MarketOverview: React.FC = () => {
   const [summary, setSummary] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [expanded, setExpanded] = useState(false);
 
   // Try to load from cache on mount, or auto-generate if no cached data
   useEffect(() => {
@@ -60,17 +61,32 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
 
   if (!configured) return null;
 
+  /** Parse summary into lines, filtering empties */
+  const lines = summary ? summary.split("\n").filter((l) => l.trim()) : [];
+  const PREVIEW_LINES = 3;
+  const canCollapse = lines.length > PREVIEW_LINES;
+  const visibleLines = expanded ? lines : lines.slice(0, PREVIEW_LINES);
+
   return (
     <div className="market-overview">
-      <div className="market-overview-header">
-        <FaRobot size={16} />
+      <div
+        className="market-overview-header"
+        onClick={() => summary && setExpanded((e) => !e)}
+        style={{ cursor: summary ? "pointer" : undefined }}
+      >
+        <FaRobot size={14} />
         <span>AI Market Overview</span>
+        {summary && (
+          <span className="market-overview-toggle">
+            {expanded ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
+          </span>
+        )}
       </div>
       <div className="market-overview-gradient-line" />
 
       {summary ? (
-        <div className="market-overview-content">
-          {summary.split("\n").map((line, i) => (
+        <div className={`market-overview-content ${!expanded ? "collapsed" : ""}`}>
+          {visibleLines.map((line, i) => (
             <p
               key={i}
               dangerouslySetInnerHTML={{
@@ -80,32 +96,44 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
               }}
             />
           ))}
-          <button
-            className="market-overview-refresh"
-            onClick={generateSummary}
-            disabled={loading || creditsRemaining <= 0}
-          >
-            {loading ? "Generating..." : "Refresh"}
-          </button>
+          {canCollapse && !expanded && (
+            <button
+              className="market-overview-expand"
+              onClick={() => setExpanded(true)}
+            >
+              Show more
+            </button>
+          )}
+          {expanded && (
+            <button
+              className="market-overview-refresh"
+              onClick={generateSummary}
+              disabled={loading || creditsRemaining <= 0}
+            >
+              {loading ? "Generating..." : "Refresh"}
+            </button>
+          )}
         </div>
       ) : (
         <div className="market-overview-empty">
-          <p>Get an AI-powered summary of today's market conditions</p>
-          <button
-            className="market-overview-generate"
-            onClick={generateSummary}
-            disabled={loading || creditsRemaining <= 0}
-          >
-            {loading ? (
-              <span className="market-overview-loading">Analyzing...</span>
-            ) : (
-              "Generate Overview"
-            )}
-          </button>
-          {creditsRemaining <= 0 && !loading && (
-            <p className="market-overview-limit">
-              Daily AI credits used. Resets at midnight.
-            </p>
+          {loading ? (
+            <span className="market-overview-loading">Analyzing markets...</span>
+          ) : (
+            <>
+              <p>Get an AI-powered summary of today's market conditions</p>
+              <button
+                className="market-overview-generate"
+                onClick={generateSummary}
+                disabled={loading || creditsRemaining <= 0}
+              >
+                Generate Overview
+              </button>
+              {creditsRemaining <= 0 && (
+                <p className="market-overview-limit">
+                  Daily AI credits used. Resets at midnight.
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

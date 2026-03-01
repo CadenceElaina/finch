@@ -31,10 +31,10 @@ const Home: React.FC<HomeProps> = () => {
           <Search />
           <div className="main-content-container">
             <div className="main-content-left">
-              <MarketOverview />
-              <ResearchChat />
               <Watchlist />
+              <MarketOverview />
               <HomeNews />
+              <ResearchChat />
             </div>
             <div className="main-content-right">
               {portfolios.length > 0 ? <YourPortfolios /> : <AddPortfolio />}

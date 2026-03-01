@@ -1,86 +1,93 @@
 .markets-container {
-  display: flex;
-  align-content: center;
-  justify-self: center;
-  align-self: center;
-  align-items: center;
-  flex-wrap: wrap;
-  flex-direction: row;
+  margin-bottom: 8px;
 }
-.compare-markets {
-  padding: 1rem;
-  text-align: end;
-  flex: 1;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-right: 4px;
+
+/* ── Single-row top bar: label + chips + article ── */
+.markets-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.compare-markets-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .exchange-chips {
-  flex: 1;
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .chip {
-  flex: 1;
   cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 8px;
-  font-size: 1rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: var(--text-secondary);
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
 }
-
+.chip:hover {
+  color: var(--text-primary);
+}
 .chip.active {
   background-color: var(--blue);
   color: var(--text-primary);
 }
+
 .markets-article {
-  padding: 1rem;
   flex: 1;
-  max-width: 32%;
-  margin-left: 4px;
-  font-size: 0.9rem;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
 }
 .markets-article-link {
-  flex: 1;
-  text-decoration: none;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-.markets-article-link a {
   color: var(--accent);
   text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.markets-article-link a:hover {
-  color: var(--accent-hover);
+.markets-article-link:hover {
   text-decoration: underline;
 }
 .markets-article-source {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-tertiary);
-  margin-top: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* ── Index cards row ── */
 .index-cards-container {
   display: flex;
   flex: 1;
-  justify-content: center; /* Center the cards horizontally */
-  gap: 16px; /* Add some gap between the cards */
+  justify-content: center;
+  gap: 10px;
 }
 
 .index-cards-inner {
-  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-  gap: 16px; /* Add some gap between the cards */
-  justify-content: center; /* Center the cards horizontally */
+  gap: 10px;
+  justify-content: center;
+  margin-top: 6px;
+  margin-bottom: 4px;
 }
 
 .index-card-content {
@@ -89,9 +96,10 @@
   align-items: center;
   background-color: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  padding: 6px;
+  padding: 5px 10px;
   border: 1px solid var(--border);
   white-space: nowrap;
+  gap: 4px;
 }
 .currencies:hover {
   cursor: default !important;
@@ -188,40 +196,32 @@
 /* ── Responsive ──────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .markets-container {
+  .markets-top-bar {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .compare-markets {
-    text-align: center;
-    font-size: 1.2rem;
-    padding: 0.5rem;
+  .markets-article {
+    display: none;
   }
 
   .exchange-chips {
     flex-wrap: wrap;
-    justify-content: center;
   }
 
   .chip {
-    font-size: 0.85rem;
-    padding: 6px 10px;
-  }
-
-  .markets-article {
-    max-width: 100%;
-    padding: 0.5rem 1rem;
-    text-align: center;
+    font-size: 0.8rem;
+    padding: 4px 8px;
   }
 
   .index-cards-inner {
-    gap: 8px;
+    gap: 6px;
   }
 
   .index-card-content {
     min-width: 0;
-    flex: 1 1 calc(50% - 8px);
+    flex: 1 1 calc(50% - 6px);
   }
 
   .index-card-name-price {
@@ -231,6 +231,6 @@
 
   .index-card-skeleton {
     min-width: 0;
-    flex: 1 1 calc(50% - 8px);
+    flex: 1 1 calc(50% - 6px);
   }
 }

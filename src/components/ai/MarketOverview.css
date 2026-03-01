@@ -1,7 +1,7 @@
 .market-overview {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 14px 16px;
   margin-bottom: 16px;
   background: linear-gradient(135deg, rgba(26, 115, 232, 0.06) 0%, transparent 100%);
 }
@@ -10,14 +10,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--text-primary);
+  user-select: none;
 }
 
 .market-overview-header svg {
   color: var(--accent);
+}
+
+.market-overview-toggle {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
 }
 
 /* Animated gradient line — inspired by Google Finance Research */
@@ -116,4 +124,31 @@
   margin-top: 8px;
   color: var(--negative);
   font-size: 0.75rem;
+}
+
+.market-overview-content.collapsed {
+  position: relative;
+}
+.market-overview-content.collapsed::after {
+  content: "";
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(transparent, rgba(26, 115, 232, 0.06));
+  pointer-events: none;
+}
+
+.market-overview-expand {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0 0;
+}
+.market-overview-expand:hover {
+  text-decoration: underline;
 }

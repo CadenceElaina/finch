@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import DemoBanner from "../DemoBanner";
@@ -8,10 +8,15 @@ import Search from "../search/Search";
 import { useDemoMode } from "../../context/DemoModeContext";
 import "./Layout.css";
 
+/** Pages that render their own full-size Search bar */
+const PAGES_WITH_SEARCH = ["/", "/news"];
+
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
   const { isDemoMode } = useDemoMode();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const hideHeaderSearch = PAGES_WITH_SEARCH.includes(pathname);
 
   const handleDrawerToggle = () => {
     setOpen((prevOpen) => !prevOpen);
@@ -40,7 +45,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </span>
         </div>
         <div className="header-search-inline">
-          <Search compact onNavigate={() => {}} />
+          {!hideHeaderSearch && <Search compact onNavigate={() => {}} />}
         </div>
         <div className="top-banner-right">
           {isDemoMode && (

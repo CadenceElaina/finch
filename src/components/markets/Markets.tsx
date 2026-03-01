@@ -83,39 +83,39 @@ const Markets = () => {
   return (
     <>
       <div className="markets-container">
-        <div className="compare-markets">Compare Markets</div>
-        <div className="exchange-chips">
-          {Object.values(Exchange).map((exchangeType) => (
-            <div
-              key={exchangeType}
-              className={`chip ${
-                currExchange === exchangeType ? "active" : ""
-              }`}
-              onClick={() => setCurrExchange(exchangeType)}
-            >
-              {exchangeType}
-            </div>
-          ))}
-        </div>
-        <div className="markets-article">
-          {spotlightArticle && (
-            <>
-              <div className="markets-article-link">
+        <div className="markets-top-bar">
+          <span className="compare-markets-label">Compare Markets</span>
+          <div className="exchange-chips">
+            {Object.values(Exchange).map((exchangeType) => (
+              <span
+                key={exchangeType}
+                className={`chip ${
+                  currExchange === exchangeType ? "active" : ""
+                }`}
+                onClick={() => setCurrExchange(exchangeType)}
+              >
+                {exchangeType}
+              </span>
+            ))}
+          </div>
+          <div className="markets-article">
+            {spotlightArticle && (
+              <>
                 <a
                   href={spotlightArticle.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="linkToArticle"
+                  className="markets-article-link"
                 >
                   {spotlightArticle.title}
                 </a>
-              </div>
-              <div className="markets-article-source">
-                {spotlightArticle.source}{" "}
-                {spotlightArticle.time}
-              </div>
-            </>
-          )}
+                <span className="markets-article-source">
+                  {spotlightArticle.source}{" "}
+                  {spotlightArticle.time}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

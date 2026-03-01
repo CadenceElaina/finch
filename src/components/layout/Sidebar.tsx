@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { BsHouseFill, BsListUl, BsNewspaper } from "react-icons/bs";
 import { IoMdAddCircleOutline, IoMdSettings } from "react-icons/io";
-import { MdManageSearch, MdOutlineInsertChart } from "react-icons/md";
+import { MdManageSearch, MdOutlineInsertChart, MdFeedback } from "react-icons/md";
 import SidebarItem from "./SidebarItem";
 import { SidebarProps } from "./types";
 import { FaUncharted } from "react-icons/fa";
@@ -44,8 +44,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const bottomItems = [
     {
       icon: IoMdSettings,
-      label: "settings",
+      label: "Settings",
       href: settings,
+      auth: true,
+    },
+    {
+      icon: MdFeedback,
+      label: "Send feedback",
+      href: "/feedback",
       auth: true,
     },
   ];
@@ -104,8 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         />
       )}
       <span className="logo-side">
-        {" "}
-        <FaUncharted size={24} />
+        <FaUncharted size={22} />
         <span>Finch</span>
       </span>
       <div className="sidebar-items">
@@ -125,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             {!exceedsPortfoliosLimit && (
               <div className="inner-icon">
                 <IoMdAddCircleOutline
-                  size={24}
+                  size={20}
                   onClick={() => addList("portfolio")}
                 />
               </div>
@@ -136,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <Link to={`/portfolio/${p.id}`} key={p.id} onClick={onClose}>
               <li className="sidebar-item">
                 <div className="sidebar-button-icon">
-                  <MdOutlineInsertChart size={24} />
+                  <MdOutlineInsertChart size={20} />
                 </div>
                 <div className="sidebar-button-label">{p.title}</div>
               </li>
@@ -149,7 +154,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             {!exceedsWatchlistLimit && (
               <div className="inner-icon">
                 <IoMdAddCircleOutline
-                  size={24}
+                  size={20}
                   onClick={() => addList("watchlist")}
                 />
               </div>
@@ -160,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <Link to={`/watchlist/${w.id}`} key={w.id} onClick={onClose}>
               <li className="sidebar-item">
                 <div className="sidebar-button-icon">
-                  <BsListUl size={24} />
+                  <BsListUl size={20} />
                 </div>
                 <div className="sidebar-button-label">{w.title}</div>
               </li>
