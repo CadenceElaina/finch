@@ -53,6 +53,12 @@ body {
   transition: background-color 0.3s ease;
   margin: 0;
 }
+
+/* Global image safety — prevent oversized images from breaking layout */
+img {
+  max-width: 100%;
+  height: auto;
+}
 .content-wrapper {
   padding: 20px;
   display: flex;
@@ -67,6 +73,8 @@ body {
 
 .main-content-left {
   width: 63%;
+  min-width: 0; /* prevent flex children from overflowing */
+  overflow: hidden;
 }
 
 .main-content-right {

@@ -38,7 +38,9 @@ const DemoModeContext = createContext<DemoModeContextType | null>(null);
 
 const LS_KEY = "finch_demo_mode";
 const LS_FAILURES_KEY = "finch_api_failures";
+const LS_EXIT_TS_KEY = "finch_demo_exit_ts";
 const FAILURE_THRESHOLD = 3;
+const GRACE_PERIOD_MS = 10_000; // 10s grace after user exits before auto-re-entry
 
 /** Check if demo mode was previously activated today */
 function loadDemoState(): boolean {
@@ -112,6 +114,8 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
     setFailureCount(0);
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem(LS_FAILURES_KEY);
+    // Record exit timestamp so the interceptor respects a grace period
+    localStorage.setItem(LS_EXIT_TS_KEY, String(Date.now()));
   }, []);
 
   const enterDemoMode = useCallback(() => {
@@ -122,15 +126,32 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
   const interceptorIds = useRef<{ req: number; res: number } | null>(null);
 
   useEffect(() => {
+    /** Check if user recently exited demo mode — skip auto-re-entry during grace period */
+    const isInGracePeriod = (): boolean => {
+      try {
+        const ts = localStorage.getItem(LS_EXIT_TS_KEY);
+        if (!ts) return false;
+        return Date.now() - Number(ts) < GRACE_PERIOD_MS;
+      } catch {
+        return false;
+      }
+    };
+
     // Response interceptor: track success/failure
     const resId = axios.interceptors.response.use(
       (response) => {
         // Successful API call — reset failure counter
         setFailureCount(0);
+        // Clear exit timestamp on first success (live data works)
+        localStorage.removeItem(LS_EXIT_TS_KEY);
         return response;
       },
       (error) => {
         const status = error?.response?.status;
+        // During grace period after explicit exit, don't auto-re-enter demo mode
+        if (isInGracePeriod()) {
+          return Promise.reject(error);
+        }
         if (status === 429 || status === 403) {
           setIsDemoMode(true);
           setFailureCount((c) => c + 1);
