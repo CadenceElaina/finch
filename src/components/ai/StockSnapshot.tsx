@@ -73,13 +73,31 @@ Keep it under 150 words total. Be specific with numbers and dates. Be factual, n
     }
   }, [configured, creditsRemaining, generateGrounded, symbol, quotePageData, cacheKey]);
 
+  const handleRefresh = useCallback(async () => {
+    cacheStorage.remove(cacheKey);
+    setSnapshot("");
+    await generateSnapshot();
+  }, [cacheKey, generateSnapshot]);
+
   if (!configured) return null;
 
   return (
     <div className="stock-snapshot">
       <div className="stock-snapshot-header">
-        <FaRobot size={14} />
-        <span>AI Snapshot</span>
+        <div className="stock-snapshot-header-left">
+          <FaRobot size={14} />
+          <span>AI Snapshot</span>
+        </div>
+        {snapshot && (
+          <button
+            className="stock-snapshot-refresh"
+            onClick={handleRefresh}
+            disabled={loading || creditsRemaining <= 0}
+            title="Regenerate snapshot"
+          >
+            {loading ? "…" : "↺"}
+          </button>
+        )}
       </div>
 
       {snapshot ? (

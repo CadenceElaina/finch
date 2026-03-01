@@ -68,7 +68,7 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ symbol }) => {
         )}
       </div>
 
-      {history.length > 0 && (
+      {(history.length > 0 || loading) && (
         <div className="research-chat-messages">
           {history.map((msg, i) => (
             <div key={i} className={`research-chat-msg ${msg.role}`}>
