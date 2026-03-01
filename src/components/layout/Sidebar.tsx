@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { BsHouseFill, BsListUl } from "react-icons/bs";
+import { BsHouseFill, BsListUl, BsNewspaper } from "react-icons/bs";
 import { IoMdAddCircleOutline, IoMdSettings } from "react-icons/io";
 import { MdManageSearch, MdOutlineInsertChart } from "react-icons/md";
 import SidebarItem from "./SidebarItem";
@@ -26,6 +26,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       icon: BsHouseFill,
       label: "Home",
       href: "/",
+      auth: true,
+    },
+    {
+      icon: BsNewspaper,
+      label: "News",
+      href: "/news",
       auth: true,
     },
     {

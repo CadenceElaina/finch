@@ -3,6 +3,10 @@
 }
 .quote-news-heading {
   margin-top: 25px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .quote-news-skeleton {
