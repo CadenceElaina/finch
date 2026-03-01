@@ -1,0 +1,69 @@
+/* AiPanel — Collapsible AI research panel */
+
+.ai-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 16px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.ai-panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.ai-panel-toggle:hover {
+  background: var(--bg-tertiary, rgba(128, 128, 128, 0.06));
+}
+
+.ai-panel-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ai-panel-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-panel-credits {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary, rgba(128, 128, 128, 0.1));
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.ai-panel-toggle-right svg {
+  color: var(--text-tertiary);
+}
+
+.ai-panel-body {
+  padding: 0 16px 16px;
+}
+
+/* Override nested component border/margin when inside AiPanel */
+.ai-panel-body .stock-snapshot,
+.ai-panel-body .research-chat {
+  border: none;
+  margin-top: 8px;
+  padding: 8px 0;
+  background: transparent;
+}
+
+.ai-panel-body .stock-snapshot + .research-chat {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}

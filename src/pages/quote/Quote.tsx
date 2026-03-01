@@ -13,8 +13,7 @@ import {
 } from "react-icons/fa";
 import QuoteNews from "../../components/quote-chart/news/QuoteNews";
 import RelatedStocks from "../../components/quote-chart/RelatedStocks";
-import StockSnapshot from "../../components/ai/StockSnapshot";
-import ResearchChat from "../../components/ai/ResearchChat";
+import AiPanel from "../../components/ai/AiPanel";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQuotePageData } from "../../components/search/quoteUtils";
 import { ENDPOINTS, getQuoteRefreshInterval } from "../../config/api";
@@ -424,8 +423,7 @@ const Quote: React.FC<QuoteProps> = () => {
                   );
                 })}
               </div>
-              <StockSnapshot symbol={symbol} quotePageData={quotePageData ?? null} />
-              <ResearchChat symbol={symbol} />
+              <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
               <div className={`quote-about ${isAboutOpen ? "open" : "closed"}`}>
                 <div
                   role="heading"
