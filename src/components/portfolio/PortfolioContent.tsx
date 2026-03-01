@@ -56,7 +56,14 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
                 )}
               </div>
             </div>
-            {portfolio && <PortfolioPerformance portfolio={portfolio} onRemoveSecurity={onRemoveSecurity} />}
+            {portfolio && portfolio.securities && portfolio.securities.length > 0 ? (
+              <PortfolioPerformance portfolio={portfolio} onRemoveSecurity={onRemoveSecurity} />
+            ) : (
+              <div className="empty-state">
+                <p className="empty-state-text">No holdings yet</p>
+                <p className="empty-state-subtext">Add your first investment to start tracking performance</p>
+              </div>
+            )}
           </div>
           <button className="add-investment" onClick={openAddToPortfolioModal}>
             <FaPlus size={18} />

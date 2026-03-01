@@ -14,7 +14,13 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ data }) => {
 
   // Don't render the chart if there's no valid data
   if (validData.length === 0) {
-    return <div className="portfolio-chart"><p>No chart data yet</p></div>;
+    return (
+      <div className="portfolio-chart">
+        <p style={{ color: "var(--text-secondary, #999)", fontSize: "0.9rem" }}>
+          Portfolio value will appear here after the next trading day
+        </p>
+      </div>
+    );
   }
 
   const chartData = [

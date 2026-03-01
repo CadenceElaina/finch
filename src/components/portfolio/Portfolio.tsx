@@ -349,12 +349,20 @@ const Portfolio = () => {
               ))}
           </div>
         </div>
-        {/*  {activeListType === "watchlist" && (
-          <div>
-            <Watchlist name="123list" data={[]} />
+        {activeListType === \"portfolios\" && portfolios.length === 0 && (
+          <div className="main-container">
+            <div className="empty-state-page">
+              <FaChartLine size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
+              <p className="empty-state-text">No portfolios yet</p>
+              <p className="empty-state-subtext">Create a portfolio to track your investments and see performance over time</p>
+              <button className="add-investment" onClick={() => setNewPortfolioModalOpen(true)}>
+                <FaPlus size={18} />
+                <span className="label">New Portfolio</span>
+              </button>
+            </div>
           </div>
-        )} */}
-        {activeListType === "portfolios" && (
+        )}
+        {activeListType === "portfolios" && portfolios.length > 0 && (
           <div className="main-container">
             <PortfolioContent
               portfolio={activePortfolio}
@@ -374,7 +382,20 @@ const Portfolio = () => {
             />
           </div>
         )}
-        {activeListType === "watchlists" && (
+        {activeListType === "watchlists" && watchlists.length === 0 && (
+          <div className="main-container">
+            <div className="empty-state-page">
+              <FaList size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
+              <p className="empty-state-text">No watchlists yet</p>
+              <p className="empty-state-subtext">Create a watchlist to follow stocks you're interested in</p>
+              <button className="add-investment" onClick={() => setAddWatchlistModalIsOpen(true)}>
+                <FaPlus size={18} />
+                <span className="label">New Watchlist</span>
+              </button>
+            </div>
+          </div>
+        )}
+        {activeListType === "watchlists" && watchlists.length > 0 && (
           <div className="main-container">
             <WatchlistContent
               watchlistName={activeTab}
