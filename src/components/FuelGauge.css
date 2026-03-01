@@ -57,3 +57,10 @@
 .fuel-low .fuel-count {
   color: #ef9a9a;
 }
+
+.fuel-info {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary, rgba(255,255,255,0.4));
+  cursor: help;
+}

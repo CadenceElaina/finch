@@ -1,5 +1,6 @@
 /**
- * ResearchChat — Follow-up chat panel on the Quote page.
+ * ResearchChat — Unified AI chat panel.
+ * One continuous thread across all pages (like Google Finance).
  * Each question costs 1 AI credit. History persists via AiContext.
  */
 
@@ -9,17 +10,18 @@ import { FaRobot, FaPaperPlane, FaTrash } from "react-icons/fa";
 import "./ResearchChat.css";
 
 interface ResearchChatProps {
-  symbol: string;
+  /** Optional hint shown in the placeholder, e.g. "MSFT" */
+  contextHint?: string;
 }
 
-const ResearchChat: React.FC<ResearchChatProps> = ({ symbol }) => {
+const ResearchChat: React.FC<ResearchChatProps> = ({ contextHint }) => {
   const { chat, getChatHistory, clearChat, configured, creditsRemaining } = useAi();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const history: ChatMessage[] = getChatHistory(symbol);
+  const history: ChatMessage[] = getChatHistory();
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -33,13 +35,13 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ symbol }) => {
     setError("");
     setLoading(true);
     try {
-      await chat(symbol, trimmed);
+      await chat(trimmed);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to get response");
     } finally {
       setLoading(false);
     }
-  }, [input, loading, creditsRemaining, chat, symbol]);
+  }, [input, loading, creditsRemaining, chat]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -50,17 +52,23 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ symbol }) => {
 
   if (!configured) return null;
 
+  const placeholder = creditsRemaining <= 0
+    ? "No credits remaining"
+    : contextHint
+      ? `Ask about ${contextHint}…`
+      : "Ask about the market…";
+
   return (
     <div className="research-chat">
       <div className="research-chat-header">
         <div className="research-chat-title">
           <FaRobot size={14} />
-          <span>Ask about {symbol.toUpperCase()}</span>
+          <span>Ask about {contextHint ? contextHint.toUpperCase() : "the market"}</span>
         </div>
         {history.length > 0 && (
           <button
             className="research-chat-clear"
-            onClick={() => clearChat(symbol)}
+            onClick={() => clearChat()}
             title="Clear chat"
           >
             <FaTrash size={11} />
@@ -102,11 +110,7 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ symbol }) => {
         <input
           type="text"
           className="research-chat-input"
-          placeholder={
-            creditsRemaining <= 0
-              ? "No credits remaining"
-              : `Ask about ${symbol.toUpperCase()}…`
-          }
+          placeholder={placeholder}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}

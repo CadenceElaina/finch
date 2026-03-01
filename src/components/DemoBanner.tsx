@@ -22,6 +22,11 @@ const DemoBanner: React.FC = () => {
     setDismissed(true);
   };
 
+  const handleExitDemo = () => {
+    exitDemoMode();
+    setTimeout(() => window.location.assign("/"), 150);
+  };
+
   return (
     <div
       style={{
@@ -43,7 +48,7 @@ const DemoBanner: React.FC = () => {
         📊 Demo data — prices are a frozen snapshot
       </span>
       <button
-        onClick={exitDemoMode}
+        onClick={handleExitDemo}
         style={{
           background: "rgba(26, 115, 232, 0.3)",
           border: "1px solid rgba(26, 115, 232, 0.5)",

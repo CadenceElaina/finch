@@ -5,6 +5,7 @@ import { IoMdAddCircleOutline } from "react-icons/io";
 import { TableProps, AllowedFields } from "./types";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlists } from "../../context/WatchlistContext";
+import { formatCurrency } from "../../utils/format";
 
 const getRandomColor = (): string => {
   const letters = "0123456789ABCDEF";
@@ -118,7 +119,7 @@ const Table: React.FC<TableProps> = ({
                   className="price-pc"
                   onClick={() => handleClick(item.symbol)}
                 >
-                  <div className="field-value">${item.price}</div>
+                  <div className="field-value">{formatCurrency(item.price)}</div>
 
                   <div className={`item-field percent-change`}>
                     <div
@@ -205,7 +206,7 @@ const Table: React.FC<TableProps> = ({
                             className="field-value"
                             key={`mustfixwarning${item.symbol}`}
                           >
-                            ${item.price}
+                            {formatCurrency(item.price)}
                           </div>
                         )}
                         {field === "percentChange" && (

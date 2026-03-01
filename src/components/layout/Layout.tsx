@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import DemoBanner from "../DemoBanner";
 import FuelGauge from "../FuelGauge";
+import { useDemoMode } from "../../context/DemoModeContext";
 import "./Layout.css";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [open, setOpen] = useState(false);
+  const { isDemoMode } = useDemoMode();
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setOpen((prevOpen) => !prevOpen);
@@ -35,7 +38,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <Link to={"/"}>Finch</Link>
           </span>
         </div>
-        <FuelGauge />
+        <div className="top-banner-right">
+          {isDemoMode && (
+            <button
+              className="demo-badge"
+              onClick={() => navigate("/settings")}
+              title="Using demo data — click to change"
+            >
+              DEMO
+            </button>
+          )}
+          <FuelGauge />
+        </div>
       </div>
 
       <div className="container">
