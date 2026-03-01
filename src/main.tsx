@@ -8,12 +8,14 @@ import { WatchlistsProvider } from "./context/WatchlistContext.tsx";
 import { IndexQuotesProvider } from "./context/IndexQuotesContext.tsx";
 import { NotificationProvider } from "./context/NotificationContext.tsx";
 import { DemoModeProvider } from "./context/DemoModeContext.tsx";
+import { AiProvider } from "./context/AiContext.tsx";
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <DemoModeProvider>
-      <NotificationProvider>
+      <AiProvider>
+        <NotificationProvider>
         <PortfoliosProvider>
             <WatchlistsProvider>
               <QueryClientProvider client={queryClient}>
@@ -27,6 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             </WatchlistsProvider>
           </PortfoliosProvider>
       </NotificationProvider>
+      </AiProvider>
     </DemoModeProvider>
   </React.StrictMode>
 );
