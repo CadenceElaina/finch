@@ -121,12 +121,12 @@ const Quote: React.FC<QuoteProps> = () => {
   const keyMappings: Record<string, string> = {
     previousClose: "PREVIOUS CLOSE",
     dayRange: "DAY RANGE",
-    fiftyTwoWeekHigh: "52 WEEK HIGH",
+    fiftyTwoWeekRange: "52 WEEK RANGE",
     marketCap: "MARKET CAP",
-    average3MonthVolume: "AVG 3M VOLUME",
-    trailingPE: "TRAILING PE",
+    volume: "VOLUME",
+    average3MonthVolume: "AVG VOLUME",
+    trailingPE: "P/E RATIO",
     dividendYield: "DIVIDEND YIELD",
-    primaryExchange: "EXCHANGE",
   };
 
   // If it's a direct link from an index card, update the symbol from the state
@@ -407,13 +407,16 @@ const Quote: React.FC<QuoteProps> = () => {
                     <span>Share</span>
                   </button>
                 </div>
-                {Object.entries(quoteSidebarData || {}).map(([key, value]) => (
-                  <div key={key} className="quote-data-row">
-                    {/* Use the mapped key for display */}
-                    <div>{keyMappings[key]}</div>
-                    <div>{value}</div>
-                  </div>
-                ))}
+                {Object.entries(keyMappings).map(([key, label]) => {
+                  const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
+                  if (!value) return null;
+                  return (
+                    <div key={key} className="quote-data-row">
+                      <div>{label}</div>
+                      <div>{value}</div>
+                    </div>
+                  );
+                })}
               </div>
               <div className={`quote-about ${isAboutOpen ? "open" : "closed"}`}>
                 <div
@@ -437,34 +440,37 @@ const Quote: React.FC<QuoteProps> = () => {
                     )}
                     {quoteSidebarAboutData &&
                       Object.entries(quoteSidebarAboutData)
-                        .filter(([key]) => key !== "summary")
-                        .map(([key, value]) => (
-                          <div key={key} className="quote-about-row">
-                            <span>{key}</span>
-                            {key.toLowerCase() === "website" ? (
-                              <span>
-                                <a
-                                  href={value}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  {value.replace(
-                                    /(https?:\/\/)?(www\.)|(\.\w{2,3}\.\w{2})/g,
-                                    ""
-                                  )}
-                                </a>
-                              </span>
-                            ) : key.toLowerCase() === "employees" ? (
-                              <span>
-                                {value && !isNaN(parseInt(value, 10))
-                                  ? parseInt(value, 10).toLocaleString()
-                                  : "N/A"}
-                              </span>
-                            ) : (
-                              <span>{value}</span>
-                            )}
-                          </div>
-                        ))}
+                        .filter(([key]) => key !== "summary" && key !== "ceo")
+                        .map(([key, value]) => {
+                          if (!value) return null;
+                          return (
+                            <div key={key} className="quote-about-row">
+                              <span>{key.toUpperCase()}</span>
+                              {key.toLowerCase() === "website" ? (
+                                <span>
+                                  <a
+                                    href={value}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {value.replace(
+                                      /(https?:\/\/)?(www\.)|(\.\w{2,3}\.\w{2})/g,
+                                      ""
+                                    )}
+                                  </a>
+                                </span>
+                              ) : key.toLowerCase() === "employees" ? (
+                                <span>
+                                  {value && !isNaN(parseInt(value, 10))
+                                    ? parseInt(value, 10).toLocaleString()
+                                    : "N/A"}
+                                </span>
+                              ) : (
+                                <span>{value}</span>
+                              )}
+                            </div>
+                          );
+                        })}
                   </div>
                 )}
               </div>

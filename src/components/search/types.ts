@@ -31,8 +31,9 @@ export interface quoteType extends previousClose {
 export interface QuotePageSidebarData {
   previousClose: string;
   dayRange: string;
-  fiftyTwoWeekHigh: string;
+  fiftyTwoWeekRange: string;
   marketCap: string;
+  volume: string;
   average3MonthVolume: string;
   trailingPE: string;
   dividendYield: string;
