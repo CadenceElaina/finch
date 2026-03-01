@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import DemoBanner from "../DemoBanner";
+import FuelGauge from "../FuelGauge";
 import "./Layout.css";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,6 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <Link to={"/"}>Finch</Link>
           </span>
         </div>
+        <FuelGauge />
       </div>
 
       <div className="container">
