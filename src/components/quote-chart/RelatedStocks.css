@@ -14,16 +14,9 @@
 }
 
 .related-stocks-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 10px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-
-.related-stocks-grid::-webkit-scrollbar {
-  display: none;
 }
 
 .related-stock-card {
@@ -36,7 +29,6 @@
   text-decoration: none;
   color: inherit;
   transition: background-color 0.15s ease, border-color 0.15s;
-  flex: 0 0 140px;
   min-width: 0;
 }
 

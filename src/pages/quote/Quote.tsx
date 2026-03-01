@@ -338,7 +338,7 @@ const Quote: React.FC<QuoteProps> = () => {
             {/* ── Overview ── */}
             {activeTab === "overview" && (
               <div className="quote-tab-content">
-                {/* Stats grid */}
+                {/* Stats grid — inline */}
                 {quoteSidebarData && (
                   <div className="quote-stats-grid">
                     {sidebarEntries.map(({ label, key }) => {
@@ -435,8 +435,73 @@ const Quote: React.FC<QuoteProps> = () => {
             )}
           </div>
 
-          {/* Sidebar — AI only */}
+          {/* ── Sidebar: Stats + About + AI ── */}
           <aside className="quote-sidebar">
+            {/* Key stats — always visible */}
+            {quoteSidebarData && (
+              <div className="quote-sidebar-card">
+                {sidebarEntries.map(({ label, key }) => {
+                  const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
+                  if (!value) return null;
+                  return (
+                    <div key={key} className="quote-kv-row">
+                      <span>{label}</span>
+                      <span>{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* About snippet — always visible in sidebar */}
+            {hasAbout && (
+              <div className="quote-sidebar-card">
+                <div className="quote-sidebar-card-title">About</div>
+                {quoteSidebarAboutData?.summary && (
+                  <p className="quote-sidebar-about-text">
+                    {quoteSidebarAboutData.summary.length > 220
+                      ? quoteSidebarAboutData.summary.slice(0, 220) + "…"
+                      : quoteSidebarAboutData.summary}
+                  </p>
+                )}
+                <div className="quote-sidebar-about-details">
+                  {quoteSidebarAboutData?.ceo && (
+                    <div className="quote-kv-row">
+                      <span>CEO</span>
+                      <span>{quoteSidebarAboutData.ceo}</span>
+                    </div>
+                  )}
+                  {quoteSidebarAboutData?.headquarters && (
+                    <div className="quote-kv-row">
+                      <span>Headquarters</span>
+                      <span>{quoteSidebarAboutData.headquarters}</span>
+                    </div>
+                  )}
+                  {quoteSidebarAboutData?.employees && (
+                    <div className="quote-kv-row">
+                      <span>Employees</span>
+                      <span>
+                        {!isNaN(parseInt(quoteSidebarAboutData.employees, 10))
+                          ? parseInt(quoteSidebarAboutData.employees, 10).toLocaleString()
+                          : quoteSidebarAboutData.employees}
+                      </span>
+                    </div>
+                  )}
+                  {quoteSidebarAboutData?.website && (
+                    <div className="quote-kv-row">
+                      <span>Website</span>
+                      <span>
+                        <a href={quoteSidebarAboutData.website} target="_blank" rel="noopener noreferrer">
+                          {quoteSidebarAboutData.website.replace(/(https?:\/\/)?(www\.)?/g, "").replace(/\/$/, "")}
+                        </a>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* AI Research */}
             <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
           </aside>
         </div>
