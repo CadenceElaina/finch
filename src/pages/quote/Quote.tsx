@@ -54,7 +54,7 @@ const Quote: React.FC<QuoteProps> = () => {
 
   const [selectedInterval, setSelectedInterval] = useState("1D");
   const [isAboutOpen, setIsAboutOpen] = useState(true);
-  const [isFinancialsOpen, setIsFinancialsOpen] = useState(false);
+  const [isFinancialsOpen, setIsFinancialsOpen] = useState(true);
 
   /** Check if the symbol is already in any watchlist */
   const isFollowing = useMemo(() => {
@@ -307,6 +307,9 @@ const Quote: React.FC<QuoteProps> = () => {
               previousClosePrice={quoteSidebarData?.previousClose || ""}
             />
 
+            {/* AI Research — compact, inline after chart */}
+            <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
+
             {/* Financials */}
             {hasFinancials && (
               <section className="quote-section">
@@ -352,8 +355,6 @@ const Quote: React.FC<QuoteProps> = () => {
                 );
               })}
             </div>
-
-            <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
 
             {quoteSidebarAboutData?.summary && (
               <div className="quote-about-card">

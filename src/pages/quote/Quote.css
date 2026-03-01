@@ -6,7 +6,7 @@
 .quote-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px 48px;
+  padding: 16px 24px 48px;
   overflow-x: hidden;
 }
 
@@ -241,6 +241,11 @@
 .quote-section {
   border-top: 1px solid var(--border);
   padding-top: 16px;
+  margin-top: 24px;
+}
+
+/* AI panel in main column — give it section-like spacing */
+.quote-main > .ai-panel {
   margin-top: 24px;
 }
 
