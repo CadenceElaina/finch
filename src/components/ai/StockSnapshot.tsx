@@ -60,6 +60,10 @@ Format your response EXACTLY as:
 Keep it under 150 words total. Be specific with numbers and dates. Be factual, not advisory.`;
 
       const text = await generateGrounded(prompt);
+      if (!text || !text.trim()) {
+        setError("Received empty response — please try again.");
+        return;
+      }
       setSnapshot(text);
       cacheStorage.set(cacheKey, text);
     } catch (err) {

@@ -118,7 +118,7 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     chat,
     getChatHistory,
     clearChat,
-  }), [credits, generate, chat, getChatHistory, clearChat]);
+  }), [credits, generate, generateGrounded, chat, getChatHistory, clearChat]);
 
   return <AiContext.Provider value={value}>{children}</AiContext.Provider>;
 };

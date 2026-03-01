@@ -55,18 +55,29 @@ export async function askGemini(prompt: string): Promise<string> {
  * Use for market overviews and stock snapshots where current info matters.
  */
 export async function askGeminiGrounded(prompt: string): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.4,
-      topP: 0.8,
-      maxOutputTokens: 1024,
-      tools: [{ googleSearch: {} }],
-    },
-  });
-  return response.text ?? "";
+  // Grounded search can occasionally return empty text on the first try.
+  // Retry up to 2 times with a short delay if that happens.
+  const MAX_ATTEMPTS = 2;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.4,
+        topP: 0.8,
+        maxOutputTokens: 1024,
+        tools: [{ googleSearch: {} }],
+      },
+    });
+    const text = (response.text ?? "").trim();
+    if (text) return text;
+    // Empty response — wait briefly before retrying
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  throw new Error("Gemini returned an empty response. Please try again.");
 }
 
 /**
