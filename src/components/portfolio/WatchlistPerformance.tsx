@@ -4,6 +4,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -100,6 +101,21 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
       maximumFractionDigits: 2,
     });
 
+  /** Generate a deterministic mini sparkline from price + percentChange */
+  const genSparkline = (price: number, pctChange: number): { v: number }[] => {
+    const points = 12;
+    const data: { v: number }[] = [];
+    // Start from approximate previous close, end at current price
+    const prevClose = price / (1 + pctChange / 100);
+    for (let i = 0; i < points; i++) {
+      const t = i / (points - 1);
+      // Smooth interpolation with a little deterministic wobble
+      const wobble = Math.sin(i * 2.1 + price * 0.01) * price * 0.003;
+      data.push({ v: prevClose + (price - prevClose) * t + wobble });
+    }
+    return data;
+  };
+
   const handleClick = (symbol: string) => {
     navigate(`/quote/${symbol}`, { state: [false, symbol] });
   };
@@ -136,6 +152,7 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
               <th className="sortable-th" onClick={() => handleSort("percentChange")}>
                 % Change <SortIcon field="percentChange" />
               </th>
+              <th>Chart</th>
               {onRemoveSecurity && <th></th>}
             </tr>
           </thead>
@@ -161,6 +178,20 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                 <td className={gainClass(row.percentChange)}>
                   {row.percentChange >= 0 ? "+" : ""}
                   {row.percentChange}%
+                </td>
+                <td className="sparkline-cell">
+                  <ResponsiveContainer width={80} height={30}>
+                    <LineChart data={genSparkline(row.price, row.percentChange)}>
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke={row.percentChange >= 0 ? "#00c853" : "#e53935"}
+                        strokeWidth={1.5}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </td>
                 {onRemoveSecurity && (
                   <td>
