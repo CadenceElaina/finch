@@ -40,6 +40,10 @@ Include:
 Format: Use **bold** for section headers and key numbers. Use bullet points. Keep it under 180 words. Be specific with real numbers and percentages.`;
 
       const text = await generateGrounded(prompt);
+      if (!text || !text.trim()) {
+        setError("Received empty response — please try again.");
+        return;
+      }
       setSummary(text);
       cacheStorage.set(CACHE_KEY, text);
     } catch (err) {
