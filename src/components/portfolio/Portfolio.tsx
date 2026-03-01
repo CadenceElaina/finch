@@ -349,7 +349,7 @@ const Portfolio = () => {
               ))}
           </div>
         </div>
-        {activeListType === \"portfolios\" && portfolios.length === 0 && (
+        {activeListType === "portfolios" && portfolios.length === 0 && (
           <div className="main-container">
             <div className="empty-state-page">
               <FaChartLine size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
