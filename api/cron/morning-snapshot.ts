@@ -106,9 +106,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const kv = await getKv();
     if (kv) {
-      await kv.set(KV_SNAPSHOT_KEY, JSON.stringify(snapshot), {
-        EX: KV_SNAPSHOT_TTL,
-      });
+      await kv.set(KV_SNAPSHOT_KEY, JSON.stringify(snapshot), "EX", KV_SNAPSHOT_TTL);
       kvWritten = true;
     }
   } catch (err) {

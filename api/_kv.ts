@@ -9,21 +9,20 @@
  * If not configured, `getKv()` returns null — callers should
  * fall back gracefully (e.g. serve from Edge Cache only).
  *
- * NOTE: Uses Node.js runtime (not Edge) because standard Redis
+ * NOTE: Uses Node.js runtime (not Edge) because Redis
  * requires TCP sockets which Edge Runtime doesn't support.
  */
 
-import { createClient, type RedisClientType } from "redis";
+import Redis from "ioredis";
 
-let _client: RedisClientType | null = null;
+let _client: Redis | null = null;
 
 /**
  * Returns a connected Redis client, or null if env vars aren't set.
  * Reuses the same client within a single serverless invocation.
- * Each new invocation creates a fresh connection (serverless lifecycle).
  */
-export async function getKv(): Promise<RedisClientType | null> {
-  if (_client?.isOpen) return _client;
+export async function getKv(): Promise<Redis | null> {
+  if (_client && _client.status === "ready") return _client;
 
   const url =
     process.env.REDIS_URL ||
@@ -33,7 +32,11 @@ export async function getKv(): Promise<RedisClientType | null> {
   if (!url) return null;
 
   try {
-    _client = createClient({ url });
+    _client = new Redis(url, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 5000,
+      lazyConnect: true,
+    });
     await _client.connect();
     return _client;
   } catch {
@@ -47,8 +50,8 @@ export async function getKv(): Promise<RedisClientType | null> {
  * to avoid connection leaks in serverless functions.
  */
 export async function disconnectKv(): Promise<void> {
-  if (_client?.isOpen) {
-    await _client.disconnect();
+  if (_client && _client.status === "ready") {
+    await _client.quit();
     _client = null;
   }
 }
