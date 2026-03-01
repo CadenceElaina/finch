@@ -402,3 +402,34 @@
   width: 90px;
   min-width: 90px;
 }
+
+/* S&P 500 benchmark comparison */
+.benchmark-row {
+  margin-top: 0.75rem;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.benchmark-label {
+  color: var(--text-secondary, #aaa);
+  font-weight: 600;
+}
+
+.benchmark-value.gain {
+  color: #00c853;
+}
+
+.benchmark-value.loss {
+  color: #e53935;
+}
+
+.benchmark-vs {
+  color: var(--text-secondary, #888);
+  font-size: 0.78rem;
+}

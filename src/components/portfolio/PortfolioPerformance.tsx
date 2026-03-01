@@ -53,6 +53,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     totalGain: 0,
     totalGainPct: 0,
   });
+  const [spyDayChange, setSpyDayChange] = useState<{ pct: number; price: number } | null>(null);
   const queryClient = useQueryClient();
 
   const handleSort = (field: PortfolioSortField) => {
@@ -94,6 +95,15 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       return;
     }
     const symbolQuoteMap = await getBatchQuotes(queryClient, symbols);
+
+    // Fetch SPY as benchmark (piggyback if SPY is already in holdings, else separate)
+    try {
+      const spyMap = symbolQuoteMap["SPY"] ? symbolQuoteMap : await getBatchQuotes(queryClient, ["SPY"]);
+      const spy = spyMap["SPY"];
+      if (spy) {
+        setSpyDayChange({ pct: spy.percentChange ?? 0, price: spy.price ?? 0 });
+      }
+    } catch { /* non-critical */ }
     const transformedData: Data[] = transformQuotesToDataWithQuantities(
       symbolQuoteMap,
       portfolio
@@ -262,6 +272,17 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             <div className="portfolio-summary-row" style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary, #aaa)" }}>
               <div>Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</div>
               <div>Current value: ${fmt(portfolioPerformance.totalCurrentValue)}</div>
+            </div>
+          )}
+          {spyDayChange && (
+            <div className="benchmark-row">
+              <span className="benchmark-label">S&P 500 (SPY)</span>
+              <span className={`benchmark-value ${spyDayChange.pct >= 0 ? "gain" : "loss"}`}>
+                {spyDayChange.pct >= 0 ? "+" : ""}{spyDayChange.pct.toFixed(2)}%
+              </span>
+              <span className="benchmark-vs">
+                vs portfolio {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{portfolioPerformance.totalPercentChange}%
+              </span>
             </div>
           )}
         </div>
