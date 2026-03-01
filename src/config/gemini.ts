@@ -1,13 +1,14 @@
 /**
  * Gemini API client configuration.
- * Uses Gemini 1.5 Flash for speed and free-tier compatibility.
+ * Uses Gemini 2.5 Flash via the @google/genai SDK.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
+const MODEL = "gemini-2.5-flash";
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 /** System instruction that governs the AI's behavior across all calls */
 const SYSTEM_INSTRUCTION = `You are the Finch Market Intelligence Agent. You provide objective, concise,
@@ -25,42 +26,52 @@ ROLE CONSTRAINTS:
 CACHING BEHAVIOR: If providing a stock snapshot (not a user-initiated question),
 limit to: 3-sentence trend summary + 3 key metrics to watch + 1 risk factor.`;
 
-export const geminiModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-  systemInstruction: SYSTEM_INSTRUCTION,
-  generationConfig: {
-    temperature: 0.4,
-    topP: 0.8,
-    maxOutputTokens: 1024,
-  },
-});
-
 /**
  * Generate content from Gemini. Returns the text response.
  * Throws on failure — callers should handle errors.
  */
 export async function askGemini(prompt: string): Promise<string> {
-  const result = await geminiModel.generateContent(prompt);
-  const response = result.response;
-  return response.text();
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 0.4,
+      topP: 0.8,
+      maxOutputTokens: 1024,
+    },
+  });
+  return response.text ?? "";
 }
 
 /**
  * Generate content with chat history context.
  * Used for the research chat feature where follow-up context matters.
+ * Builds a multi-turn contents array per the Gemini API spec.
  */
 export async function askGeminiChat(
   history: { role: "user" | "model"; text: string }[],
   newMessage: string
 ): Promise<string> {
-  const chat = geminiModel.startChat({
-    history: history.map((msg) => ({
+  const contents = [
+    ...history.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.text }],
     })),
+    { role: "user" as const, parts: [{ text: newMessage }] },
+  ];
+
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents,
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 0.4,
+      topP: 0.8,
+      maxOutputTokens: 1024,
+    },
   });
-  const result = await chat.sendMessage(newMessage);
-  return result.response.text();
+  return response.text ?? "";
 }
 
 /** Check if Gemini is configured (API key present) */
