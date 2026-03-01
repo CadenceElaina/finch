@@ -20,12 +20,12 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./lib/kv";
+import Redis from "ioredis";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
 export const config = { runtime: "nodejs" };
 
-/** Maximum snapshot age (in seconds) before client should treat it as stale */
+const KV_SNAPSHOT_KEY = "market:snapshot";
 const MAX_AGE_SECONDS = 15 * 60; // 15 minutes
 
 function json(res: ServerResponse, status: number, body: unknown, extra?: Record<string, string>) {
@@ -40,25 +40,22 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return json(res, 405, { error: "Method not allowed" });
   }
 
-  let kv;
-  try {
-    kv = await getKv();
-  } catch {
-    // Redis connection failed — fall through to 503
-  }
-
-  if (!kv) {
+  const url = process.env.REDIS_URL || process.env.STORAGE_URL || process.env.KV_URL;
+  if (!url) {
     return json(res, 503, { error: "KV not configured" }, { "Cache-Control": "no-store" });
   }
 
+  let client: Redis | null = null;
   try {
-    const raw = await kv.get(KV_SNAPSHOT_KEY);
+    client = new Redis(url, { maxRetriesPerRequest: 1, connectTimeout: 5000, lazyConnect: true });
+    await client.connect();
+
+    const raw = await client.get(KV_SNAPSHOT_KEY);
 
     if (!raw) {
       return json(res, 404, { error: "No snapshot available" }, { "Cache-Control": "no-store" });
     }
 
-    // Parse the snapshot (stored as JSON string)
     const snapshot = typeof raw === "string" ? JSON.parse(raw) : raw;
     const snapshotTime = new Date(snapshot.timestamp).getTime();
     const ageSeconds = Math.floor((Date.now() - snapshotTime) / 1000);
@@ -70,6 +67,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   } catch (err) {
     return json(res, 500, { error: "KV read failed", detail: String(err) }, { "Cache-Control": "no-store" });
   } finally {
-    await disconnectKv();
+    if (client) await client.quit().catch(() => {});
   }
 }

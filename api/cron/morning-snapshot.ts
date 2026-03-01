@@ -17,14 +17,15 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { getKv, disconnectKv, KV_SNAPSHOT_KEY, KV_SNAPSHOT_TTL } from "../lib/kv";
+import Redis from "ioredis";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
 export const config = { runtime: "nodejs" };
 
-const YH_HOST = "yh-finance.p.rapidapi.com";
+const KV_SNAPSHOT_KEY = "market:snapshot";
+const KV_SNAPSHOT_TTL = 15 * 60; // 15 minutes
 
-// US market indices we pre-fetch
+const YH_HOST = "yh-finance.p.rapidapi.com";
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
 
 export interface MarketSnapshot {
@@ -103,16 +104,19 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   // Write to Redis if configured
   let kvWritten = false;
+  let client: Redis | null = null;
   try {
-    const kv = await getKv();
-    if (kv) {
-      await kv.set(KV_SNAPSHOT_KEY, JSON.stringify(snapshot), "EX", KV_SNAPSHOT_TTL);
+    const url = process.env.REDIS_URL || process.env.STORAGE_URL || process.env.KV_URL;
+    if (url) {
+      client = new Redis(url, { maxRetriesPerRequest: 1, connectTimeout: 5000, lazyConnect: true });
+      await client.connect();
+      await client.set(KV_SNAPSHOT_KEY, JSON.stringify(snapshot), "EX", KV_SNAPSHOT_TTL);
       kvWritten = true;
     }
   } catch (err) {
     snapshot.errors.push(`KV write failed: ${String(err)}`);
   } finally {
-    await disconnectKv();
+    if (client) await client.quit().catch(() => {});
   }
 
   return json(res, 200, { ...snapshot, kvWritten }, {
