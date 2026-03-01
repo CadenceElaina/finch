@@ -13,6 +13,7 @@ interface PortfolioContentProps {
   handleDropdownOptionClick: (option: string) => void;
   showDropdown: boolean;
   openAddToPortfolioModal: () => void;
+  onRemoveSecurity?: (symbol: string) => void;
 }
 
 const PortfolioContent: React.FC<PortfolioContentProps> = ({
@@ -22,6 +23,7 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
   handleDropdownOptionClick,
   showDropdown,
   openAddToPortfolioModal,
+  onRemoveSecurity,
 }) => {
   const { portfolios } = usePortfolios();
   return (
@@ -54,7 +56,7 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
                 )}
               </div>
             </div>
-            {portfolio && <PortfolioPerformance portfolio={portfolio} />}
+            {portfolio && <PortfolioPerformance portfolio={portfolio} onRemoveSecurity={onRemoveSecurity} />}
           </div>
           <button className="add-investment" onClick={openAddToPortfolioModal}>
             <FaPlus size={18} />

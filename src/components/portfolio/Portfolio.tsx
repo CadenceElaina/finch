@@ -37,7 +37,7 @@ const Portfolio = () => {
     useState<boolean>(false);
   const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
     useState<boolean>(false);
-  const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, appendPortfolio } =
+  const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, removeSecurityFromPortfolio, appendPortfolio } =
     usePortfolios();
   const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } =
     useWatchlists();
@@ -365,6 +365,12 @@ const Portfolio = () => {
               handleDropdownToggle={handleDropdownToggle}
               showDropdown={showDropdown}
               openAddToPortfolioModal={openAddToPortfolioModal}
+              onRemoveSecurity={(symbol) => {
+                if (activePortfolio) {
+                  removeSecurityFromPortfolio(activePortfolio.id, symbol);
+                  addNotification(`${symbol.toUpperCase()} removed`, "success");
+                }
+              }}
             />
           </div>
         )}
