@@ -5,8 +5,6 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useAi } from "../../context/AiContext";
-import { useIndexQuotes } from "../../context/IndexQuotesContext";
-import { buildContextBundle, contextToPrompt } from "../../services/contextBundle";
 import { cacheStorage } from "../../services/storage";
 import { FaRobot } from "react-icons/fa";
 import "./MarketOverview.css";
@@ -15,8 +13,7 @@ const CACHE_KEY = "ai_market_overview";
 const CACHE_TTL = 60 * 60_000; // 1 hour
 
 const MarketOverview: React.FC = () => {
-  const { generate, configured, creditsRemaining } = useAi();
-  const { indexQuotesData } = useIndexQuotes();
+  const { generateGrounded, configured, creditsRemaining } = useAi();
 
   const [summary, setSummary] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -33,17 +30,16 @@ const MarketOverview: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const bundle = buildContextBundle({ indexQuotes: indexQuotesData });
-      const prompt =
-        contextToPrompt(bundle) +
-        `Provide a concise market overview for today. Include:
-1. Overall market sentiment (bullish/bearish/mixed) in one sentence
-2. 3-4 key market developments or themes
-3. What to watch for the next trading session
+      const prompt = `Search the web for today's stock market data and provide a concise market overview.
 
-Keep it under 150 words. Use bullet points. Be data-driven.`;
+Include:
+1. **Market Summary** — What happened today (or last close if weekend/holiday). List the exact closing values and % changes for the Dow Jones, S&P 500, and Nasdaq.
+2. **Key Drivers** — 2-3 major themes moving the market (earnings, economic data, geopolitics, sector rotation, etc.)
+3. **What to Watch** — 1-2 upcoming catalysts for the next session
 
-      const text = await generate(prompt);
+Format: Use **bold** for section headers and key numbers. Use bullet points. Keep it under 180 words. Be specific with real numbers and percentages.`;
+
+      const text = await generateGrounded(prompt);
       setSummary(text);
       cacheStorage.set(CACHE_KEY, text);
     } catch (err) {
@@ -51,7 +47,7 @@ Keep it under 150 words. Use bullet points. Be data-driven.`;
     } finally {
       setLoading(false);
     }
-  }, [configured, creditsRemaining, generate, indexQuotesData]);
+  }, [configured, creditsRemaining, generateGrounded]);
 
   if (!configured) return null;
 
@@ -61,11 +57,19 @@ Keep it under 150 words. Use bullet points. Be data-driven.`;
         <FaRobot size={16} />
         <span>AI Market Overview</span>
       </div>
+      <div className="market-overview-gradient-line" />
 
       {summary ? (
         <div className="market-overview-content">
           {summary.split("\n").map((line, i) => (
-            <p key={i}>{line}</p>
+            <p
+              key={i}
+              dangerouslySetInnerHTML={{
+                __html: line
+                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                  .replace(/\*(.*?)\*/g, "<em>$1</em>"),
+              }}
+            />
           ))}
           <button
             className="market-overview-refresh"

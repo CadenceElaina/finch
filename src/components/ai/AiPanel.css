@@ -50,6 +50,29 @@
   color: var(--text-tertiary);
 }
 
+/* Animated gradient line — inspired by Google Finance Research */
+.ai-panel-gradient-line {
+  height: 3px;
+  margin: 0 16px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    #4285f4 0%,
+    #9b72cb 25%,
+    #d96570 50%,
+    #d7a66e 75%,
+    #4285f4 100%
+  );
+  background-size: 200% 100%;
+  animation: ai-gradient-shift 4s ease infinite;
+}
+
+@keyframes ai-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .ai-panel-body {
   padding: 0 16px 16px;
 }

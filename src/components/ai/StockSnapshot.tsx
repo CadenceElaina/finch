@@ -18,7 +18,7 @@ interface StockSnapshotProps {
 }
 
 const StockSnapshot: React.FC<StockSnapshotProps> = ({ symbol, quotePageData }) => {
-  const { generate, configured, creditsRemaining } = useAi();
+  const { generateGrounded, configured, creditsRemaining } = useAi();
 
   const [snapshot, setSnapshot] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -39,27 +39,27 @@ const StockSnapshot: React.FC<StockSnapshotProps> = ({ symbol, quotePageData }) 
     setLoading(true);
     setError("");
     try {
-      const { quoteData, quoteSidebarData, quoteSidebarAboutData, quoteFinancialData } = quotePageData;
-      const prompt = `Provide a brief stock snapshot for ${symbol.toUpperCase()} (${quoteData.name}).
+      const { quoteData } = quotePageData;
+      const prompt = `Search the web for the latest news and data on ${symbol.toUpperCase()} (${quoteData.name}) stock.
 
-Current data:
-- Price: $${quoteData.price} (${quoteData.percentChange >= 0 ? "+" : ""}${quoteData.percentChange.toFixed(2)}% today)
-- Market Cap: ${quoteSidebarData.marketCap}
-- P/E Ratio: ${quoteSidebarData.trailingPE || "N/A"}
-- 52W Range: ${quoteSidebarData.fiftyTwoWeekRange || "N/A"}
-- Dividend Yield: ${quoteSidebarData.dividendYield || "None"}
-- Revenue: ${quoteFinancialData.annualRevenue || "N/A"}
-- Net Profit Margin: ${quoteFinancialData.netProfitMargin || "N/A"}
-- About: ${quoteSidebarAboutData.summary?.slice(0, 200) || "N/A"}
+Provide a concise stock research snapshot. Use REAL current data from your web search — do not rely solely on the data I provide.
 
-Format your response as:
-1. **Trend** — 2-3 sentence summary of the stock's current momentum
-2. **Key Metrics** — 3 bullet points of the most important numbers
-3. **Risk Factor** — 1 sentence on the primary risk to watch
+Format your response EXACTLY as:
 
-Keep it under 120 words total. Be factual, not advisory.`;
+**Trend**
+2-3 sentences on the stock's current momentum, referencing today's price action and recent catalysts from the news.
 
-      const text = await generate(prompt);
+**Key Metrics**
+- Revenue / earnings figures from the most recent quarter
+- Current valuation vs sector average
+- Any notable analyst price target changes
+
+**Risk Factor**
+1 sentence on the primary risk investors should watch.
+
+Keep it under 150 words total. Be specific with numbers and dates. Be factual, not advisory.`;
+
+      const text = await generateGrounded(prompt);
       setSnapshot(text);
       cacheStorage.set(cacheKey, text);
     } catch (err) {
@@ -67,7 +67,7 @@ Keep it under 120 words total. Be factual, not advisory.`;
     } finally {
       setLoading(false);
     }
-  }, [configured, creditsRemaining, generate, symbol, quotePageData, cacheKey]);
+  }, [configured, creditsRemaining, generateGrounded, symbol, quotePageData, cacheKey]);
 
   if (!configured) return null;
 
