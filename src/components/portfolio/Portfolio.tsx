@@ -21,6 +21,7 @@ import {
 } from "../../types/types";
 import { useNotification } from "../../context/NotificationContext";
 import Notification from "../Notification";
+import PortfolioSummary from "../ai/PortfolioSummary";
 
 const Portfolio = () => {
   const { addNotification } = useNotification();
@@ -380,6 +381,7 @@ const Portfolio = () => {
                 }
               }}
             />
+            <PortfolioSummary portfolio={activePortfolio} />
           </div>
         )}
         {activeListType === "watchlists" && watchlists.length === 0 && (

@@ -1,0 +1,96 @@
+/* PortfolioSummary — AI commentary card on Portfolio page */
+
+.portfolio-summary {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  background: var(--bg-secondary);
+}
+
+.portfolio-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.portfolio-summary-content p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.portfolio-summary-content p:empty {
+  display: none;
+}
+
+.portfolio-summary-content strong {
+  color: var(--text-primary);
+}
+
+.portfolio-summary-refresh {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: border-color 0.15s;
+}
+
+.portfolio-summary-refresh:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.portfolio-summary-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.portfolio-summary-empty {
+  text-align: center;
+  padding: 6px 0;
+}
+
+.portfolio-summary-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.portfolio-summary-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.portfolio-summary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.portfolio-summary-limit {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.portfolio-summary-error {
+  font-size: 0.78rem;
+  color: #e74c3c;
+  margin-top: 8px;
+}
