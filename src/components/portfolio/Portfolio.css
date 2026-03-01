@@ -395,3 +395,10 @@
 .allocation-pct {
   color: var(--text-secondary, #aaa);
 }
+
+/* Sparkline cells in watchlist table */
+.sparkline-cell {
+  padding: 2px 6px !important;
+  width: 90px;
+  min-width: 90px;
+}
