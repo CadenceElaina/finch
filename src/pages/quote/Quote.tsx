@@ -15,7 +15,7 @@ import QuoteNews from "../../components/quote-chart/news/QuoteNews";
 import RelatedStocks from "../../components/quote-chart/RelatedStocks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQuotePageData } from "../../components/search/quoteUtils";
-import { ENDPOINTS } from "../../config/api";
+import { ENDPOINTS, getQuoteRefreshInterval } from "../../config/api";
 import { IoAddSharp } from "react-icons/io5";
 import { CiShare2 } from "react-icons/ci";
 import { isHoliday } from "./quoteUtils";
@@ -68,6 +68,8 @@ const Quote: React.FC<QuoteProps> = () => {
     enabled: Boolean(symbol),
     staleTime: ENDPOINTS.profile.cache.stale,
     gcTime: ENDPOINTS.profile.cache.gc,
+    refetchInterval: getQuoteRefreshInterval(),
+    refetchIntervalInBackground: false,
   });
 
   useEffect(() => {
