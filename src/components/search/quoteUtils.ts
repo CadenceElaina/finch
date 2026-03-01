@@ -277,8 +277,9 @@ export const getQuotePageData = async (
       ? {
           previousClose: "",
           dayRange: "",
-          fiftyTwoWeekHigh: "",
+          fiftyTwoWeekRange: "",
           marketCap: "",
+          volume: "",
           average3MonthVolume: "",
           trailingPE: "",
           dividendYield: "",
@@ -292,10 +293,16 @@ export const getQuotePageData = async (
             q.regularMarketDayLow && q.regularMarketDayHigh
               ? `$${q.regularMarketDayLow} - $${q.regularMarketDayHigh}`
               : q.regularMarketDayRange ?? "",
-          fiftyTwoWeekHigh: q.fiftyTwoWeekHigh
-            ? `${q.fiftyTwoWeekHigh}`
-            : "",
+          fiftyTwoWeekRange:
+            q.fiftyTwoWeekLow && q.fiftyTwoWeekHigh
+              ? `$${q.fiftyTwoWeekLow} - $${q.fiftyTwoWeekHigh}`
+              : q.fiftyTwoWeekHigh
+                ? `$${q.fiftyTwoWeekHigh}`
+                : "",
           marketCap: q.marketCap ? formatLargeNumber(q.marketCap) : "",
+          volume: q.regularMarketVolume
+            ? formatLargeNumber(q.regularMarketVolume)
+            : "",
           average3MonthVolume: q.averageDailyVolume3Month
             ? formatLargeNumber(q.averageDailyVolume3Month)
             : "",
