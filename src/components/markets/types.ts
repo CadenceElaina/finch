@@ -18,4 +18,5 @@ export interface IndexCard {
 export interface IndexCardProps {
   cards: IndexCard[];
   currExchange: Exchange;
+  hasError?: boolean;
 }

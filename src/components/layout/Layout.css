@@ -18,6 +18,29 @@
   z-index: 100;
 }
 
+.top-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-badge {
+  background: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  color: #ffa500;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.demo-badge:hover {
+  background: rgba(255, 165, 0, 0.25);
+}
+
 .logo-container {
   display: flex;
   align-items: center;
@@ -241,4 +264,29 @@
   margin: 0 auto;
   padding-bottom: 10px;
   justify-content: center;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .top-banner {
+    padding: 8px 12px;
+  }
+
+  .main-content {
+    padding-top: 44px;
+  }
+
+  .main-content.open {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    width: 0;
+    overflow: hidden;
+  }
+
+  .sidebar.open {
+    width: 240px;
+  }
 }

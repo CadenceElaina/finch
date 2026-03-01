@@ -28,11 +28,12 @@
   padding: 1rem;
   flex: 1;
   cursor: pointer;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
   border-radius: 12px;
   padding: 8px;
   font-size: 1rem;
   font-weight: 500;
+  color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -54,10 +55,17 @@
   margin-bottom: 2px;
 }
 .markets-article-link a {
-  color: rgba(28, 116, 233, 0.8);
+  color: var(--accent, rgba(28, 116, 233, 0.9));
+  text-decoration: none;
 }
 .markets-article-link a:hover {
-  color: rgb(24, 90, 188);
+  color: var(--accent-hover, rgb(24, 90, 188));
+  text-decoration: underline;
+}
+.markets-article-source {
+  font-size: 0.78rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+  margin-top: 2px;
 }
 
 .index-cards-container {
@@ -80,18 +88,18 @@
   display: flex;
   flex-direction: row !important;
   align-items: center;
-  background-color: #fff;
+  background-color: var(--bg-secondary, #1e1e1e);
   border-radius: 8px;
   padding: 6px;
-  border: 1px solid rgb(0, 0, 0);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
 }
 .currencies:hover {
   cursor: default !important;
 }
 .index-card-content:hover {
-  background-color: rgba(246, 246, 246, 0.95);
+  background-color: var(--bg-tertiary, rgba(128, 128, 128, 0.1));
   cursor: pointer;
 }
 .index-card-link {
@@ -118,7 +126,7 @@
   text-align: center;
 }
 .index-card-name {
-  color: rgb(32, 33, 36);
+  color: var(--text-primary);
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
@@ -126,7 +134,7 @@
 }
 
 .index-card-price {
-  color: rgb(60, 64, 67);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
 }
 
 .index-card-change {
@@ -148,5 +156,83 @@
 
 .card-content.neutral .card-percent-change,
 .card-content.neutral .card-price-change {
-  color: #777; /* Adjust the color for neutral change */
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+}
+
+/* Index card skeletons */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.index-card-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-secondary, #1e1e1e);
+  border-radius: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  min-width: 160px;
+  height: 44px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-bar {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.skeleton-bar.sm { width: 32px; height: 12px; }
+.skeleton-bar.md { width: 64px; height: 12px; }
+.skeleton-bar.lg { width: 90px; height: 12px; }
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .markets-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .compare-markets {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+  }
+
+  .exchange-chips {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .chip {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  .markets-article {
+    max-width: 100%;
+    padding: 0.5rem 1rem;
+    text-align: center;
+  }
+
+  .index-cards-inner {
+    gap: 8px;
+  }
+
+  .index-card-content {
+    min-width: 0;
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .index-card-name-price {
+    max-width: none;
+    min-width: 0;
+  }
+
+  .index-card-skeleton {
+    min-width: 0;
+    flex: 1 1 calc(50% - 8px);
+  }
 }

@@ -11,6 +11,7 @@ import { getMoversSymbols, getBatchQuotes, getTrending } from "./search/quoteUti
 import { quoteType } from "./search/types";
 import { transformQuotesToData } from "./market-trends/utils";
 import { Skeleton } from "@mui/material";
+import ErrorState from "./ErrorState";
 
 const MarketTrendsList = () => {
   const marketTrendsConfig: RowConfig = {
@@ -28,17 +29,20 @@ const MarketTrendsList = () => {
   }; */
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
   const [mostActiveQuotes, setMostActiveQuotes] = useState<
     Record<string, quoteType | null>
   >({});
 
   const fetchMostActiveQuotes = async () => {
     try {
+      setError(false);
       const newSymbols = await getMoversSymbols("active");
 
       setSymbols(newSymbols);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      setError(true);
     }
   };
 
@@ -71,14 +75,17 @@ const MarketTrendsList = () => {
       setLoading(true);
       const fetchTrendingData = async () => {
         try {
+          setError(false);
           const data = await getTrending(queryClient);
           setTrendingData(data.slice(0, 5));
-        } catch (error) {
-          console.error("Error fetching trending data:", error);
+        } catch (err) {
+          console.error("Error fetching trending data:", err);
+          setError(true);
+        } finally {
+          setLoading(false);
         }
       };
       fetchTrendingData();
-      setLoading(false);
     }
   }, [currTrend]);
 
@@ -136,7 +143,17 @@ const MarketTrendsList = () => {
             />
           </div>
         )}
-        {!loading && currTrend === "most-active" && (
+        {!loading && error && (
+          <ErrorState
+            message="Unable to load market trends."
+            onRetry={() => {
+              if (currTrend === "most-active") fetchMostActiveQuotes();
+              else setCurrTrend("trending");
+            }}
+            compact
+          />
+        )}
+        {!loading && !error && currTrend === "most-active" && (
           <Table
             data={transformQuotesToData(mostActiveQuotes)}
             config={marketTrendsConfig}
@@ -144,7 +161,7 @@ const MarketTrendsList = () => {
             icon={true}
           />
         )}
-        {!loading && currTrend === "trending" && (
+        {!loading && !error && currTrend === "trending" && (
           <Table
             data={trendingData}
             config={marketTrendsConfig}

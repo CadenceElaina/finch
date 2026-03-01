@@ -265,9 +265,35 @@
 @media (max-width: 768px) {
   .quote-container {
     flex-direction: column; /* Switch to a single column on smaller screens */
+    padding: 16px;
+  }
+
+  .quote-main-column {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 24px;
   }
 
   .quote-side-column {
+    width: 100%;
     flex: 1; /* Allow the side column to take full width on smaller screens */
+  }
+
+  .quote-top-container {
+    padding: 0 16px 8px;
+  }
+
+  .quote-name {
+    font-size: 1.4rem;
+  }
+
+  .quote-price-changes .quote-price-positive,
+  .quote-price-changes .quote-price-negative {
+    font-size: 1.5rem;
+  }
+
+  .quote-data-buttons {
+    flex-wrap: wrap;
+    gap: 4px;
   }
 }

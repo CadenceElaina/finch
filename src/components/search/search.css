@@ -79,7 +79,8 @@
   border-radius: 0 0 8px 8px; /* Rounded on bottom corners only for the last row */
 }
 
-.quote-row:hover {
+.quote-row:hover,
+.quote-row.active {
   background: linear-gradient(to right, #454a56, #3e424e);
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
@@ -112,4 +113,59 @@
 .price-change,
 .percent-change {
   color: #00ff00;
+}
+
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .app-container {
+    width: 90%;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .search-input {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .search-button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .stock-name {
+    font-size: 16px;
+  }
+
+  .stock-details,
+  .price-change,
+  .percent-change,
+  .price {
+    font-size: 14px;
+  }
+
+  .quote-row {
+    padding: 12px;
+  }
+}
+
+/* ── Focus / Accessibility ───────────────────────────── */
+
+.search-input:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+}
+
+.quote-row:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+  background: linear-gradient(to right, #454a56, #3e424e);
 }
