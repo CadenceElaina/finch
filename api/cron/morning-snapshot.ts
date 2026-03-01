@@ -19,6 +19,7 @@
 import { getKv, disconnectKv, KV_SNAPSHOT_KEY, KV_SNAPSHOT_TTL } from "../_kv";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
+export const config = { runtime: "nodejs" };
 
 const YH_HOST = "yh-finance.p.rapidapi.com";
 

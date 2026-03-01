@@ -22,6 +22,7 @@
 import { getKv, disconnectKv, KV_SNAPSHOT_KEY } from "./_kv";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
+export const config = { runtime: "nodejs" };
 
 /** Maximum snapshot age (in seconds) before client should treat it as stale */
 const MAX_AGE_SECONDS = 15 * 60; // 15 minutes
