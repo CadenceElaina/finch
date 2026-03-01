@@ -11,13 +11,39 @@
 .stock-snapshot-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 10px;
+}
+
+.stock-snapshot-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stock-snapshot-refresh {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary, rgba(255,255,255,0.35));
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.stock-snapshot-refresh:hover {
+  color: var(--text-secondary);
+}
+
+.stock-snapshot-refresh:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .stock-snapshot-content p {

@@ -43,7 +43,7 @@ export async function askGemini(prompt: string): Promise<string> {
       systemInstruction: SYSTEM_INSTRUCTION,
       temperature: 0.4,
       topP: 0.8,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
     },
   });
   return response.text ?? "";
@@ -66,7 +66,7 @@ export async function askGeminiGrounded(prompt: string): Promise<string> {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.4,
         topP: 0.8,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 4096,
         tools: [{ googleSearch: {} }],
       },
     });
@@ -103,7 +103,7 @@ export async function askGeminiChat(
       systemInstruction: SYSTEM_INSTRUCTION,
       temperature: 0.4,
       topP: 0.8,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
       tools: [{ googleSearch: {} }],
     },
   });
