@@ -54,7 +54,9 @@
 }
 
 .data {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
   z-index: 1000;
   max-width: 800px;
   margin: 0 auto;

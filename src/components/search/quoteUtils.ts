@@ -242,17 +242,27 @@ export const getQuotePageData = async (
   }
 
   try {
-    const cachedQuote = queryClient.getQueryData([
-      "quotePageData",
-      symbol,
-    ]) as QuotePageData;
-    if (cachedQuote) return cachedQuote;
-
-    // Check localStorage (survives refresh)
+    // Check localStorage first (only cached when profile data was present)
     const lsCached = cacheStorage.get<QuotePageData>(`quotePageData_${symbol}`, LS_TTL.quotePageData);
     if (lsCached) {
       queryClient.setQueryData(["quotePageData", symbol], lsCached);
       return lsCached;
+    }
+
+    // Check react-query cache — but only if it has meaningful financial data.
+    // Without this guard, a failed profile fetch gets cached with empty
+    // financials and the queryFn never retries.
+    const cachedQuote = queryClient.getQueryData([
+      "quotePageData",
+      symbol,
+    ]) as QuotePageData | undefined;
+    if (
+      cachedQuote &&
+      (cachedQuote.quoteFinancialData?.annualRevenue ||
+        cachedQuote.quoteSidebarAboutData?.summary ||
+        isIndex)
+    ) {
+      return cachedQuote;
     }
 
     // Fetch basic quote data via batch quotes endpoint (1 symbol)

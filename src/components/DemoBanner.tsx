@@ -30,54 +30,38 @@ const DemoBanner: React.FC = () => {
   return (
     <div
       style={{
-        background: "rgba(26, 115, 232, 0.15)",
-        borderBottom: "1px solid rgba(26, 115, 232, 0.3)",
-        color: "var(--text-primary)",
-        padding: "5px 16px",
+        background: "var(--bg-secondary)",
+        borderBottom: "1px solid var(--border)",
+        color: "var(--text-secondary)",
+        padding: "6px 16px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "12px",
-        fontSize: "12px",
+        gap: "10px",
+        fontSize: "0.78rem",
         fontWeight: 400,
         zIndex: 1000,
         position: "relative",
       }}
     >
-      <span style={{ opacity: 0.75 }}>
+      <span>
         📊 Demo data — prices are a frozen snapshot
       </span>
       <button
         onClick={handleExitDemo}
         style={{
-          background: "rgba(26, 115, 232, 0.3)",
-          border: "1px solid rgba(26, 115, 232, 0.5)",
-          color: "var(--text-primary)",
+          background: "var(--blue)",
+          border: "none",
+          color: "#fff",
           borderRadius: "4px",
-          padding: "2px 8px",
-          fontSize: "11px",
+          padding: "3px 10px",
+          fontSize: "0.72rem",
           cursor: "pointer",
-          fontWeight: 500,
+          fontWeight: 600,
+          letterSpacing: "0.02em",
         }}
       >
         Try live data
-      </button>
-      <button
-        onClick={handleDismiss}
-        title="Dismiss"
-        style={{
-          position: "absolute",
-          right: "12px",
-          background: "transparent",
-          border: "none",
-          color: "var(--text-tertiary)",
-          cursor: "pointer",
-          fontSize: "14px",
-          lineHeight: 1,
-          padding: "2px 4px",
-        }}
-      >
-        ×
       </button>
     </div>
   );

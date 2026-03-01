@@ -8,7 +8,7 @@ import { useWatchlists } from "../context/WatchlistContext";
 import { useTheme } from "../context/ThemeContext";
 import "./Settings.css";
 
-const APP_VERSION = "0.15.0";
+const APP_VERSION = "0.16.0";
 const CACHE_PREFIX = "finch_cache_";
 
 const Settings = () => {
@@ -28,7 +28,7 @@ const Settings = () => {
     // All contexts + react-query caches hold stale data from the previous mode.
     // A reload is the simplest way to ensure every fetch re-runs against the
     // new demo/live flag.  Short delay lets the localStorage write flush first.
-    setTimeout(() => window.location.assign("/"), 150);
+    setTimeout(() => window.location.reload(), 150);
   };
 
   const handleClearCache = () => {

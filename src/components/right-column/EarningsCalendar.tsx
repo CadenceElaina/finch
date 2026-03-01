@@ -1,7 +1,8 @@
 /**
- * EarningsCalendar — Upcoming earnings dates for the user's holdings.
- * Pulls earningsTimestampStart from batch quotes for watchlist + portfolio
- * symbols. Zero extra API calls — piggybacks on cached quote data.
+ * EarningsCalendar — Upcoming earnings dates.
+ * Shows earnings for the user's holdings PLUS major stocks so
+ * the calendar is useful even for new users.
+ * Piggybacks on the batch quotes endpoint (earningsTimestampStart field).
  */
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,14 @@ import { cacheStorage } from "../../services/storage";
 import { isDemoActive } from "../../data/demo";
 import { FaCalendarAlt } from "react-icons/fa";
 import "./right.css";
+
+/** Major tickers to always check for upcoming earnings */
+const NOTABLE_TICKERS = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA",
+  "JPM", "V", "JNJ", "WMT", "PG", "UNH", "HD", "DIS",
+  "NFLX", "PYPL", "INTC", "AMD", "CRM", "BA", "GS",
+  "COST", "MCD", "NKE",
+];
 
 interface EarningsEntry {
   symbol: string;
@@ -32,8 +41,8 @@ const EarningsCalendar: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Collect unique symbols from watchlists + portfolios
-    const symbolSet = new Set<string>();
+    // Collect unique symbols from watchlists + portfolios + notable tickers
+    const symbolSet = new Set<string>(NOTABLE_TICKERS);
     watchlists.forEach((w) =>
       w.securities?.forEach((s) => symbolSet.add(s.symbol.toUpperCase()))
     );
@@ -110,11 +119,7 @@ const EarningsCalendar: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchlists, portfolios]);
 
-  // Don't render if no symbols tracked
-  const hasSymbols =
-    watchlists.some((w) => (w.securities?.length ?? 0) > 0) ||
-    portfolios.some((p) => (p.securities?.length ?? 0) > 0);
-  if (!hasSymbols) return null;
+  // Component always renders (notable tickers ensure we have something to show)
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -142,7 +147,7 @@ const EarningsCalendar: React.FC = () => {
 
       {!loading && earnings.length === 0 && (
         <div className="earnings-calendar-empty">
-          No upcoming earnings for your holdings
+          No upcoming earnings in the next 90 days
         </div>
       )}
 

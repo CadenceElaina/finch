@@ -4,6 +4,16 @@ import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import ErrorState from "../ErrorState";
 
+/** Format a number with commas and fixed decimals (e.g. 43,840.91) */
+const fmt = (v: number, decimals = 2): string =>
+  v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+/** Signed percent string: "+0.37%" or "-1.05%" */
+const fmtPct = (v: number): string => `${v > 0 ? "+" : ""}${fmt(v)}%`;
+
+/** Signed price-change string: "159.95" or "-521.28" (with commas) */
+const fmtChg = (v: number): string => fmt(v);
+
 const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError }) => {
   const isIndex = true;
   const filteredCards = cards.filter((card: IndexCard) => card.exchange === currExchange);
@@ -51,16 +61,16 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
               <div className="index-card-content currencies" key={card.symbol}>
                 <div className="index-card-icon">
                   {card.priceChange > 0 ? (
-                    <FaArrowUp style={{ color: "green" }} />
+                    <FaArrowUp style={{ color: "var(--positive)" }} />
                   ) : card.priceChange === 0 ? (
                     <></>
                   ) : (
-                    <FaArrowDown style={{ color: "red" }} />
+                    <FaArrowDown style={{ color: "var(--negative)" }} />
                   )}
                 </div>
                 <div className="index-card-name-price">
                   <div className="index-card-name">{card.name}</div>
-                  <div className="index-card-price">{card.price}</div>
+                  <div className="index-card-price">{fmt(card.price, 4)}</div>
                 </div>
                 <div className="index-card-change">
                   <div
@@ -72,12 +82,7 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
                         : "negative"
                     }`}
                   >
-                    {card.percentChange > 0
-                      ? "+"
-                      : card.percentChange === 0
-                      ? ""
-                      : "-"}
-                    {card.percentChange}%
+                    {fmtPct(card.percentChange)}
                   </div>
                   <div
                     className={`index-card-price-change ${
@@ -88,7 +93,7 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
                         : "negative"
                     }`}
                   >
-                    <div>{card.priceChange}</div>
+                    <div>{fmtChg(card.priceChange)}</div>
                   </div>
                 </div>
               </div>
@@ -106,16 +111,16 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
               <div className="index-card-content">
                 <div className="index-card-icon">
                   {card.priceChange > 0 ? (
-                    <FaArrowUp style={{ color: "green" }} />
+                    <FaArrowUp style={{ color: "var(--positive)" }} />
                   ) : card.priceChange === 0 ? (
                     <></>
                   ) : (
-                    <FaArrowDown style={{ color: "red" }} />
+                    <FaArrowDown style={{ color: "var(--negative)" }} />
                   )}
                 </div>
                 <div className="index-card-name-price">
                   <div className="index-card-name">{card.name}</div>
-                  <div className="index-card-price">{card.price}</div>
+                  <div className="index-card-price">{fmt(card.price)}</div>
                 </div>
                 <div className="index-card-change">
                   <div
@@ -127,12 +132,7 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
                         : "negative"
                     }`}
                   >
-                    {card.percentChange > 0
-                      ? "+"
-                      : card.percentChange === 0
-                      ? ""
-                      : "-"}
-                    {card.percentChange}%
+                    {fmtPct(card.percentChange)}
                   </div>
                   <div
                     className={`index-card-price-change ${
@@ -143,7 +143,7 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
                         : "negative"
                     }`}
                   >
-                    <div>{card.priceChange}</div>
+                    <div>{fmtChg(card.priceChange)}</div>
                   </div>
                 </div>
               </div>

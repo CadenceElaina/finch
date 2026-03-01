@@ -138,7 +138,7 @@ const YourPortfolios = () => {
             sx={{ bgcolor: "var(--skeleton-bg)" }}
           />
         ) : totalPortfolioValue ? (
-          `$${totalPortfolioValue.toFixed(2)}`
+          `$${totalPortfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         ) : (
           "$0.00"
         )}
@@ -173,35 +173,34 @@ const YourPortfolios = () => {
           ) : (
             portfolios.map((portfolio) => {
               const securities = portfolioQuotes[portfolio.title] || [];
-              const totalValue = securities.reduce((acc, security) => {
-                const { quantity, percentChange } = security;
-                const securityValueChange = quantity * percentChange;
-                return acc + securityValueChange;
-              }, 0);
-
-              const totalQuantity = securities.reduce((acc, security) => {
-                return acc + security.quantity;
-              }, 0);
-
-              const totalPercentChange =
-                totalQuantity !== 0 ? (totalValue / totalQuantity) * 100 : 0;
 
               const portfolioValue = securities.reduce((acc, security) => {
                 return acc + security.price * security.quantity;
               }, 0);
+
+              // Weighted average percent change:
+              // weight each security's %change by its $ value in the portfolio
+              const totalPercentChange =
+                portfolioValue > 0
+                  ? securities.reduce((acc, security) => {
+                      const weight =
+                        (security.price * security.quantity) / portfolioValue;
+                      return acc + weight * security.percentChange;
+                    }, 0)
+                  : 0;
 
               return (
                 <div key={portfolio.id} className="portfolio">
                   <div className="portfolio-inner">
                     <Link
                       to={`/portfolio/${portfolio.id}`}
-                      style={{ textDecoration: "none", color: "white" }}
+                      style={{ textDecoration: "none", color: "var(--text-primary)" }}
                       className="portfolio-link"
                     >
                       <span className="portfolio-label">{portfolio.title}</span>
                       <span className="portfolio-value">
                         {portfolioValue
-                          ? `$${portfolioValue.toFixed(2)}`
+                          ? `$${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           : "$0.00"}
                       </span>
                       <span
