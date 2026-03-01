@@ -12,6 +12,7 @@ import {
   FaArrowUp,
 } from "react-icons/fa";
 import QuoteNews from "../../components/quote-chart/news/QuoteNews";
+import RelatedStocks from "../../components/quote-chart/RelatedStocks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQuotePageData } from "../../components/search/quoteUtils";
 import { ENDPOINTS } from "../../config/api";
@@ -389,6 +390,7 @@ const Quote: React.FC<QuoteProps> = () => {
                 <div role="heading">Cash Flow</div>
               </div>
             </div>
+            <RelatedStocks currentSymbol={symbol} />
           </div>
           <div className="quote-side-column">
             <div className="quote-right-info">
