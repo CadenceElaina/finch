@@ -5,27 +5,18 @@ export const formatApiResponse = (
   apiResponse: Record<string, quoteType | null>,
   exchange: Exchange
 ): IndexCard[] => {
-  return Object.entries(apiResponse).map(([symbol, quote]) => {
-    if (quote === null) {
-      // Handle null values as needed
+  return Object.entries(apiResponse)
+    .filter(([, quote]) => quote !== null && quote.price !== 0)
+    .map(([symbol, quote]) => {
+      const q = quote!;
+      const percentChange = q.percentChange || 0;
       return {
         exchange,
-        name: "",
+        name: q.name || "",
         symbol,
-        price: 0,
-        priceChange: 0,
-        percentChange: 0,
+        price: q.price || 0,
+        priceChange: q.priceChange || 0,
+        percentChange: parseFloat(percentChange.toFixed(2)),
       };
-    }
-
-    const percentChange = quote.percentChange || 0;
-    return {
-      exchange,
-      name: quote.name || "",
-      symbol,
-      price: quote.price || 0,
-      priceChange: quote.priceChange || 0,
-      percentChange: parseFloat(percentChange.toFixed(2)),
-    };
-  });
+    });
 };

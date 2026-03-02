@@ -68,7 +68,7 @@ const Financials: React.FC<Props> = ({ symbol }) => {
   });
 
   /* Use live data if available, else fall back to demo */
-  const demoData = useMemo(() => getDemoFinancials(symbol), [symbol]);
+  const demoData = useMemo(() => getDemoFinancials(symbol, period), [symbol, period]);
   const data = (!demo && liveData) ? liveData : demoData;
 
   if (!data) return null;

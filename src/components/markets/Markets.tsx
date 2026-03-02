@@ -90,21 +90,28 @@ const Markets = () => {
       return;
     }
 
+    let stale = false;
+
     const fetchData = async () => {
       try {
         setFetchError(false);
         const apiResponse = await fetchSymbolQuotes();
+        if (stale) return; // component re-rendered, discard old result
         const formattedData = formatApiResponse(apiResponse, currExchange);
+        // Only update state if we got at least one valid quote
+        if (formattedData.length === 0) return;
         const formattedDataForContext = transformQuotesToData(apiResponse);
         setSymbolQuotes(formattedData);
         updateIndexQuotesData(formattedDataForContext);
       } catch (err) {
+        if (stale) return;
         console.error("Error fetching market data:", err);
         setFetchError(true);
       }
     };
 
     fetchData();
+    return () => { stale = true; };
   }, [currExchange, isStale]);
 
   return (

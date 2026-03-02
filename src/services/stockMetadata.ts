@@ -620,10 +620,12 @@ function buildMeta(
   symbol: string,
   partial: Partial<StockMetadata>
 ): StockMetadata {
+  const qt = (partial.quoteType || "").toUpperCase();
+  const isCrypto = qt === "CRYPTOCURRENCY" || symbol.endsWith("-USD");
   return {
     symbol,
-    sector: partial.sector || "Unknown",
-    industry: partial.industry || "Unknown",
+    sector: partial.sector || (isCrypto ? "Cryptocurrency" : "Unknown"),
+    industry: partial.industry || (isCrypto ? "Cryptocurrency" : "Unknown"),
     marketCapRaw: partial.marketCapRaw ?? 0,
     beta: partial.beta ?? 0,
     dividendYield: partial.dividendYield ?? 0,

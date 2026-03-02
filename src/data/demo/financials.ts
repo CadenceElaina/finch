@@ -146,9 +146,13 @@ function noise(rand: () => number, base: number, pct: number = 0.05): number {
 
 /* ── Generator ── */
 
-export function getDemoFinancials(symbol: string): StockFinancials {
+export function getDemoFinancials(
+  symbol: string,
+  period: "quarterly" | "annual" = "quarterly"
+): StockFinancials {
   const upper = symbol.toUpperCase();
-  const rand = seededRand(hashSym(upper) + 9999);
+  const isAnnual = period === "annual";
+  const rand = seededRand(hashSym(upper) + (isAnnual ? 7777 : 9999));
 
   // Get profile or generate a default one
   const p = PROFILES[upper] ?? {
@@ -162,10 +166,14 @@ export function getDemoFinancials(symbol: string): StockFinancials {
   };
 
   const s = p.scale;
-  const quarters = [...BASE_QUARTERS];
+  // Annual: 4 fiscal years; Quarterly: 4 quarters
+  const ANNUAL_PERIODS = ["FY 2022", "FY 2023", "FY 2024", "FY 2025"];
+  const quarters = isAnnual ? [...ANNUAL_PERIODS] : [...BASE_QUARTERS];
+  // Annual values are ~4× quarterly to represent full-year figures
+  const periodScale = isAnnual ? 4 : 1;
 
   // ─── Income Statement ───
-  const revenue = BASE.revenue.map(v => noise(rand, v * s));
+  const revenue = BASE.revenue.map(v => noise(rand, v * s * periodScale));
   const cogs = revenue.map(r => noise(rand, r * p.cogsRatio, 0.03));
   const costOfRevenue = cogs.map(v => v); // same as COGS for most companies
   const rd = revenue.map(r => noise(rand, r * p.rdRatio, 0.04));
@@ -174,14 +182,14 @@ export function getDemoFinancials(symbol: string): StockFinancials {
   const opEx = rd.map((r, i) => r + sga[i]);
   const totalOpEx = cogs.map((c, i) => c + opEx[i]);
   const opIncome = revenue.map((r, i) => r - totalOpEx[i]);
-  const otherIncome = BASE.otherIncome.map(v => noise(rand, v * s, 0.3));
+  const otherIncome = BASE.otherIncome.map(v => noise(rand, v * s * periodScale, 0.3));
   const ebt = opIncome.map((o, i) => o + otherIncome[i]);
   const taxRateBase = p.netMarginPct > 30 ? 18 : 22;
   const taxRate = [0,1,2,3].map(() => noise(rand, taxRateBase, 0.1));
   const taxExpense = ebt.map((e, i) => e * (taxRate[i] / 100));
   const netIncome = ebt.map((e, i) => e - taxExpense[i]);
   const netMargin = netIncome.map((n, i) => (n / revenue[i]) * 100);
-  const eps = BASE.eps.map(v => noise(rand, v * p.epsBase / 3.5, 0.08));
+  const eps = BASE.eps.map(v => noise(rand, v * p.epsBase / 3.5 * periodScale, 0.08));
   const ebitda = opIncome.map(o => noise(rand, o * 1.25, 0.05));
 
   // ─── Balance Sheet ───
