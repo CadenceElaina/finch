@@ -241,6 +241,161 @@ const DEMO_METADATA: Record<string, Partial<StockMetadata>> = {
     exchange: "PCX",
     country: "United States",
   },
+  // ── Common ETFs (fallback when YH Finance quota is exhausted) ──
+  SCHG: {
+    sector: "N/A",
+    industry: "Large Cap Growth ETF",
+    marketCapRaw: 0,
+    beta: 1.05,
+    dividendYield: 0.003,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  CGGR: {
+    sector: "N/A",
+    industry: "Growth ETF",
+    marketCapRaw: 0,
+    beta: 1.02,
+    dividendYield: 0.004,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  IAU: {
+    sector: "N/A",
+    industry: "Gold Trust",
+    marketCapRaw: 0,
+    beta: 0.08,
+    dividendYield: 0,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VB: {
+    sector: "N/A",
+    industry: "Small Cap ETF",
+    marketCapRaw: 0,
+    beta: 1.15,
+    dividendYield: 0.013,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VO: {
+    sector: "N/A",
+    industry: "Mid Cap ETF",
+    marketCapRaw: 0,
+    beta: 1.05,
+    dividendYield: 0.013,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VXUS: {
+    sector: "N/A",
+    industry: "International ETF",
+    marketCapRaw: 0,
+    beta: 0.85,
+    dividendYield: 0.028,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VTI: {
+    sector: "N/A",
+    industry: "Total Market ETF",
+    marketCapRaw: 0,
+    beta: 1.0,
+    dividendYield: 0.013,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  QQQ: {
+    sector: "N/A",
+    industry: "NASDAQ 100 ETF",
+    marketCapRaw: 0,
+    beta: 1.18,
+    dividendYield: 0.005,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "NMS",
+    country: "United States",
+  },
+  VOO: {
+    sector: "N/A",
+    industry: "S&P 500 ETF",
+    marketCapRaw: 0,
+    beta: 1.0,
+    dividendYield: 0.012,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  AGG: {
+    sector: "N/A",
+    industry: "Bond Aggregate ETF",
+    marketCapRaw: 0,
+    beta: 0.03,
+    dividendYield: 0.035,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  BND: {
+    sector: "N/A",
+    industry: "Total Bond ETF",
+    marketCapRaw: 0,
+    beta: 0.03,
+    dividendYield: 0.033,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "NMS",
+    country: "United States",
+  },
+  IWM: {
+    sector: "N/A",
+    industry: "Russell 2000 ETF",
+    marketCapRaw: 0,
+    beta: 1.18,
+    dividendYield: 0.012,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VEA: {
+    sector: "N/A",
+    industry: "Developed Markets ETF",
+    marketCapRaw: 0,
+    beta: 0.82,
+    dividendYield: 0.029,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
+  VWO: {
+    sector: "N/A",
+    industry: "Emerging Markets ETF",
+    marketCapRaw: 0,
+    beta: 0.88,
+    dividendYield: 0.032,
+    trailingPE: 0,
+    quoteType: "ETF",
+    exchange: "PCX",
+    country: "United States",
+  },
   "BTC-USD": {
     sector: "Cryptocurrency",
     industry: "Cryptocurrency",
@@ -297,7 +452,19 @@ export async function getStockMetadata(
     `metadata_${sym}`,
     METADATA_TTL
   );
-  if (cached) return cached;
+  // Validate cached data: if we have hardcoded ETF data but the cache says
+  // EQUITY, the cache is stale from a failed API call — discard it.
+  if (cached) {
+    const known = DEMO_METADATA[sym];
+    if (
+      known?.quoteType &&
+      cached.quoteType !== known.quoteType
+    ) {
+      // Stale/wrong — fall through to re-fetch or fallback
+    } else {
+      return cached;
+    }
+  }
 
   // Fetch from YH Finance profile endpoint
   try {
