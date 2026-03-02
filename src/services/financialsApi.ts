@@ -143,44 +143,50 @@ function quarterLabel(year: number, quarter: number): string {
   return `${MONTHS[quarter] ?? `Q${quarter}`} ${year}`;
 }
 
+/** Format annual label: just the fiscal year. */
+function annualLabel(year: number): string {
+  return `FY ${year}`;
+}
+
 // ── Build a FinancialSection from raw SA data ────────────
 
 function buildSection(
   items: SAFundamentalItem[],
   fieldMap: Record<string, string>,
-  chartConfig: { fields: string[]; labels: string[]; colors: string[] }
+  chartConfig: { fields: string[]; labels: string[]; colors: string[] },
+  isAnnual = false
 ): FinancialSection {
   if (items.length === 0) {
     return { quarters: [], rows: [], chart: [] };
   }
 
-  // 1. Group by (year, quarter) to identify unique quarters
-  const quarterMap = new Map<string, { year: number; quarter: number }>();
+  // 1. Group by period to identify unique periods
+  const periodMap = new Map<string, { year: number; quarter: number }>();
   for (const item of items) {
     const { year, quarter } = item.attributes;
-    const key = `${year}-${quarter}`;
-    if (!quarterMap.has(key)) {
-      quarterMap.set(key, { year, quarter });
+    const key = isAnnual ? `${year}` : `${year}-${quarter}`;
+    if (!periodMap.has(key)) {
+      periodMap.set(key, { year, quarter });
     }
   }
 
-  // Sort quarters chronologically, take last 4
-  const sortedQuarters = Array.from(quarterMap.values())
+  // Sort periods chronologically, take last 4
+  const sortedPeriods = Array.from(periodMap.values())
     .sort((a, b) => a.year - b.year || a.quarter - b.quarter)
     .slice(-4);
 
-  const quarterKeys = sortedQuarters.map(
-    (q) => `${q.year}-${q.quarter}`
+  const quarterKeys = sortedPeriods.map(
+    (q) => isAnnual ? `${q.year}` : `${q.year}-${q.quarter}`
   );
-  const quarterLabels = sortedQuarters.map((q) =>
-    quarterLabel(q.year, q.quarter)
+  const quarterLabels = sortedPeriods.map((q) =>
+    isAnnual ? annualLabel(q.year) : quarterLabel(q.year, q.quarter)
   );
 
-  // 2. Build field → quarter → value lookup
+  // 2. Build field → period → value lookup
   const fieldData = new Map<string, Map<string, number>>();
   for (const item of items) {
     const { year, quarter, field, value } = item.attributes;
-    const qKey = `${year}-${quarter}`;
+    const qKey = isAnnual ? `${year}` : `${year}-${quarter}`;
     if (!quarterKeys.includes(qKey)) continue; // outside last 4 quarters
     if (!fieldData.has(field)) fieldData.set(field, new Map());
     fieldData.get(field)!.set(qKey, value);
@@ -276,18 +282,26 @@ const CASHFLOW_CHART = {
 
 // ── Public API ───────────────────────────────────────────
 
-const CACHE_MODULE = "financials_sa";
+const CACHE_MODULE_QUARTERLY = "financials_sa";
+const CACHE_MODULE_ANNUAL = "financials_sa_annual";
+
+export type FinancialPeriod = "quarterly" | "annual";
 
 /**
- * Fetch quarterly financial statements for a stock from Seeking Alpha.
+ * Fetch financial statements for a stock from Seeking Alpha.
+ * Supports both quarterly and annual periods.
  * Returns cached data if available (24 h TTL).
  * Falls back to null on error (caller should use demo data).
  */
 export async function fetchFinancials(
-  symbol: string
+  symbol: string,
+  period: FinancialPeriod = "quarterly"
 ): Promise<StockFinancials | null> {
+  const isAnnual = period === "annual";
+  const cacheModule = isAnnual ? CACHE_MODULE_ANNUAL : CACHE_MODULE_QUARTERLY;
+
   // 1. Check localStorage cache
-  const cached = readCachedModule<StockFinancials>(symbol, CACHE_MODULE);
+  const cached = readCachedModule<StockFinancials>(symbol, cacheModule);
   if (cached) return cached;
 
   try {
@@ -296,19 +310,19 @@ export async function fetchFinancials(
       saFetch(SA_ENDPOINTS.financials, {
         symbol: symbol.toLowerCase(),
         target_currency: "USD",
-        period_type: "quarterly",
+        period_type: period,
         statement_type: "income-statement",
       }),
       saFetch(SA_ENDPOINTS.financials, {
         symbol: symbol.toLowerCase(),
         target_currency: "USD",
-        period_type: "quarterly",
+        period_type: period,
         statement_type: "balance-sheet",
       }),
       saFetch(SA_ENDPOINTS.financials, {
         symbol: symbol.toLowerCase(),
         target_currency: "USD",
-        period_type: "quarterly",
+        period_type: period,
         statement_type: "cash-flow-statement",
       }),
     ]);
@@ -323,17 +337,20 @@ export async function fetchFinancials(
     const incomeStatement = buildSection(
       incomeData.data ?? [],
       INCOME_FIELDS,
-      INCOME_CHART
+      INCOME_CHART,
+      isAnnual
     );
     const balanceSheet = buildSection(
       balanceData.data ?? [],
       BALANCE_FIELDS,
-      BALANCE_CHART
+      BALANCE_CHART,
+      isAnnual
     );
     const cashFlow = buildSection(
       cashflowData.data ?? [],
       CASHFLOW_FIELDS,
-      CASHFLOW_CHART
+      CASHFLOW_CHART,
+      isAnnual
     );
 
     // 4. If we got no data at all, return null so caller can fallback
@@ -355,7 +372,7 @@ export async function fetchFinancials(
     };
 
     // 5. Cache for 24 h
-    writeCachedModule(symbol, CACHE_MODULE, result);
+    writeCachedModule(symbol, cacheModule, result);
 
     return result;
   } catch (err) {

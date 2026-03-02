@@ -10,7 +10,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-1",
     title: "S&P 500 Hits Record as Tech Rally Extends Into February",
-    link: "#",
+    link: "https://seekingalpha.com/market-news",
     source: "Seeking Alpha",
     time: "2h ago",
     relatedSymbol: "",
@@ -20,7 +20,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-2",
     title: "NVIDIA Surges on New AI Chip Announcement, Data Center Revenue Soars",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/NVDA",
     source: "Seeking Alpha",
     time: "3h ago",
     relatedSymbol: "NVDA",
@@ -30,7 +30,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-3",
     title: "Federal Reserve Holds Rates Steady, Signals Possible Cut in June",
-    link: "#",
+    link: "https://seekingalpha.com/market-news",
     source: "Seeking Alpha",
     time: "4h ago",
     relatedSymbol: "",
@@ -40,7 +40,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-4",
     title: "Tesla Deliveries Miss Estimates; Shares Slide in Pre-Market",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/TSLA",
     source: "Seeking Alpha",
     time: "5h ago",
     relatedSymbol: "TSLA",
@@ -50,7 +50,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-5",
     title: "Apple Vision Pro Sales Exceed Expectations in Q1 Earnings",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/AAPL",
     source: "Seeking Alpha",
     time: "6h ago",
     relatedSymbol: "AAPL",
@@ -60,7 +60,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-6",
     title: "European Markets Mixed as ECB Minutes Show Rate Cut Debate",
-    link: "#",
+    link: "https://seekingalpha.com/market-news/international",
     source: "Seeking Alpha",
     time: "7h ago",
     relatedSymbol: "",
@@ -70,7 +70,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-7",
     title: "Amazon Web Services Growth Reaccelerates, Cloud Spending Boom Continues",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/AMZN",
     source: "Seeking Alpha",
     time: "8h ago",
     relatedSymbol: "AMZN",
@@ -80,7 +80,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-8",
     title: "Japan's Nikkei 225 Retreats From All-Time High on Profit Taking",
-    link: "#",
+    link: "https://seekingalpha.com/market-news/international",
     source: "Seeking Alpha",
     time: "10h ago",
     relatedSymbol: "",
@@ -90,7 +90,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-9",
     title: "Intel Restructuring Plan Fails to Impress Wall Street, Stock Drops 4%",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/INTC",
     source: "Seeking Alpha",
     time: "11h ago",
     relatedSymbol: "INTC",
@@ -100,7 +100,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-10",
     title: "Oil Prices Rise on Middle East Supply Concerns, WTI Above $78",
-    link: "#",
+    link: "https://seekingalpha.com/market-news/commodities",
     source: "Seeking Alpha",
     time: "12h ago",
     relatedSymbol: "",
@@ -110,7 +110,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-11",
     title: "Meta Platforms Reports Strong Ad Revenue Growth, Explores AI Monetization",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/META",
     source: "Seeking Alpha",
     time: "14h ago",
     relatedSymbol: "META",
@@ -120,7 +120,7 @@ export const DEMO_NEWS: Article[] = [
   {
     id: "demo-12",
     title: "Microsoft Copilot Adoption Surges Among Enterprise Customers",
-    link: "#",
+    link: "https://seekingalpha.com/symbol/MSFT",
     source: "Seeking Alpha",
     time: "16h ago",
     relatedSymbol: "MSFT",
@@ -135,7 +135,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
     {
       id: "demo-aapl-1",
       title: "Apple Vision Pro Sales Exceed Expectations in Q1 Earnings",
-      link: "#",
+      link: "https://seekingalpha.com/symbol/AAPL",
       source: "Seeking Alpha",
       time: "6h ago",
       relatedSymbol: "AAPL",
@@ -145,7 +145,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
     {
       id: "demo-aapl-2",
       title: "Apple's Services Revenue Reaches All-Time High",
-      link: "#",
+      link: "https://seekingalpha.com/symbol/AAPL",
       source: "Seeking Alpha",
       time: "1d ago",
       relatedSymbol: "AAPL",
@@ -155,7 +155,7 @@ export const DEMO_SYMBOL_NEWS: Record<string, Article[]> = {
     {
       id: "demo-aapl-3",
       title: "Analysts Raise Apple Price Targets Ahead of WWDC 2026",
-      link: "#",
+      link: "https://seekingalpha.com/symbol/AAPL",
       source: "Seeking Alpha",
       time: "2d ago",
       relatedSymbol: "AAPL",

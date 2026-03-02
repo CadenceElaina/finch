@@ -12,7 +12,7 @@ import { BsSun, BsMoon } from "react-icons/bs";
 import "./Layout.css";
 
 /** Pages that render their own full-size Search bar */
-const PAGES_WITH_SEARCH = ["/", "/news"];
+const PAGES_WITH_SEARCH = ["/"];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isDemoMode } = useDemoMode();

@@ -19,7 +19,7 @@ const FuelGauge: React.FC = () => {
   const level = pct > 50 ? "high" : pct > 20 ? "medium" : "low";
 
   return (
-    <div className={`fuel-gauge fuel-${level}`} title="Daily AI research credits">
+    <div className={`fuel-gauge fuel-${level}`}>
       <BsStars size={13} className="fuel-icon" />
       <span className="fuel-count">
         {creditsRemaining}/{maxCredits}
@@ -31,6 +31,12 @@ const FuelGauge: React.FC = () => {
       )}
       <div className="fuel-bar">
         <div className="fuel-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="fuel-tooltip">
+        <strong>AI Research Credits</strong>
+        <span>{creditsRemaining} of {maxCredits} daily credits remaining.</span>
+        <span>Use credits to get AI-powered stock analysis, portfolio commentary, and market insights.</span>
+        <span>Credits reset at midnight.</span>
       </div>
     </div>
   );

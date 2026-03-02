@@ -57,10 +57,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   ];
 
   const canCreateNewPortfolio = () => {
-    return portfolios.length < 3;
+    return portfolios.filter((p) => !p.isDemo).length < 3;
   };
   const canCreateNewWatchlist = () => {
-    return watchlists.length < 3;
+    return watchlists.filter((w) => !w.isDemo).length < 3;
   };
   const closeModal = () => {
     setPortfolioModal(false);
@@ -93,8 +93,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       setAddWatchlistModalIsOpen(true);
     }
   };
-  const exceedsWatchlistLimit = watchlists.length >= 3;
-  const exceedsPortfoliosLimit = portfolios.length >= 3;
+  const exceedsWatchlistLimit = watchlists.filter((w) => !w.isDemo).length >= 3;
+  const exceedsPortfoliosLimit = portfolios.filter((p) => !p.isDemo).length >= 3;
   return (
     <>
       {portfolioModal && (

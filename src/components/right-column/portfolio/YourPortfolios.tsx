@@ -106,7 +106,7 @@ const YourPortfolios = () => {
   };
 
   const canCreateNewPortfolio = () => {
-    return portfolios.length < 3;
+    return portfolios.filter((p) => !p.isDemo).length < 3;
   };
 
   const Tooltip = () => (

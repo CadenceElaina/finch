@@ -13,3 +13,4 @@ export { DEMO_CHART_DATA, getDemoChartData } from "./charts";
 export type { DemoChartPoint } from "./charts";
 export { DEMO_QUOTE_PAGE_DATA } from "./quotePageData";
 export { isDemoActive, setDemoActive } from "./demoState";
+export { DEFAULT_PORTFOLIOS, DEFAULT_WATCHLISTS } from "./defaultLists";

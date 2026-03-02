@@ -131,7 +131,7 @@ const Portfolio = () => {
   };
 
   const exceedsLimit = (type: "watchlist" | "portfolio") =>
-    type === "watchlist" ? watchlists.length >= 3 : portfolios.length >= 3;
+    type === "watchlist" ? watchlists.filter((w) => !w.isDemo).length >= 3 : portfolios.filter((p) => !p.isDemo).length >= 3;
 
   return (
     <Layout>

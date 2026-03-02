@@ -53,6 +53,7 @@ export interface Portfolio {
   author: string | undefined;
   securities?: Security[];
   portfolioValue?: Array<{ date: string; value: number }>;
+  isDemo?: boolean;
 }
 export interface Watchlist {
   id: string;
@@ -60,6 +61,7 @@ export interface Watchlist {
   author: string | undefined;
   securities?: WatchlistSecurity[];
   selected?: boolean;
+  isDemo?: boolean;
 }
 export interface Watchlists {
   id: string;

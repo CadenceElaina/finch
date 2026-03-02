@@ -129,6 +129,26 @@ const DEMO_ETF_SECTORS: Record<string, EtfSectorBreakdown> = {
     stockHoldings: {},
     bondHoldings: {},
   },
+  BND: {
+    // Vanguard Total Bond Market ETF — nearly 100% fixed income
+    stockHoldings: {},
+    bondHoldings: {
+      government: 46.0,
+      corporate: 27.5,
+      securitized: 21.5,
+      cashAndEquiv: 5.0,
+    },
+  },
+  AGG: {
+    // iShares Core US Aggregate Bond ETF — similar to BND
+    stockHoldings: {},
+    bondHoldings: {
+      government: 43.0,
+      corporate: 28.0,
+      securitized: 24.0,
+      cashAndEquiv: 5.0,
+    },
+  },
   SPY: {
     stockHoldings: {
       technology: 31.5,

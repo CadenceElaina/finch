@@ -289,3 +289,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Return Attribution ── */
+.pa-return-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.pa-gain {
+  color: var(--positive, #34a853);
+  font-weight: 600;
+}
+
+.pa-loss {
+  color: var(--negative, #ea4335);
+  font-weight: 600;
+}
+
+.pa-return-chart {
+  margin-top: 4px;
+}

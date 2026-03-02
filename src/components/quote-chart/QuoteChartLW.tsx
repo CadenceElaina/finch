@@ -141,6 +141,8 @@ function generateDemoOHLCV(symbol: string, period: string): OHLCVPoint[] {
     case "5Y": {
       const d = new Date(now);
       d.setFullYear(d.getFullYear() - 5);
+      // Ensure start is a weekday so weekly steps don't all land on weekends
+      while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
       intervals = { start: d, step: 7 * 86400, count: 260 };
       volatility = 0.04;
       priceOffset = -0.20;
@@ -162,22 +164,48 @@ function generateDemoOHLCV(symbol: string, period: string): OHLCVPoint[] {
     }
   }
 
+  // ── Build timestamp list ──────────────────────────────
+  const tsList: Date[] = [];
+  if (period === "5D") {
+    // Generate 15-min bars for the last 5 trading days
+    const tradeDays: Date[] = [];
+    const cursor = new Date(now);
+    cursor.setHours(0, 0, 0, 0);
+    for (let back = 0; tradeDays.length < 5; back++) {
+      const check = new Date(cursor);
+      check.setDate(cursor.getDate() - back);
+      if (check.getDay() !== 0 && check.getDay() !== 6) {
+        tradeDays.unshift(check);
+      }
+    }
+    for (const day of tradeDays) {
+      for (let m = 0; m < 26; m++) { // 26 bars per day: 9:30 → 16:00
+        const mins = 9 * 60 + 30 + m * 15;
+        const t = new Date(day);
+        t.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+        tsList.push(t);
+      }
+    }
+  } else {
+    // 1D keeps all bars (even if demo date is weekend); others skip weekends
+    const skipWeekends = period !== "1D";
+    for (let i = 0; i < intervals.count; i++) {
+      const d = new Date(intervals.start.getTime() + i * intervals.step * 1000);
+      if (skipWeekends && (d.getDay() === 0 || d.getDay() === 6)) continue;
+      tsList.push(d);
+    }
+  }
+
   let price = base * (1 + priceOffset);
   const target = base;
-  const step = (target - price) / intervals.count;
-  const isIntraday = period === "1D" || period === "5D";
+  const priceDrift = (target - price) / (tsList.length || 1);
 
-  for (let i = 0; i < intervals.count; i++) {
-    const d = new Date(intervals.start.getTime() + i * intervals.step * 1000);
-
-    // Skip weekends for non-intraday
-    if (!isIntraday && (d.getDay() === 0 || d.getDay() === 6)) continue;
-    // For 5D, skip weekends
-    if (period === "5D" && (d.getDay() === 0 || d.getDay() === 6)) continue;
+  for (let i = 0; i < tsList.length; i++) {
+    const d = tsList[i];
 
     const noise = (Math.sin(i * 0.8 + rand() * 3) + Math.cos(i * 0.3 + rand() * 2));
     const drift = (rand() - 0.48) * volatility * base * 0.02;
-    price += step + noise * volatility * base * 0.05 * 0.3 + drift;
+    price += priceDrift + noise * volatility * base * 0.05 * 0.3 + drift;
     price = Math.max(price, base * 0.1); // floor
 
     const bodyRange = price * volatility * (0.3 + rand() * 0.7);

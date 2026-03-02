@@ -154,22 +154,17 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       0
     );
     const formattedTotalPriceChange = Number(totalPriceChange.toFixed(2));
-    const totalQuantity = transformedData.reduce(
-      (tq, security) => (tq += security.quantity ?? 0),
-      0
-    );
-    const overallPercentChange =
-      transformedData.reduce(
-        (pc, curr) => (pc += curr.percentChange * (curr.quantity ?? 0)),
-        0
-      ) / totalQuantity;
-    const formattedOverallPercentChange = Number(
-      overallPercentChange.toFixed(2)
-    );
 
     const totalValue = transformedData.reduce(
       (value, security) => (value += security.price * (security.quantity ?? 0)),
       0
+    );
+
+    // Value-weighted percent change: sum of (each holding's day $ change) / total portfolio value
+    const overallPercentChange =
+      totalValue > 0 ? (totalPriceChange / totalValue) * 100 : 0;
+    const formattedOverallPercentChange = Number(
+      overallPercentChange.toFixed(2)
     );
 
     const totalCostBasis = details.reduce((s, d) => s + d.costBasis, 0);
@@ -306,6 +301,11 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         symbol: d.symbol,
         currentValue: d.currentValue,
         quantity: d.quantity,
+        costBasis: d.costBasis,
+        totalGain: d.totalGain,
+        totalGainPct: d.totalGainPct,
+        dayChange: d.dayChange,
+        dayChangePct: d.dayChangePct,
         metadata: metadataMap[d.symbol],
       }));
   }, [securityDetails, metadataMap]);

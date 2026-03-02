@@ -16,6 +16,7 @@ import {
 } from "../../data/demo/financials";
 import { isDemoActive } from "../../data/demo/demoState";
 import { fetchFinancials } from "../../services/financialsApi";
+import type { FinancialPeriod } from "../../services/financialsApi";
 import Skeleton from "@mui/material/Skeleton";
 import "./Financials.css";
 
@@ -52,14 +53,15 @@ const fmtTooltip = (val: number): string => {
 
 const Financials: React.FC<Props> = ({ symbol }) => {
   const [subTab, setSubTab] = useState<SubTab>("income");
+  const [period, setPeriod] = useState<FinancialPeriod>("quarterly");
   const { theme } = useTheme();
   const isLight = theme === "light";
   const demo = isDemoActive();
 
   /* Live data fetch (skipped in demo mode) */
   const { data: liveData, isLoading } = useQuery({
-    queryKey: ["financials", symbol],
-    queryFn: () => fetchFinancials(symbol),
+    queryKey: ["financials", symbol, period],
+    queryFn: () => fetchFinancials(symbol, period),
     enabled: !demo,
     staleTime: 24 * 60 * 60_000, // 24 h
     gcTime: 48 * 60 * 60_000,
@@ -85,7 +87,20 @@ const Financials: React.FC<Props> = ({ symbol }) => {
               {label}
             </button>
           ))}
-          <span className="fin-period-badge">● Quarterly</span>
+          <div className="fin-period-toggle">
+            <button
+              className={`fin-period-btn ${period === "quarterly" ? "active" : ""}`}
+              onClick={() => setPeriod("quarterly")}
+            >
+              Quarterly
+            </button>
+            <button
+              className={`fin-period-btn ${period === "annual" ? "active" : ""}`}
+              onClick={() => setPeriod("annual")}
+            >
+              Annual
+            </button>
+          </div>
         </div>
         <Skeleton variant="rounded" width="100%" height={220} sx={{ my: 2, bgcolor: isLight ? undefined : "rgba(255,255,255,0.08)" }} />
         <Skeleton variant="rounded" width="100%" height={180} sx={{ bgcolor: isLight ? undefined : "rgba(255,255,255,0.08)" }} />
@@ -130,7 +145,20 @@ const Financials: React.FC<Props> = ({ symbol }) => {
             {label}
           </button>
         ))}
-        <span className="fin-period-badge">● Quarterly</span>
+        <div className="fin-period-toggle">
+          <button
+            className={`fin-period-btn ${period === "quarterly" ? "active" : ""}`}
+            onClick={() => setPeriod("quarterly")}
+          >
+            Quarterly
+          </button>
+          <button
+            className={`fin-period-btn ${period === "annual" ? "active" : ""}`}
+            onClick={() => setPeriod("annual")}
+          >
+            Annual
+          </button>
+        </div>
       </div>
 
       {/* ── Heading + Legend ── */}
@@ -175,7 +203,6 @@ const Financials: React.FC<Props> = ({ symbol }) => {
               }}
               axisLine={false}
               tickLine={false}
-              reversed
             />
             <YAxis
               tick={{

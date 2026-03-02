@@ -1,19 +1,36 @@
 import React, { useState, useMemo } from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ReferenceLine,
+} from "recharts";
 import {
   StockMetadata,
   classifyAssetType,
 } from "../../services/stockMetadata";
-import { FaExclamationTriangle, FaShieldAlt, FaChartPie, FaInfoCircle } from "react-icons/fa";
+import { FaExclamationTriangle, FaShieldAlt, FaChartPie, FaInfoCircle, FaChartBar } from "react-icons/fa";
 import type { EtfSectorBreakdown } from "../../services/etfHoldings";
 import "./PortfolioAnalysis.css";
 
-// ── Types ────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────
 
 export interface HoldingWithMeta {
   symbol: string;
   currentValue: number;
   quantity: number;
+  costBasis: number;
+  totalGain: number;
+  totalGainPct: number;
+  dayChange: number;
+  dayChangePct: number;
   metadata: StockMetadata;
 }
 
@@ -151,9 +168,21 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
               bySector["Other (Bonds/Cash)"] = (bySector["Other (Bonds/Cash)"] || 0) + portion;
             }
           }
+        } else if (etfBreakdown.bondHoldings && Object.keys(etfBreakdown.bondHoldings).length > 0) {
+          // Bond/fixed-income ETF (e.g. BND, AGG) — no stock holdings, all bonds
+          bySector["Fixed Income"] = (bySector["Fixed Income"] || 0) + h.currentValue;
         } else {
-          // No stock holdings (commodity ETF like IAU)
+          // No stock holdings, no bond data (commodity ETF like IAU)
           bySector["Other (Non-Equity)"] = (bySector["Other (Non-Equity)"] || 0) + h.currentValue;
+        }
+      } else if (m.quoteType?.toUpperCase() === "ETF") {
+        // ETF without breakdown data — classify by industry
+        const ind = (m.industry || "").toLowerCase();
+        if (ind.includes("bond") || ind.includes("fixed income") || ind.includes("treasury")) {
+          bySector["Fixed Income"] = (bySector["Fixed Income"] || 0) + h.currentValue;
+        } else {
+          bySector[m.sector === "N/A" ? "Other" : (m.sector || "Other")] =
+            (bySector[m.sector === "N/A" ? "Other" : (m.sector || "Other")] || 0) + h.currentValue;
         }
       } else if (m.quoteType?.toUpperCase() === "EQUITY") {
         // Individual stock — use its sector directly
@@ -172,6 +201,22 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
   }, [holdings, totalValue, etfSectors]);
 
   const activeData = allocations[allocTab];
+
+  // ── Return Attribution data ──
+  const returnData = useMemo(() => {
+    return holdings
+      .map((h) => ({
+        symbol: h.symbol,
+        gain: h.totalGain,
+        pct: h.totalGainPct,
+      }))
+      .sort((a, b) => b.gain - a.gain);
+  }, [holdings]);
+
+  const totalGain = useMemo(
+    () => returnData.reduce((s, d) => s + d.gain, 0),
+    [returnData]
+  );
 
   // ── Risk Metrics ──
   const riskMetrics = useMemo(() => {
@@ -192,9 +237,10 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
           )
         : 0;
 
-    // Concentration: only flag individual STOCKS > 25% (ETFs/funds are fine per Bogleheads strategies)
+    // Concentration: flag individual STOCKS or CRYPTO > 25% (ETFs/funds are fine per Bogleheads strategies)
+    const CONCENTRATED_TYPES = new Set(["EQUITY", "CRYPTOCURRENCY"]);
     const concentrated = holdings
-      .filter((h) => h.metadata.quoteType?.toUpperCase() === "EQUITY")
+      .filter((h) => CONCENTRATED_TYPES.has(h.metadata.quoteType?.toUpperCase()))
       .map((h) => ({
         symbol: h.symbol,
         pct: (h.currentValue / totalValue) * 100,
@@ -353,6 +399,86 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
         </div>
       </div>
 
+      {/* ── Return Attribution ── */}
+      {returnData.length > 1 && (
+        <div className="pa-section">
+          <h3 className="perf-section-title">
+            <FaChartBar
+              size={14}
+              style={{ marginRight: 6, opacity: 0.7 }}
+            />
+            Return Attribution
+          </h3>
+          <p className="pa-return-subtitle">
+            Total gain: <span className={totalGain >= 0 ? "pa-gain" : "pa-loss"}>
+              {totalGain >= 0 ? "+" : ""}${fmt(Math.abs(totalGain))}
+            </span>
+          </p>
+          <div className="pa-return-chart">
+            <ResponsiveContainer width="100%" height={Math.max(160, returnData.length * 36 + 40)}>
+              <BarChart
+                data={returnData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  horizontal={false}
+                />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                  tickFormatter={(val: number) => {
+                    const abs = Math.abs(val);
+                    if (abs >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
+                    if (abs >= 1e3) return `${(val / 1e3).toFixed(1)}K`;
+                    return `$${val.toFixed(0)}`;
+                  }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="symbol"
+                  tick={{ fontSize: 12, fill: "var(--text-primary)", fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={48}
+                />
+                <Tooltip
+                  formatter={(value: number) => [
+                    `${value >= 0 ? "+" : ""}$${fmt(Math.abs(value))}`,
+                    "Gain/Loss",
+                  ]}
+                  labelFormatter={(label: string) => label}
+                  contentStyle={{
+                    background: "var(--bg-elevated)",
+                    border: "1px solid var(--border-strong)",
+                    borderRadius: 8,
+                    fontSize: "0.85rem",
+                  }}
+                  itemStyle={{ color: "var(--text-primary)" }}
+                />
+                <ReferenceLine x={0} stroke="var(--text-tertiary)" strokeWidth={1} />
+                <Bar
+                  dataKey="gain"
+                  radius={[0, 4, 4, 0]}
+                  maxBarSize={24}
+                >
+                  {returnData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry.gain >= 0 ? "#34a853" : "#ea4335"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       {/* ── Risk & Fundamentals ── */}
       {riskMetrics && (
         <div className="pa-section">
@@ -427,8 +553,8 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
               </span>
               <span className="pa-risk-hint">
                 {riskMetrics.concentrated.length > 0
-                  ? "Single stock exceeds 25% of portfolio"
-                  : "No single stock exceeds 25%"}
+                  ? "Single position exceeds 25% of portfolio"
+                  : "No single stock or crypto exceeds 25%"}
               </span>
             </div>
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Layout from "../components/layout/Layout";
 import Footer from "../components/Footer";
-import Search from "../components/search/Search";
 import CustomButton from "../components/CustomButton";
 import ArticleCard from "../components/news/ArticleCard";
 import { useNews } from "../context/NewsContext";
@@ -26,7 +25,6 @@ const News = () => {
   return (
     <Layout>
       <div className="news-page-container">
-        <Search />
         <div className="news-page-heading">Today's financial news</div>
         <div className="news-page-filters">
           {SEGMENTS.map((s) => (

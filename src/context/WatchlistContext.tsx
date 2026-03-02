@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { watchlistStorage } from "../services/storage";
 import { Watchlist, WatchlistSecurity } from "../types/types";
+import { DEFAULT_WATCHLISTS } from "../data/demo/defaultLists";
 
 interface WatchlistContextProps {
   watchlists: Watchlist[];
@@ -37,7 +38,32 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 
   useEffect(() => {
-    setWatchlists(watchlistStorage.getAll());
+    const stored = watchlistStorage.getAll();
+    const seeded = localStorage.getItem("finch_demo_watchlists_seeded");
+    let list: Watchlist[];
+    if (seeded) {
+      list = stored;
+    } else {
+      // First visit or never seeded — merge defaults with any existing data
+      const existingTitles = new Set(stored.map((w) => w.title));
+      const toAdd = DEFAULT_WATCHLISTS.filter((w) => !existingTitles.has(w.title));
+      list = [...stored, ...toAdd];
+      localStorage.setItem("finch_demo_watchlists_seeded", "1");
+    }
+
+    // Ensure isDemo flag is set on any demo watchlist (covers pre-flag seeded data)
+    const demoTitles = new Set(DEFAULT_WATCHLISTS.map((w) => w.title));
+    let patched = false;
+    for (const w of list) {
+      if (demoTitles.has(w.title) && !w.isDemo) {
+        w.isDemo = true;
+        patched = true;
+      }
+    }
+    if (patched || !seeded) {
+      localStorage.setItem("finch_watchlists", JSON.stringify(list));
+    }
+    setWatchlists(list);
   }, []);
 
   const updateWatchlistsState: Dispatch<SetStateAction<Watchlist[]>> = (

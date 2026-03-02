@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { portfolioStorage } from "../services/storage";
 import { Portfolio, Security } from "../types/types";
+import { DEFAULT_PORTFOLIOS } from "../data/demo/defaultLists";
 
 interface PortfoliosContextProps {
   portfolios: Portfolio[];
@@ -28,7 +29,32 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
 
   useEffect(() => {
-    setPortfolios(portfolioStorage.getAll());
+    const stored = portfolioStorage.getAll();
+    const seeded = localStorage.getItem("finch_demo_portfolios_seeded");
+    let list: Portfolio[];
+    if (seeded) {
+      list = stored;
+    } else {
+      // First visit or never seeded — merge defaults with any existing data
+      const existingIds = new Set(stored.map((p) => p.title));
+      const toAdd = DEFAULT_PORTFOLIOS.filter((p) => !existingIds.has(p.title));
+      list = [...stored, ...toAdd];
+      localStorage.setItem("finch_demo_portfolios_seeded", "1");
+    }
+
+    // Ensure isDemo flag is set on any demo portfolio (covers pre-flag seeded data)
+    const demoTitles = new Set(DEFAULT_PORTFOLIOS.map((p) => p.title));
+    let patched = false;
+    for (const p of list) {
+      if (demoTitles.has(p.title) && !p.isDemo) {
+        p.isDemo = true;
+        patched = true;
+      }
+    }
+    if (patched || !seeded) {
+      localStorage.setItem("finch_portfolios", JSON.stringify(list));
+    }
+    setPortfolios(list);
   }, []);
 
   const appendPortfolio = (newPortfolio: Portfolio) => {

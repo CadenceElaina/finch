@@ -39,14 +39,36 @@
   border-bottom-color: var(--accent);
 }
 
-.fin-period-badge {
+.fin-period-toggle {
+  display: flex;
   margin-left: auto;
-  font-size: 12px;
-  color: var(--text-secondary);
-  padding: 4px 10px;
+  gap: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.fin-period-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
   white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.fin-period-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.fin-period-btn.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* ── Chart heading + legend ── */
@@ -156,8 +178,9 @@
     padding: 8px 10px;
   }
 
-  .fin-period-badge {
+  .fin-period-btn {
     font-size: 11px;
+    padding: 3px 8px;
   }
 
   .fin-table {
