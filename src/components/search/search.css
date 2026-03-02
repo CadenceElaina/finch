@@ -19,6 +19,7 @@
   justify-content: space-between;
   width: 100%;
   box-shadow: var(--shadow-md);
+  z-index: 1000;
 }
 
 .search-input {
@@ -54,11 +55,14 @@
 
 .data {
   position: absolute;
+  top: 100%;
   left: 0;
   right: 0;
   z-index: 1000;
-  max-width: 800px;
-  margin: 0 auto;
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,.3));
 }
 
 .quote-row {

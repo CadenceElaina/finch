@@ -265,7 +265,10 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
     // When input is empty, show recent + popular
     if (searchInput.trim() === "") {
       const recent = getRecentSearches().map((r) => r.symbol);
-      const popular = POPULAR_SEARCHES.map((p) => p.symbol);
+      const recentSet = new Set(recent);
+      const popular = POPULAR_SEARCHES
+        .filter((p) => !recentSet.has(p.symbol))
+        .map((p) => p.symbol);
       return [...recent, ...popular];
     }
     if (quoteQuery.data && quoteQuery.data.length >= 1) {
@@ -295,6 +298,10 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
   /** Render popular/recent suggestions when input is empty */
   const renderEmptyStateSuggestions = () => {
     const recent = getRecentSearches();
+    const recentSymbols = new Set(recent.map((r) => r.symbol));
+    const filteredPopular = POPULAR_SEARCHES.filter(
+      (p) => !recentSymbols.has(p.symbol)
+    );
 
     return (
       <div className="result-container" role="listbox" id="search-listbox">
@@ -319,26 +326,30 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
             ))}
           </>
         )}
-        <div className="search-section-label">Popular</div>
-        {POPULAR_SEARCHES.map((item, i) => {
-          const idx = recent.length + i;
-          return (
-            <div
-              key={`popular-${item.symbol}`}
-              id={`search-option-${idx}`}
-              role="option"
-              tabIndex={-1}
-              aria-selected={idx === activeIndex}
-              className={`quote-row suggestion-row${idx === activeIndex ? " active" : ""}`}
-              onClick={() => handleClickQuote(item.symbol)}
-            >
-              <div className="left-column">
-                <div className="stock-name">{item.symbol}</div>
-                <div className="stock-details">{item.name}</div>
-              </div>
-            </div>
-          );
-        })}
+        {filteredPopular.length > 0 && (
+          <>
+            <div className="search-section-label">Popular</div>
+            {filteredPopular.map((item, i) => {
+              const idx = recent.length + i;
+              return (
+                <div
+                  key={`popular-${item.symbol}`}
+                  id={`search-option-${idx}`}
+                  role="option"
+                  tabIndex={-1}
+                  aria-selected={idx === activeIndex}
+                  className={`quote-row suggestion-row${idx === activeIndex ? " active" : ""}`}
+                  onClick={() => handleClickQuote(item.symbol)}
+                >
+                  <div className="left-column">
+                    <div className="stock-name">{item.symbol}</div>
+                    <div className="stock-details">{item.name}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
     );
   };
@@ -482,12 +493,12 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
               Search
             </button>
           )}
+          {showDropdown && (
+            <div className="data" ref={dropdownRef}>
+              {renderQuoteResults()}
+            </div>
+          )}
         </div>
-        {showDropdown && (
-          <div className="data" ref={dropdownRef}>
-            {renderQuoteResults()}
-          </div>
-        )}
       </div>
     </>
   );
