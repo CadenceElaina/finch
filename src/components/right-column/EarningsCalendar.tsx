@@ -78,27 +78,36 @@ const EarningsCalendar: React.FC = () => {
           symbols: symbolsParam,
         });
 
-        const rawQuotes = response.data?.quoteResponse?.result ?? [];
+        const rawQuotes =
+          response.data?.quoteResponse?.result ??
+          response.data?.quoteSummary?.result ??
+          [];
         const now = new Date();
         const entries: EarningsEntry[] = [];
 
         for (const q of rawQuotes) {
-          const start = q.earningsTimestampStart;
-          const end = q.earningsTimestampEnd;
+          // Handle both flat and nested (quoteSummary) formats
+          const flat = q.calendarEvents ?? q;
+          const price = q.price ?? q;
+          const start = flat.earningsTimestampStart ?? flat.earnings?.earningsDate?.[0]?.raw;
+          const end = flat.earningsTimestampEnd ?? flat.earnings?.earningsDate?.[1]?.raw;
           if (!start) continue;
 
-          const date = new Date(start * 1000);
+          const ts = typeof start === "object" ? start.raw : start;
+          const date = new Date(ts * 1000);
           // Only show upcoming earnings (within next 90 days)
           if (date < now) continue;
           const diffDays =
             (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
           if (diffDays > 90) continue;
 
+          const tsEnd = end ? (typeof end === "object" ? end.raw : end) : undefined;
+
           entries.push({
-            symbol: q.symbol,
-            name: q.shortName ?? q.longName ?? q.symbol,
+            symbol: price.symbol ?? q.symbol,
+            name: price.shortName ?? price.longName ?? q.shortName ?? q.longName ?? q.symbol,
             date,
-            dateEnd: end ? new Date(end * 1000) : undefined,
+            dateEnd: tsEnd ? new Date(tsEnd * 1000) : undefined,
           });
         }
 

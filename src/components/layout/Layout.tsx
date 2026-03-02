@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaBars, FaChevronLeft, FaUncharted } from "react-icons/fa";
-import Sidebar from "./Sidebar";
-import DemoBanner from "../DemoBanner";
+import { Link, useLocation, useNavigate, NavLink } from "react-router-dom";
+import { FaUncharted } from "react-icons/fa";
+import { BsNewspaper } from "react-icons/bs";
+import { MdManageSearch } from "react-icons/md";
+import { IoMdSettings } from "react-icons/io";
+import { FaListUl } from "react-icons/fa";
 import FuelGauge from "../FuelGauge";
 import Search from "../search/Search";
 import { useDemoMode } from "../../context/DemoModeContext";
@@ -14,38 +15,38 @@ import "./Layout.css";
 const PAGES_WITH_SEARCH = ["/", "/news"];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [open, setOpen] = useState(false);
   const { isDemoMode } = useDemoMode();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideHeaderSearch = PAGES_WITH_SEARCH.includes(pathname);
 
-  const handleDrawerToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
-
   return (
-    <div className={`layout-container ${open ? "open" : ""}`}>
-      <DemoBanner />
-      <div
-        className={`overlay ${open ? "open" : ""}`}
-        onClick={handleDrawerClose}
-      ></div>
+    <div className="layout-container">
       <div className="top-banner">
         <div className="logo-container">
-          <button className="menu-button" onClick={handleDrawerToggle}>
-            {open ? <FaChevronLeft /> : <FaBars />}
-          </button>
           <span className="logo">
-            {" "}
             <FaUncharted size={24} />
             <Link to={"/"}>Finch</Link>
           </span>
+          <nav className="header-nav">
+            <NavLink to="/news" className={({ isActive }) => `header-nav-link${isActive ? " active" : ""}`}>
+              <BsNewspaper size={14} />
+              <span>News</span>
+            </NavLink>
+            <NavLink to="/portfolio" className={() => `header-nav-link${pathname.startsWith("/portfolio") || pathname.startsWith("/watchlist") ? " active" : ""}`}>
+              <FaListUl size={14} />
+              <span>Lists</span>
+            </NavLink>
+            <NavLink to="/market-trends/indexes" className={() => `header-nav-link${pathname.startsWith("/market-trends") ? " active" : ""}`}>
+              <MdManageSearch size={16} />
+              <span>Markets</span>
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => `header-nav-link${isActive ? " active" : ""}`}>
+              <IoMdSettings size={15} />
+              <span>Settings</span>
+            </NavLink>
+          </nav>
         </div>
         <div className="header-search-inline">
           {!hideHeaderSearch && <Search compact onNavigate={() => {}} />}
@@ -73,18 +74,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
 
       <div className="container">
-        {open && (
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <button className="close-button" onClick={handleDrawerClose}>
-                <FaChevronLeft />
-              </button>
-            </div>
-            <Sidebar isOpen={open} onClose={handleDrawerClose} />
-          </div>
-        )}
-
-        <div className={`main-content ${open ? "open" : ""}`}>{children}</div>
+        <div className="main-content">{children}</div>
       </div>
     </div>
   );

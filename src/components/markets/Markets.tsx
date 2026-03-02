@@ -12,6 +12,22 @@ import { useIndexQuotes } from "../../context/IndexQuotesContext";
 import { useSnapshot } from "../../context/SnapshotContext";
 import { extractIndicesFromSnapshot } from "../../services/marketSnapshot";
 
+/**
+ * Symbol maps matching Google Finance market tabs.
+ * US: S&P 500, Dow, Nasdaq, Russell 2000, VIX
+ * Europe: DAX, FTSE 100, CAC 40, IBEX 35, STOXX 50
+ * Asia: Nikkei 225, SSE, HSI, SENSEX, NIFTY 50
+ * Crypto: Bitcoin, Ethereum, Solana, XRP, Dogecoin
+ * Currencies: EUR/USD, JPY/USD, GBP/USD, CAD/USD, AUD/USD
+ */
+const MARKET_SYMBOLS: Record<Exchange, string[]> = {
+  [Exchange.US]: ["^GSPC", "^DJI", "^IXIC", "^RUT", "^VIX"],
+  [Exchange.Europe]: ["^GDAXI", "^FTSE", "^FCHI", "^IBEX", "^STOXX50E"],
+  [Exchange.Asia]: ["^N225", "000001.SS", "^HSI", "^BSESN", "^NSEI"],
+  [Exchange.Crypto]: ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "DOGE-USD"],
+  [Exchange.Currencies]: ["EURUSD=X", "JPY=X", "GBPUSD=X", "CAD=X", "AUDUSD=X"],
+};
+
 const Markets = () => {
   const { updateIndexQuotesData } = useIndexQuotes();
   const queryClient = useQueryClient();
@@ -27,11 +43,7 @@ const Markets = () => {
     if (!newsData.length) return null;
     return newsData[Math.floor(Math.random() * newsData.length)];
   }, [newsData.length]);
-  const symbolsUS = ["^DJI", "^GSPC", "^IXIC", "^RUT", "^VIX"];
-  const symbolsEUR = ["^GDAXI", "^FTSE", " ^IBEX"];
-  const symbolsASIA = ["^N225", "^HSI", "^BSESN"];
-  const symbolsCUR = ["EURUSD=X", "JPY=X", "GBPUSD=X", "CAD=X"];
-  const symbolsCRYPTO = ["BTC-USD", "ETH-USD", "BAT-USD"];
+
   queryClient.setQueryDefaults(["quote"], { gcTime: 1000 * 60 * 15 });
 
   // ── Use KV snapshot for US indices if available ────────
@@ -56,28 +68,8 @@ const Markets = () => {
   }, [snapshot, currExchange]);
 
   const fetchSymbolQuotes = async () => {
-    let symbols;
+    const symbols = MARKET_SYMBOLS[currExchange] ?? MARKET_SYMBOLS[Exchange.US];
 
-    switch (currExchange) {
-      case Exchange.US:
-        symbols = symbolsUS;
-        break;
-      case Exchange.Europe:
-        symbols = symbolsEUR;
-        break;
-      case Exchange.Asia:
-        symbols = symbolsASIA;
-        break;
-      case Exchange.Currencies:
-        symbols = symbolsCUR;
-        break;
-      case Exchange.Crypto:
-        symbols = symbolsCRYPTO;
-        break;
-      default:
-        symbols = symbolsUS;
-    }
-    //
     const batchResult = await getBatchQuotes(queryClient, symbols);
 
     const symbolQuoteMap: Record<string, quoteType | null> = {};

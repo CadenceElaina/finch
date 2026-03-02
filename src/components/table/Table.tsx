@@ -5,6 +5,7 @@ import { IoMdAddCircleOutline } from "react-icons/io";
 import { TableProps, AllowedFields } from "./types";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlists } from "../../context/WatchlistContext";
+import { usePortfolios } from "../../context/PortfoliosContext";
 import { formatCurrency } from "../../utils/format";
 
 const getRandomColor = (): string => {
@@ -42,6 +43,7 @@ const Table: React.FC<TableProps> = ({
   onIconClick,
 }) => {
   const { watchlists } = useWatchlists();
+  const { portfolios } = usePortfolios();
   const navigate = useNavigate();
   const handleClick = (symbol: string) => {
     const newState = [false, symbol];
@@ -304,6 +306,11 @@ const Table: React.FC<TableProps> = ({
             {watchlists.some(
               (watchlist) =>
                 watchlist.securities?.some(
+                  (s) => s.symbol?.toLowerCase() === item.symbol?.toLowerCase()
+                ) ?? false
+            ) || portfolios.some(
+              (portfolio) =>
+                portfolio.securities?.some(
                   (s) => s.symbol?.toLowerCase() === item.symbol?.toLowerCase()
                 ) ?? false
             ) ? (

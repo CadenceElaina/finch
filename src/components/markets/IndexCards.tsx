@@ -1,24 +1,54 @@
 import React from "react";
 import { IndexCardProps, IndexCard, Exchange } from "./types";
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import ErrorState from "../ErrorState";
 
 /** Format a number with commas and fixed decimals (e.g. 43,840.91) */
 const fmt = (v: number, decimals = 2): string =>
-  v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  v.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
 
 /** Signed percent string: "+0.37%" or "-1.05%" */
 const fmtPct = (v: number): string => `${v > 0 ? "+" : ""}${fmt(v)}%`;
 
-/** Signed price-change string: "159.95" or "-521.28" (with commas) */
-const fmtChg = (v: number): string => fmt(v);
+/** Signed price-change string: "+159.95" or "-521.28" */
+const fmtChg = (v: number): string => `${v > 0 ? "+" : ""}${fmt(v)}`;
 
-const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError }) => {
-  const isIndex = true;
-  const filteredCards = cards.filter((card: IndexCard) => card.exchange === currExchange);
+/** Determine color class from a number */
+const colorCls = (v: number): string =>
+  v > 0 ? "positive" : v < 0 ? "negative" : "";
 
-  // Error state
+/** Render the inner card body (shared between Link and plain div) */
+const CardBody: React.FC<{ card: IndexCard; isCurrency?: boolean }> = ({
+  card,
+  isCurrency,
+}) => {
+  const cls = colorCls(card.percentChange);
+  return (
+    <div className={`idx-card ${cls}`}>
+      <span className="idx-name">{card.name}</span>
+      <span className="idx-price">
+        {fmt(card.price, isCurrency ? 4 : 2)}
+      </span>
+      <span className={`idx-change ${cls}`}>
+        {fmtPct(card.percentChange)}{" "}
+        <span className="idx-chg-abs">{fmtChg(card.priceChange)}</span>
+      </span>
+    </div>
+  );
+};
+
+const IndexCards: React.FC<IndexCardProps> = ({
+  cards,
+  currExchange,
+  hasError,
+}) => {
+  const filteredCards = cards.filter(
+    (card: IndexCard) => card.exchange === currExchange
+  );
+
   if (hasError) {
     return (
       <div className="index-cards-inner">
@@ -31,16 +61,11 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
     );
   }
 
-  // Loading skeleton when no cards yet
   if (filteredCards.length === 0) {
     return (
       <div className="index-cards-inner">
-        {Array.from({ length: currExchange === "Currencies" ? 4 : 5 }).map((_, i) => (
-          <div key={i} className="index-card-skeleton">
-            <div className="skeleton-bar sm" />
-            <div className="skeleton-bar lg" />
-            <div className="skeleton-bar md" />
-          </div>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="idx-card-skeleton" />
         ))}
       </div>
     );
@@ -48,108 +73,39 @@ const IndexCards: React.FC<IndexCardProps> = ({ cards, currExchange, hasError })
 
   return (
     <div className="index-cards-inner">
-      {filteredCards
-        .map((card: IndexCard) => {
-          // Create a variable for the symbol
-          let symbol = card.symbol;
-          if (symbol.charAt(0) === "^") {
-            symbol = symbol.replace("^", "");
-          }
-          // Check if the current exchange is Exchange.Currencies
-          if (currExchange === Exchange.Currencies) {
-            return (
-              <div className="index-card-content currencies" key={card.symbol}>
-                <div className="index-card-icon">
-                  {card.priceChange > 0 ? (
-                    <FaArrowUp style={{ color: "var(--positive)" }} />
-                  ) : card.priceChange === 0 ? (
-                    <></>
-                  ) : (
-                    <FaArrowDown style={{ color: "var(--negative)" }} />
-                  )}
-                </div>
-                <div className="index-card-name-price">
-                  <div className="index-card-name">{card.name}</div>
-                  <div className="index-card-price">{fmt(card.price, 4)}</div>
-                </div>
-                <div className="index-card-change">
-                  <div
-                    className={`index-card-percent-change ${
-                      card.percentChange > 0
-                        ? "positive"
-                        : card.percentChange === 0
-                        ? ""
-                        : "negative"
-                    }`}
-                  >
-                    {fmtPct(card.percentChange)}
-                  </div>
-                  <div
-                    className={`index-card-price-change ${
-                      card.priceChange > 0
-                        ? "positive"
-                        : card.priceChange === 0
-                        ? ""
-                        : "negative"
-                    }`}
-                  >
-                    <div>{fmtChg(card.priceChange)}</div>
-                  </div>
-                </div>
-              </div>
-            );
-          }
+      {filteredCards.map((card) => {
+        const symbol = card.symbol.replace(/^\^/, "");
+        const isCurrency = currExchange === Exchange.Currencies;
 
-          // If the current exchange is not Exchange.Currencies, render with Link
+        if (isCurrency) {
           return (
             <Link
-              to={`/quote/${symbol}`}
-              state={[isIndex, card.symbol]}
-              className="index-card-link"
+              to={`/quote/${encodeURIComponent(card.symbol)}`}
+              state={[false, card.symbol]}
+              className="idx-card-wrap"
               key={card.symbol}
             >
-              <div className="index-card-content">
-                <div className="index-card-icon">
-                  {card.priceChange > 0 ? (
-                    <FaArrowUp style={{ color: "var(--positive)" }} />
-                  ) : card.priceChange === 0 ? (
-                    <></>
-                  ) : (
-                    <FaArrowDown style={{ color: "var(--negative)" }} />
-                  )}
-                </div>
-                <div className="index-card-name-price">
-                  <div className="index-card-name">{card.name}</div>
-                  <div className="index-card-price">{fmt(card.price)}</div>
-                </div>
-                <div className="index-card-change">
-                  <div
-                    className={`index-card-percent-change ${
-                      card.percentChange > 0
-                        ? "positive"
-                        : card.percentChange === 0
-                        ? ""
-                        : "negative"
-                    }`}
-                  >
-                    {fmtPct(card.percentChange)}
-                  </div>
-                  <div
-                    className={`index-card-price-change ${
-                      card.priceChange > 0
-                        ? "positive"
-                        : card.priceChange === 0
-                        ? ""
-                        : "negative"
-                    }`}
-                  >
-                    <div>{fmtChg(card.priceChange)}</div>
-                  </div>
-                </div>
-              </div>
+              <CardBody card={card} isCurrency />
             </Link>
           );
-        })}
+        }
+
+        // Crypto — link without ^ prefix
+        const isCryptoCard = currExchange === Exchange.Crypto;
+        const linkSymbol = isCryptoCard ? card.symbol : symbol;
+        const isIndexCard = !isCryptoCard;
+
+        return (
+          <Link
+            to={`/quote/${encodeURIComponent(linkSymbol)}`}
+            state={[isIndexCard, card.symbol]}
+            className="idx-card-wrap"
+            key={card.symbol}
+          >
+            <CardBody card={card} />
+          </Link>
+        );
+      })}
     </div>
   );
 };

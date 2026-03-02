@@ -18,7 +18,6 @@ import Feedback from "./pages/footer/Feedback";
 import Privacy from "./pages/footer/Privacy";
 import Terms from "./pages/footer/Terms";
 import Disclaimer from "./pages/footer/Disclaimer";
-import Watchlist from "./pages/Watchlist";
 import Settings from "./pages/Settings";
 import Quote from "./pages/quote/Quote";
 import MarketIndexes from "./components/market-trends/MarketIndexes";
@@ -46,7 +45,7 @@ function App() {
         <Route path="/news" element={<News />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/portfolio/:id" element={<Portfolio />} />
-        <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/watchlist" element={<Portfolio />} />
         <Route path="/watchlist/:id" element={<Portfolio />} />
         <Route path="/quote/:quote" element={<Quote />} />
         <Route path="/market-trends/indexes" element={<MarketIndexes />} />
