@@ -43,10 +43,14 @@ export const yhHeaders = () => ({
 // In development: calls RapidAPI directly with the key from .env.
 
 import axios from "axios";
+import { yf15Fetch, hasYf15Fallback } from "./yf15Api";
 
 /**
  * Make a GET request to a YH Finance endpoint, routing through
  * the Vercel Edge proxy in production.
+ *
+ * If the primary YH166 API returns 429/403/5xx, automatically
+ * retries via Yahoo Finance 15 as a fallback provider.
  *
  * @param endpoint - The YH Finance path, e.g. "/market/v2/get-quotes"
  * @param params   - Query parameters (region, symbols, etc.)
@@ -56,17 +60,48 @@ export async function yhFetch(
   endpoint: string,
   params: Record<string, string | number> = {}
 ) {
-  if (import.meta.env.PROD) {
-    // Production: route through /api/yh-finance Edge Function
-    return axios.get("/api/yh-finance", {
-      params: { endpoint, ...params },
-    });
+  try {
+    let response;
+    if (import.meta.env.PROD) {
+      // Production: route through /api/yh-finance Edge Function
+      response = await axios.get("/api/yh-finance", {
+        params: { endpoint, ...params },
+      });
+    } else {
+      // Development: call RapidAPI directly
+      response = await axios.get(`https://${YH_API_HOST}${endpoint}`, {
+        params,
+        headers: yhHeaders(),
+      });
+    }
+    return response;
+  } catch (error: unknown) {
+    // Check if this is a rate-limit or server error worth retrying via fallback
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    const shouldFallback =
+      status === 429 || status === 403 || (status !== undefined && status >= 500);
+
+    if (shouldFallback && hasYf15Fallback(endpoint)) {
+      console.warn(
+        `[yhFetch] YH166 returned ${status} for ${endpoint} — falling back to YF15`
+      );
+      try {
+        if (import.meta.env.PROD) {
+          // Production: route through /api/yf15-finance Edge Function
+          return await axios.get("/api/yf15-finance", {
+            params: { endpoint, ...params },
+          });
+        }
+        return await yf15Fetch(endpoint, params);
+      } catch (fallbackError) {
+        console.error("[yhFetch] YF15 fallback also failed:", fallbackError);
+        throw fallbackError;
+      }
+    }
+
+    // No fallback available or not a retriable error — rethrow
+    throw error;
   }
-  // Development: call RapidAPI directly
-  return axios.get(`https://${YH_API_HOST}${endpoint}`, {
-    params,
-    headers: yhHeaders(),
-  });
 }
 
 // ── Rate limits ──────────────────────────────────────────
