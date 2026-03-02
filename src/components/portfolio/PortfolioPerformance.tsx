@@ -8,7 +8,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
-import { FaSortUp, FaSortDown, FaSort, FaTimes } from "react-icons/fa";
+import { FaSortUp, FaSortDown, FaSort, FaTimes, FaInfoCircle } from "react-icons/fa";
 import { getBatchStockMetadata, StockMetadata } from "../../services/stockMetadata";
 import { getEtfSectorBreakdowns } from "../../services/etfHoldings";
 import type { EtfSectorBreakdown } from "../../services/etfHoldings";
@@ -353,7 +353,18 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             <span className="perf-change-num">
               {xirrReturn >= 0 ? "+" : ""}{fmtPct(xirrReturn * 100)}%
             </span>
-            <span className="perf-change-pct">XIRR</span>
+            <span className="perf-change-pct perf-xirr-label">
+              XIRR
+              <span className="perf-xirr-info">
+                <FaInfoCircle />
+                <span className="perf-xirr-tooltip">
+                  XIRR (Extended Internal Rate of Return) is the annualized
+                  return that accounts for the timing and size of each
+                  contribution. Unlike simple return, it measures how
+                  efficiently your money grew over time.
+                </span>
+              </span>
+            </span>
           </div>
         )}
       </div>
