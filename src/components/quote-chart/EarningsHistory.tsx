@@ -238,9 +238,10 @@ function generateDemoEarnings(sym: string): EarningsQuarter[] {
 
 const EarningsHistory: React.FC<Props> = ({ symbol }) => {
   const saId = getSaId(symbol);
+  const demo = isDemoActive();
 
   const { data: quarters, isLoading } = useQuery<EarningsQuarter[]>({
-    queryKey: ["earnings-history", symbol],
+    queryKey: ["earnings-history", symbol, demo],
     queryFn: async () => {
       // Demo mode — return hardcoded or generated data, no API call
       if (isDemoActive()) {

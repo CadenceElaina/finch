@@ -21,6 +21,10 @@
     {
       "source": "/api/snapshot",
       "destination": "/api/snapshot"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
