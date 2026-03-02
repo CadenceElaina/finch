@@ -56,7 +56,7 @@ const Feedback = () => {
         <p>
           You can also open an issue or pull request on the{" "}
           <a
-            href="https://github.com"
+            href="https://github.com/CadenceElaina/finch"
             target="_blank"
             rel="noopener noreferrer"
           >

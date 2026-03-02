@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useLocation, useParams, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
-import QuoteChart from "../../components/quote-chart/QuoteChart";
+import QuoteChartLW, { type ChartMode } from "../../components/quote-chart/QuoteChartLW";
 import "./Quote.css";
 import Footer from "../../components/Footer";
 import {
@@ -76,6 +76,8 @@ const Quote: React.FC<QuoteProps> = () => {
 
   const [selectedInterval, setSelectedInterval] = useState("1D");
   const [activeTab, setActiveTab] = useState<QuoteTab>("overview");
+  const [chartMode, setChartMode] = useState<ChartMode>("area");
+  const [showVolume, setShowVolume] = useState(false);
 
   /** Check if the symbol is already in any watchlist */
   const isFollowing = useMemo(() => {
@@ -253,16 +255,42 @@ const Quote: React.FC<QuoteProps> = () => {
   );
 
   const IntervalButtons = (
-    <div className="quote-intervals">
-      {["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "MAX"].map((iv) => (
+    <div className="quote-chart-controls">
+      <div className="quote-intervals">
+        {["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "MAX"].map((iv) => (
+          <button
+            key={iv}
+            className={selectedInterval === iv ? "active" : ""}
+            onClick={() => handleIntervalChange(iv)}
+          >
+            {iv}
+          </button>
+        ))}
+      </div>
+      <div className="quote-chart-toggles">
         <button
-          key={iv}
-          className={selectedInterval === iv ? "active" : ""}
-          onClick={() => handleIntervalChange(iv)}
+          className={`chart-toggle-btn ${chartMode === "area" ? "active" : ""}`}
+          onClick={() => setChartMode("area")}
+          title="Line chart"
         >
-          {iv}
+          Line
         </button>
-      ))}
+        <button
+          className={`chart-toggle-btn ${chartMode === "candle" ? "active" : ""}`}
+          onClick={() => setChartMode("candle")}
+          title="Candlestick chart"
+        >
+          Candle
+        </button>
+        <span className="chart-toggle-sep" />
+        <button
+          className={`chart-toggle-btn ${showVolume ? "active" : ""}`}
+          onClick={() => setShowVolume((v) => !v)}
+          title="Toggle volume"
+        >
+          Vol
+        </button>
+      </div>
     </div>
   );
 
@@ -304,7 +332,13 @@ const Quote: React.FC<QuoteProps> = () => {
             <div className="quote-main">
               {PriceBlock}
               {IntervalButtons}
-              <QuoteChart interval={selectedInterval} symbol={chartSymbol || ""} previousClosePrice={quoteSidebarData?.previousClose || ""} />
+              <QuoteChartLW
+                interval={selectedInterval}
+                symbol={chartSymbol || ""}
+                previousClosePrice={quoteSidebarData?.previousClose || ""}
+                chartMode={chartMode}
+                showVolume={showVolume}
+              />
 
               {/* Related instruments from same market category */}
               <RelatedStocks currentSymbol={symbolState} />
@@ -403,10 +437,12 @@ const Quote: React.FC<QuoteProps> = () => {
             {PriceBlock}
             {IntervalButtons}
 
-            <QuoteChart
+            <QuoteChartLW
               interval={selectedInterval}
               symbol={chartSymbol || symbol || ""}
               previousClosePrice={quoteSidebarData?.previousClose || ""}
+              chartMode={chartMode}
+              showVolume={showVolume}
             />
 
             {/* Tab nav */}
