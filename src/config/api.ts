@@ -51,6 +51,8 @@ const circuitTripped: Record<string, number> = {
 };
 
 function tripCircuit(provider: string) {
+  // Don't spam the console if already tripped
+  if (isCircuitOpen(provider)) return;
   circuitTripped[provider] = Date.now();
   console.warn(`[Circuit Breaker] ${provider} tripped — disabled for ${CIRCUIT_COOLDOWN / 60000} min`);
 }
@@ -79,6 +81,26 @@ function isRateLimitError(error: unknown): boolean {
 function isRetriableError(error: unknown): boolean {
   const status = (error as { response?: { status?: number } })?.response?.status;
   return status === 429 || status === 403 || (status !== undefined && status >= 500);
+}
+
+// ── Request deduplication ────────────────────────────────
+//
+// When 6+ components call yhFetch("/api/market/get-quote", {symbols: "AAPL,MSFT"})
+// simultaneously, they all share a SINGLE in-flight request instead of each
+// firing their own. This prevents the initial burst that exhausts providers.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const inflightRequests = new Map<string, Promise<any>>();
+
+function makeDedupeKey(
+  endpoint: string,
+  params: Record<string, string | number>
+): string {
+  const sorted = Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&");
+  return `${endpoint}?${sorted}`;
 }
 
 // ── Proxy-aware fetch helper ─────────────────────────────
@@ -166,6 +188,24 @@ export async function yhFetch(
   endpoint: string,
   params: Record<string, string | number> = {}
 ) {
+  // ── Deduplication ──
+  // If an identical request is already in-flight, share it
+  const key = makeDedupeKey(endpoint, params);
+  const inflight = inflightRequests.get(key);
+  if (inflight) return inflight;
+
+  const promise = _yhFetchImpl(endpoint, params).finally(() => {
+    inflightRequests.delete(key);
+  });
+  inflightRequests.set(key, promise);
+  return promise;
+}
+
+/** Internal implementation — callers use yhFetch() which deduplicates. */
+async function _yhFetchImpl(
+  endpoint: string,
+  params: Record<string, string | number>
+) {
   // ── Tier 1: YH Finance 166 ──
   if (!isCircuitOpen("yh166")) {
     try {
@@ -188,8 +228,7 @@ export async function yhFetch(
   // ── Tier 2: ApiDojo Yahoo Finance v1 ──
   if (!isCircuitOpen("apidojo") && APIDOJO_PATH_MAP[endpoint]) {
     try {
-      const resp = await tryApiDojoFetch(endpoint, params);
-      return resp;
+      return await tryApiDojoFetch(endpoint, params);
     } catch (error: unknown) {
       if (isRateLimitError(error)) tripCircuit("apidojo");
       if (!isRetriableError(error)) throw error;

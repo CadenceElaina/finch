@@ -205,8 +205,16 @@ const ENDPOINT_MAP: Record<string, EndpointHandler> = {
         return { quoteResponse: { result: [] } };
       }
 
-      const results = await Promise.all(symbols.map(fetchSingleQuote));
-      const quotes = results.filter(Boolean);
+      // Fetch SEQUENTIALLY — not Promise.all!
+      // If the first ticker gets 429, we stop immediately instead of
+      // blasting 30+ parallel requests that all get 429.
+      const quotes: Record<string, unknown>[] = [];
+      for (const symbol of symbols) {
+        const quote = await fetchSingleQuote(symbol);
+        // fetchSingleQuote throws on 429 — let it propagate to trip circuit
+        if (quote) quotes.push(quote);
+      }
+
       return { quoteResponse: { result: quotes } };
     },
   },
