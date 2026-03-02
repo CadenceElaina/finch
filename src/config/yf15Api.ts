@@ -132,7 +132,7 @@ function normalizeQuoteBody(body: any, fallbackSymbol: string): Record<string, u
 
 /**
  * Fetch a single ticker quote from YF15 v1/markets/quote.
- * Tries the predicted type first; if empty, retries the alternate type.
+ * Tries the predicted type first; if empty body (not 429!), retries alternate type.
  * Returns null for index symbols or on failure.
  */
 async function fetchSingleQuote(symbol: string): Promise<Record<string, unknown> | null> {
@@ -149,11 +149,10 @@ async function fetchSingleQuote(symbol: string): Promise<Record<string, unknown>
 
     const body = resp.data?.body;
     if (body && !Array.isArray(body)) {
-      // Got a single-object response — success
       return normalizeQuoteBody(body, symbol);
     }
 
-    // Empty or array body → try alternate type
+    // Empty or array body → try alternate type (but NOT on rate-limit errors)
     if (!body || (Array.isArray(body) && body.length === 0)) {
       const altType = type === "STOCKS" ? "ETF" : "STOCKS";
       const altResp = await axios.get(url, {
@@ -168,6 +167,11 @@ async function fetchSingleQuote(symbol: string): Promise<Record<string, unknown>
 
     return null;
   } catch (err) {
+    // On 429/403 — DO NOT retry with alternate type, just propagate
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status === 429 || status === 403) {
+      throw err; // let the circuit breaker in yhFetch handle it
+    }
     console.warn(`[YF15] Failed to fetch quote for ${symbol}:`, err);
     return null;
   }

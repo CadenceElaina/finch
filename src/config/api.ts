@@ -1,30 +1,31 @@
 /**
- * Finch — Yahoo Finance 166 API Configuration & Cache Policy
- * -------------------------------------------------------
+ * Finch — Multi-Provider Yahoo Finance API Configuration & Cache Policy
+ * ─────────────────────────────────────────────────────────────────────
  * Single source of truth for API endpoints, rate limits, cache TTLs,
  * and refresh strategies. Import from here instead of scattering magic
  * numbers across components.
  *
- * Provider : Yahoo Finance 166 via RapidAPI
- * Host     : yahoo-finance166.p.rapidapi.com
- * Tier     : Free (Basic)
+ * PROVIDER CASCADE (tried in order):
+ * ──────────────────────────────────
+ *  1. YH Finance 166     yahoo-finance166.p.rapidapi.com       500/month
+ *  2. ApiDojo YF v1       apidojo-yahoo-finance-v1.p.rapidapi.com  500/month
+ *  3. Yahoo Finance 15    yahoo-finance15.p.rapidapi.com           500/month
+ *  ─────────────────────────────────────
+ *  Total budget: ~1,500 req/month across 3 Yahoo providers
+ *  + Seeking Alpha 500/month for news/analysis
  *
- * HARD LIMITS (free tier)
- * ─────────────────────────────────────────────────────────
- * • 500 requests per calendar month (hard cap)
- * • No per-minute / per-window sub-limits documented
- *
- * Combined with Seeking Alpha (500/month) → 1,000 total.
- * Budget: ~16 calls/day if spread evenly.
- * Batching + caching is essential.
+ * CIRCUIT BREAKER:
+ *  Once a provider returns 429/403, it is disabled for 10 minutes.
+ *  This prevents the "infinite 429 storm" where every component
+ *  retry hammers an exhausted API.
  */
 
-// ── API keys & host ──────────────────────────────────────
+// ── API keys & hosts ─────────────────────────────────────
 
 export const YH_API_HOST = "yahoo-finance166.p.rapidapi.com";
+export const APIDOJO_HOST = "apidojo-yahoo-finance-v1.p.rapidapi.com";
 
 // Key is read from env at runtime (Vite injects it)
-// Falls back to the old apidojo key since it's the same RapidAPI account
 export const YH_API_KEY = (
   import.meta.env.VITE_YH_FINANCE_KEY ??
   import.meta.env.VITE_APIDOJO_YAHOO_KEY ??
@@ -36,23 +37,128 @@ export const yhHeaders = () => ({
   "x-rapidapi-key": YH_API_KEY,
 });
 
-// ── Proxy-aware fetch helper ─────────────────────────────
+// ── Circuit Breaker ──────────────────────────────────────
 //
-// In production (Vercel): calls /api/yh-finance?endpoint=...
-//   → Edge Function adds the API key server-side.
-// In development: calls RapidAPI directly with the key from .env.
+// Tracks when each provider last hit a rate-limit (429/403).
+// If tripped, skip that provider entirely for CIRCUIT_COOLDOWN ms.
+
+const CIRCUIT_COOLDOWN = 10 * 60 * 1000; // 10 minutes
+
+const circuitTripped: Record<string, number> = {
+  yh166: 0,
+  apidojo: 0,
+  yf15: 0,
+};
+
+function tripCircuit(provider: string) {
+  circuitTripped[provider] = Date.now();
+  console.warn(`[Circuit Breaker] ${provider} tripped — disabled for ${CIRCUIT_COOLDOWN / 60000} min`);
+}
+
+function isCircuitOpen(provider: string): boolean {
+  const trippedAt = circuitTripped[provider];
+  if (!trippedAt) return false;
+  if (Date.now() - trippedAt > CIRCUIT_COOLDOWN) {
+    circuitTripped[provider] = 0; // reset
+    return false;
+  }
+  return true;
+}
+
+/** Expose for debugging in console: window.__finchCircuits */
+if (typeof window !== "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).__finchCircuits = circuitTripped;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  return status === 429 || status === 403;
+}
+
+function isRetriableError(error: unknown): boolean {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  return status === 429 || status === 403 || (status !== undefined && status >= 500);
+}
+
+// ── Proxy-aware fetch helper ─────────────────────────────
 
 import axios from "axios";
 import { yf15Fetch, hasYf15Fallback } from "./yf15Api";
 
 /**
- * Make a GET request to a YH Finance endpoint, routing through
- * the Vercel Edge proxy in production.
+ * ApiDojo YF v1 endpoint mapping.
+ * This API uses the same response format as YH166 (standard Yahoo Finance)
+ * but with slightly different endpoint paths.
+ */
+const APIDOJO_PATH_MAP: Record<string, string> = {
+  "/api/market/get-quote":                  "/market/v2/get-quotes",
+  "/api/autocomplete":                      "/auto-complete",
+  "/api/stock/get-chart":                   "/stock/v3/get-chart",
+  "/api/market/get-day-gainers":            "/market/v2/get-movers",
+  "/api/market/get-day-losers":             "/market/v2/get-movers",
+  "/api/market/get-most-actives":           "/market/v2/get-movers",
+  "/api/stock/get-financial-data":          "/stock/get-fundamentals",
+  "/api/stock/get-statistics":              "/stock/v4/get-statistics",
+  "/api/market/get-trending":               "/market/get-trending-tickers",
+  "/api/stock/get-company-outlook-summary": "/stock/get-company-outlook",
+  "/api/market/get-world-indices":          "/market/v2/get-summary",
+  "/api/market/get-market-summary":         "/market/v2/get-summary",
+  "/api/stock/get-upgrade-downgrade-history": "/stock/v3/get-upgrades-downgrades",
+};
+
+/**
+ * Map YH166 params to ApiDojo params.
+ * ApiDojo uses `symbols` (same as YH166 for quotes), and the standard
+ * Yahoo Finance query format. Most params pass through unchanged.
+ */
+function mapApiDojoParams(
+  yh166Endpoint: string,
+  params: Record<string, string | number>
+): Record<string, string | number> {
+  // Most params pass through — ApiDojo uses same param names
+  const mapped = { ...params };
+
+  // autocomplete: YH166 uses `query`, ApiDojo uses `q`
+  if (yh166Endpoint === "/api/autocomplete") {
+    mapped.q = mapped.query ?? "";
+    delete mapped.query;
+  }
+
+  return mapped;
+}
+
+async function tryApiDojoFetch(
+  endpoint: string,
+  params: Record<string, string | number>
+): Promise<{ data: unknown }> {
+  const apiDojoPath = APIDOJO_PATH_MAP[endpoint];
+  if (!apiDojoPath) throw new Error(`[ApiDojo] No mapping for ${endpoint}`);
+
+  const mappedParams = mapApiDojoParams(endpoint, params);
+
+  if (import.meta.env.PROD) {
+    return await axios.get("/api/apidojo-finance", {
+      params: { endpoint, ...params },
+    });
+  }
+
+  return await axios.get(`https://${APIDOJO_HOST}${apiDojoPath}`, {
+    params: mappedParams,
+    headers: {
+      "x-rapidapi-host": APIDOJO_HOST,
+      "x-rapidapi-key": YH_API_KEY,
+    },
+  });
+}
+
+/**
+ * Make a GET request to a Yahoo Finance endpoint with automatic
+ * multi-provider fallback and circuit breaker protection.
  *
- * If the primary YH166 API returns 429/403/5xx, automatically
- * retries via Yahoo Finance 15 as a fallback provider.
+ * Cascade: YH166 → ApiDojo v1 → YF15 → throw
  *
- * @param endpoint - The YH Finance path, e.g. "/market/v2/get-quotes"
+ * @param endpoint - The YH Finance path, e.g. "/api/market/get-quote"
  * @param params   - Query parameters (region, symbols, etc.)
  * @returns The axios response
  */
@@ -60,48 +166,63 @@ export async function yhFetch(
   endpoint: string,
   params: Record<string, string | number> = {}
 ) {
-  try {
-    let response;
-    if (import.meta.env.PROD) {
-      // Production: route through /api/yh-finance Edge Function
-      response = await axios.get("/api/yh-finance", {
-        params: { endpoint, ...params },
-      });
-    } else {
-      // Development: call RapidAPI directly
-      response = await axios.get(`https://${YH_API_HOST}${endpoint}`, {
+  // ── Tier 1: YH Finance 166 ──
+  if (!isCircuitOpen("yh166")) {
+    try {
+      if (import.meta.env.PROD) {
+        return await axios.get("/api/yh-finance", {
+          params: { endpoint, ...params },
+        });
+      }
+      return await axios.get(`https://${YH_API_HOST}${endpoint}`, {
         params,
         headers: yhHeaders(),
       });
+    } catch (error: unknown) {
+      if (isRateLimitError(error)) tripCircuit("yh166");
+      if (!isRetriableError(error)) throw error;
+      console.warn(`[yhFetch] YH166 failed for ${endpoint} — trying next provider`);
     }
-    return response;
-  } catch (error: unknown) {
-    // Check if this is a rate-limit or server error worth retrying via fallback
-    const status = (error as { response?: { status?: number } })?.response?.status;
-    const shouldFallback =
-      status === 429 || status === 403 || (status !== undefined && status >= 500);
-
-    if (shouldFallback && hasYf15Fallback(endpoint)) {
-      console.warn(
-        `[yhFetch] YH166 returned ${status} for ${endpoint} — falling back to YF15`
-      );
-      try {
-        if (import.meta.env.PROD) {
-          // Production: route through /api/yf15-finance Edge Function
-          return await axios.get("/api/yf15-finance", {
-            params: { endpoint, ...params },
-          });
-        }
-        return await yf15Fetch(endpoint, params);
-      } catch (fallbackError) {
-        console.error("[yhFetch] YF15 fallback also failed:", fallbackError);
-        throw fallbackError;
-      }
-    }
-
-    // No fallback available or not a retriable error — rethrow
-    throw error;
   }
+
+  // ── Tier 2: ApiDojo Yahoo Finance v1 ──
+  if (!isCircuitOpen("apidojo") && APIDOJO_PATH_MAP[endpoint]) {
+    try {
+      const resp = await tryApiDojoFetch(endpoint, params);
+      return resp;
+    } catch (error: unknown) {
+      if (isRateLimitError(error)) tripCircuit("apidojo");
+      if (!isRetriableError(error)) throw error;
+      console.warn(`[yhFetch] ApiDojo failed for ${endpoint} — trying next provider`);
+    }
+  }
+
+  // ── Tier 3: Yahoo Finance 15 ──
+  if (!isCircuitOpen("yf15") && hasYf15Fallback(endpoint)) {
+    try {
+      if (import.meta.env.PROD) {
+        return await axios.get("/api/yf15-finance", {
+          params: { endpoint, ...params },
+        });
+      }
+      return await yf15Fetch(endpoint, params);
+    } catch (error: unknown) {
+      if (isRateLimitError(error)) tripCircuit("yf15");
+      if (!isRetriableError(error)) throw error;
+      console.warn(`[yhFetch] YF15 also failed for ${endpoint}`);
+    }
+  }
+
+  // ── All providers exhausted ──
+  const openCircuits = Object.entries(circuitTripped)
+    .filter(([, ts]) => ts > 0 && Date.now() - ts < CIRCUIT_COOLDOWN)
+    .map(([name]) => name);
+
+  throw new Error(
+    `[yhFetch] All providers exhausted for ${endpoint}. ` +
+    `Circuits open: [${openCircuits.join(", ")}]. ` +
+    `Will retry after cooldown.`
+  );
 }
 
 // ── Rate limits ──────────────────────────────────────────
