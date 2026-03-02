@@ -1,11 +1,12 @@
 /**
  * FuelGauge — shows remaining daily AI credits.
- * Displays as a compact pill: "⚡ 7 / 10"
+ * Displays as a clean compact pill with progress bar.
  * Shows info icon at 0 credits with tooltip about reset.
  */
 
 import React from "react";
 import { useAi } from "../context/AiContext";
+import { BsStars } from "react-icons/bs";
 import { FaInfoCircle } from "react-icons/fa";
 import "./FuelGauge.css";
 
@@ -19,13 +20,13 @@ const FuelGauge: React.FC = () => {
 
   return (
     <div className={`fuel-gauge fuel-${level}`} title="Daily AI research credits">
-      <span className="fuel-icon">⚡</span>
+      <BsStars size={13} className="fuel-icon" />
       <span className="fuel-count">
-        {creditsRemaining} / {maxCredits}
+        {creditsRemaining}/{maxCredits}
       </span>
       {creditsRemaining <= 0 && (
         <span className="fuel-info" title="Resets at midnight">
-          <FaInfoCircle size={11} />
+          <FaInfoCircle size={10} />
         </span>
       )}
       <div className="fuel-bar">

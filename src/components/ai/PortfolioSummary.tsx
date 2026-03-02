@@ -8,6 +8,7 @@ import { useAi } from "../../context/AiContext";
 import { cacheStorage } from "../../services/storage";
 import { Portfolio } from "../../types/types";
 import { FaRobot } from "react-icons/fa";
+import { BsStars } from "react-icons/bs";
 import "./PortfolioSummary.css";
 
 const CACHE_TTL = 12 * 60 * 60_000; // 12 hours
@@ -124,6 +125,17 @@ Keep it under 100 words. Be factual, not advisory.`;
       )}
 
       {error && <p className="portfolio-summary-error">{error}</p>}
+
+      <a
+        href="https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ai-model-badge"
+        style={{ margin: '8px 16px 12px' }}
+      >
+        <BsStars size={12} />
+        <span>Gemini 2.5 Flash</span>
+      </a>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import StockSnapshot from "./StockSnapshot";
 import ResearchChat from "./ResearchChat";
 import { QuotePageData } from "../search/types";
 import { FaRobot, FaChevronDown, FaChevronUp, FaInfoCircle } from "react-icons/fa";
+import { BsStars } from "react-icons/bs";
 import "./AiPanel.css";
 
 interface AiPanelProps {
@@ -38,7 +39,8 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
         </div>
         <div className="ai-panel-toggle-right">
           <span className="ai-panel-credits">
-            ⚡ {creditsRemaining}/{maxCredits}
+            <BsStars size={11} style={{ marginRight: 3, verticalAlign: -1 }} />
+            {creditsRemaining}/{maxCredits}
             {creditsRemaining <= 0 && (
               <FaInfoCircle
                 size={10}
@@ -57,6 +59,15 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
           <div className="ai-panel-body">
             <StockSnapshot symbol={symbol} quotePageData={quotePageData} />
             <ResearchChat contextHint={symbol} />
+            <a
+              href="https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ai-model-badge"
+            >
+              <BsStars size={12} />
+              <span>Gemini 2.5 Flash</span>
+            </a>
           </div>
         </>
       )}

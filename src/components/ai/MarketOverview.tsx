@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useAi } from "../../context/AiContext";
 import { cacheStorage } from "../../services/storage";
 import { FaRobot, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { BsStars } from "react-icons/bs";
 import "./MarketOverview.css";
 
 const CACHE_KEY = "ai_market_overview";
@@ -139,6 +140,17 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
       )}
 
       {error && <p className="market-overview-error">{error}</p>}
+
+      <a
+        href="https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ai-model-badge"
+        style={{ margin: '8px 16px 12px' }}
+      >
+        <BsStars size={12} />
+        <span>Gemini 2.5 Flash</span>
+      </a>
     </div>
   );
 };

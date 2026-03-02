@@ -281,6 +281,23 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
         });
       }
 
+      // Filter pre-market & after-hours candles for 1D (keep 9:30 AM – 4:00 PM ET only)
+      if (interval === "1D") {
+        const filtered = data.filter((p) => {
+          const d = new Date(Number(p.time) * 1000);
+          // Convert UTC to ET (UTC-5 standard / UTC-4 DST)
+          const jan = new Date(d.getFullYear(), 0, 1).getTimezoneOffset();
+          const jul = new Date(d.getFullYear(), 6, 1).getTimezoneOffset();
+          const isDST = d.getTimezoneOffset() < Math.max(jan, jul);
+          const etOffsetHours = isDST ? -4 : -5;
+          const etHour = d.getUTCHours() + etOffsetHours;
+          const etMinute = d.getUTCMinutes();
+          const etTimeDecimal = etHour + etMinute / 60;
+          return etTimeDecimal >= 9.5 && etTimeDecimal < 16;
+        });
+        return filtered.slice(-limit);
+      }
+
       return data.slice(-limit);
     } catch (error) {
       console.error("[QuoteChartLW] fetch error:", error);
@@ -328,7 +345,7 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
     const container = chartContainerRef.current;
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: showVolume ? 340 : 280,
+      height: 280,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: colors.text,
@@ -354,8 +371,11 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
         borderColor: colors.grid,
         timeVisible: interval === "1D" || interval === "5D",
         secondsVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
       },
       handleScroll: { vertTouchDrag: false },
+      handleScale: { axisPressedMouseMove: false },
     });
 
     chartRef.current = chart;
