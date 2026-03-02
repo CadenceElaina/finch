@@ -280,7 +280,7 @@ const Table: React.FC<TableProps> = ({
                             key={`sparkline-${item.symbol}`}
                             onClick={() => handleClick(item.symbol)}
                           >
-                            <Sparkline up={item.percentChange >= 0} />
+                            <Sparkline up={item.percentChange >= 0} seed={item.symbol} />
                           </div>
                         )}
                         {field === "priceChange" && (

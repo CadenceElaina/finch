@@ -112,6 +112,25 @@
 .idx-card.positive { border-left-color: var(--positive); }
 .idx-card.negative { border-left-color: var(--negative); }
 
+.idx-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.idx-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.idx-card-spark {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
 .idx-card-wrap:hover .idx-card,
 .idx-card-wrap:focus .idx-card {
   background-color: var(--bg-tertiary);

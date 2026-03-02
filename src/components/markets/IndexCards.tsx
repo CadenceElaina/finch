@@ -2,6 +2,7 @@ import React from "react";
 import { IndexCardProps, IndexCard, Exchange } from "./types";
 import { Link } from "react-router-dom";
 import ErrorState from "../ErrorState";
+import Sparkline from "../quote-chart/Sparkline";
 
 /** Format a number with commas and fixed decimals (e.g. 43,840.91) */
 const fmt = (v: number, decimals = 2): string =>
@@ -28,10 +29,22 @@ const CardBody: React.FC<{ card: IndexCard; isCurrency?: boolean }> = ({
   const cls = colorCls(card.percentChange);
   return (
     <div className={`idx-card ${cls}`}>
-      <span className="idx-name">{card.name}</span>
-      <span className="idx-price">
-        {fmt(card.price, isCurrency ? 4 : 2)}
-      </span>
+      <div className="idx-card-top">
+        <div className="idx-card-info">
+          <span className="idx-name">{card.name}</span>
+          <span className="idx-price">
+            {fmt(card.price, isCurrency ? 4 : 2)}
+          </span>
+        </div>
+        <div className="idx-card-spark">
+          <Sparkline
+            up={card.percentChange >= 0}
+            seed={card.symbol}
+            width={60}
+            height={28}
+          />
+        </div>
+      </div>
       <span className={`idx-change ${cls}`}>
         {fmtPct(card.percentChange)}{" "}
         <span className="idx-chg-abs">{fmtChg(card.priceChange)}</span>
