@@ -28,6 +28,9 @@ export interface StockMetadata {
 // ── Cache config ─────────────────────────────────────────
 
 const METADATA_TTL = 7 * 24 * 60 * 60_000; // 7 days
+// Bump version to invalidate all stale cache entries from prior API failures
+const CACHE_VERSION = 2;
+const cacheKey = (sym: string) => `metadata_v${CACHE_VERSION}_${sym}`;
 
 // ── Demo metadata (approximate Feb 2026 values) ─────────
 
@@ -447,27 +450,12 @@ export async function getStockMetadata(
     return buildMeta(sym, DEMO_METADATA[sym] ?? {});
   }
 
-  // Check localStorage cache (7-day TTL)
+  // Check localStorage cache (7-day TTL, versioned key)
   const cached = cacheStorage.get<StockMetadata>(
-    `metadata_${sym}`,
+    cacheKey(sym),
     METADATA_TTL
   );
-  // Validate cached data against known good DEMO_METADATA.
-  // Discard stale cache from failed API calls (wrong quoteType or "Unknown" sector).
-  if (cached) {
-    const known = DEMO_METADATA[sym];
-    if (known) {
-      const typeStale = known.quoteType && cached.quoteType !== known.quoteType;
-      const sectorStale = known.sector && cached.sector === "Unknown";
-      if (typeStale || sectorStale) {
-        // Stale/wrong — fall through to re-fetch or fallback
-      } else {
-        return cached;
-      }
-    } else {
-      return cached;
-    }
-  }
+  if (cached) return cached;
 
   // Fetch from YH Finance profile endpoint
   try {
@@ -503,7 +491,7 @@ export async function getStockMetadata(
       country: profile.country ?? "",
     });
 
-    cacheStorage.set(`metadata_${sym}`, meta);
+    cacheStorage.set(cacheKey(sym), meta);
     return meta;
   } catch {
     // Fallback to demo data if available, else generic defaults
