@@ -15,9 +15,8 @@ import {
   type UTCTimestamp,
   CrosshairMode,
 } from "lightweight-charts";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ENDPOINTS, yhFetch, getQuoteRefreshInterval } from "../../config/api";
-import { queryClient } from "./quoteQueryClient";
 import { isDemoActive } from "../../data/demo/demoState";
 import { useTheme } from "../../context/ThemeContext";
 import "./QuoteChart.css";
@@ -221,6 +220,7 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
   showVolume,
 }) => {
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const isLight = theme === "light";
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);

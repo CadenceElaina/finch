@@ -28,7 +28,7 @@ const MostActive = () => {
 
       setSymbols(newSymbols);
     } catch (error) {
-      console.error(error);
+      console.warn('[MostActive] Failed to fetch movers:', error);
     }
   };
 

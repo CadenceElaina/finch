@@ -4,7 +4,7 @@
  * Chat history persists across route navigations within the same session.
  */
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { askGemini, askGeminiGrounded, askGeminiChat, isGeminiConfigured } from "../config/gemini";
 import {
   getCreditsRemaining,
@@ -51,6 +51,19 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const refreshCredits = useCallback(() => {
     setCredits(getCreditsRemaining());
   }, []);
+
+  // Auto-refresh credits when day changes (visibility change + 60s poll)
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refreshCredits();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    const interval = setInterval(refreshCredits, 60_000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      clearInterval(interval);
+    };
+  }, [refreshCredits]);
 
   const generate = useCallback(async (prompt: string): Promise<string> => {
     if (!isGeminiConfigured()) throw new Error("Gemini API key not configured");

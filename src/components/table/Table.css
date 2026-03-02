@@ -76,6 +76,18 @@
   display: flex;
 }
 
+/* Checkmark (in-list indicator) hover → red X hint */
+.item-content > svg:last-child {
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+  color: var(--positive);
+  flex-shrink: 0;
+}
+.item-content > svg:last-child:hover {
+  color: var(--negative);
+  transform: scale(1.2);
+}
+
 .sparkline {
   display: flex;
   align-items: center;

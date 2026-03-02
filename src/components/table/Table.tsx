@@ -327,11 +327,14 @@ const Table: React.FC<TableProps> = ({
               // Render check icon and show dropdown for existing watchlists
               <FaCheckCircle
                 onClick={() => onIconClick && onIconClick(item.symbol)}
+                title="Remove from list"
+                className="check-in-list"
               />
             ) : (
               // Render add icon and show dropdown for user's watchlists
               <IoMdAddCircleOutline
                 onClick={() => onIconClick && onIconClick(item.symbol)}
+                title="Add to list"
                 size={24}
               />
             )}

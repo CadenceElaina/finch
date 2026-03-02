@@ -41,7 +41,7 @@ const MarketTrendsList = () => {
 
       setSymbols(newSymbols);
     } catch (err) {
-      console.error(err);
+      console.warn('[MarketTrendsList] Failed to fetch movers:', err);
       setError(true);
     }
   };

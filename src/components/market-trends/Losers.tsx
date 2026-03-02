@@ -28,7 +28,7 @@ const Losers = () => {
 
       setSymbols(newSymbols);
     } catch (error) {
-      console.error(error);
+      console.warn('[Losers] Failed to fetch movers:', error);
     }
   };
 
