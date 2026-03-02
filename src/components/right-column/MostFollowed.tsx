@@ -29,7 +29,7 @@ const MostFollowed = () => {
   const [top5Securities, setTop5Securities] = useState<
     MostFollowedSecurities[]
   >([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {

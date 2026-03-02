@@ -298,7 +298,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
                     size={10}
                     style={{ marginLeft: 4, opacity: 0.6 }}
                     title="Classification methodology"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       setAllocTab("assetType");
                       setShowInfo((v) => !v);

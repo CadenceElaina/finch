@@ -14,6 +14,7 @@ import { ENDPOINTS, yhFetch } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
 import { isDemoActive } from "../../data/demo/demoState";
 import { DEMO_QUOTES, DEMO_GAINERS, DEMO_LOSERS, DEMO_MOST_ACTIVE, DEMO_TRENDING } from "../../data/demo";
+import type { DemoTrendingData } from "../../data/demo/trending";
 import { DEMO_QUOTE_PAGE_DATA } from "../../data/demo";
 
 // Cache TTLs for localStorage persistence (survive page refreshes)
@@ -713,15 +714,15 @@ export const getMoversSymbols = async (
   }
 };
 
-export const getTrending = async (queryClient: QueryClient) => {
+export const getTrending = async (queryClient: QueryClient): Promise<DemoTrendingData[]> => {
   // Demo mode fallback
   if (isDemoActive()) return DEMO_TRENDING;
 
-  const cachedData = queryClient.getQueryData(["trending"]);
+  const cachedData = queryClient.getQueryData<DemoTrendingData[]>(["trending"]);
   if (cachedData) return cachedData;
 
   // Check localStorage (survives refresh)
-  const lsCached = cacheStorage.get("trending", LS_TTL.trending);
+  const lsCached = cacheStorage.get<DemoTrendingData[]>("trending", LS_TTL.trending);
   if (lsCached) {
     queryClient.setQueryData(["trending"], lsCached);
     return lsCached;

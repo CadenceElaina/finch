@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getMoversSymbols, getBatchQuotes, getTrending } from "./search/quoteUtils";
 import { quoteType } from "./search/types";
 import { transformQuotesToData } from "./market-trends/utils";
+import type { DemoTrendingData } from "../data/demo/trending";
 import { Skeleton } from "@mui/material";
 import ErrorState from "./ErrorState";
 
@@ -22,7 +23,7 @@ const MarketTrendsList = () => {
   const [symbols, setSymbols] = useState<string[]>([]);
   const [firstMount, setFirstMount] = useState<boolean>(true);
   const [currTrend, setCurrTrend] = useState<string>("most-active");
-  const [trendingData, setTrendingData] = useState([]);
+  const [trendingData, setTrendingData] = useState<DemoTrendingData[]>([]);
   /* const mostActiveConfig: RowConfig = {
     fields: ["symbol", "name", "price", "priceChange", "percentChange"],
     addIcon: true,

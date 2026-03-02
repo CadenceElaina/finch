@@ -6,6 +6,7 @@ import MarketTrendsButtons from "./MarketTrendsButtons";
 import SidebarNews from "./news/SidebarNews";
 import { RowConfig } from "../table/types";
 import { getTrending } from "../search/quoteUtils";
+import type { DemoTrendingData } from "../../data/demo/trending";
 import { useQueryClient } from "@tanstack/react-query";
 import "./MarketTrends.css";
 
@@ -15,7 +16,7 @@ const Trending = () => {
     addIcon: true,
   };
 
-  const [trendingData, setTrendingData] = useState([]);
+  const [trendingData, setTrendingData] = useState<DemoTrendingData[]>([]);
   const queryClient = useQueryClient();
   useEffect(() => {
     const fetchTrendingData = async () => {
