@@ -41,6 +41,12 @@
 .portfolio-percent-change {
   margin-left: auto; /* Push it to the right */
 }
+
+.portfolio-daily-change {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
 .border-top {
   margin-top: 10px;
   background-color: var(--border);

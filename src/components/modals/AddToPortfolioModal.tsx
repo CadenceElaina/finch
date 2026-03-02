@@ -43,14 +43,20 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
         region: "US",
         symbols: sym,
       });
-      const results = res.data?.quoteResponse?.result ?? [];
-      if (results.length === 0 || !results[0]?.symbol) {
+      const results =
+        res.data?.quoteResponse?.result ??
+        res.data?.quoteSummary?.result ??
+        [];
+      const firstResult = results[0];
+      const sym0 = firstResult?.symbol ?? firstResult?.price?.symbol;
+      if (results.length === 0 || !sym0) {
         setError(`Symbol "${sym}" not found`);
         setValidating(false);
         return false;
       }
       setSymbol(sym);
-      setResolvedName(results[0]?.shortName ?? results[0]?.longName ?? sym);
+      const r0 = firstResult?.price ?? firstResult;
+      setResolvedName(r0?.shortName ?? r0?.longName ?? sym);
       setValidated(true);
       setValidating(false);
       return true;

@@ -1,7 +1,6 @@
 import React from "react";
 import { FaEllipsisV, FaPlus } from "react-icons/fa";
 import "./Portfolio.css";
-import { useWatchlists } from "../../context/WatchlistContext";
 
 interface WatchlistContentProps {
   watchlistName?: string;
@@ -18,45 +17,29 @@ const WatchlistContent: React.FC<WatchlistContentProps> = ({
   showDropdown,
   openAddToWatchlistModal,
 }) => {
-  const { watchlists } = useWatchlists();
   return (
-    <>
-      {watchlists.length > 0 && (
-        <>
-          <div className="chart">
-            <div className="chart-header">
-              <span className="portfolio-title">{watchlistName ?? "Watchlist"}</span>
-
-              <div className="settings-dropdown">
-                <button className="settings" onClick={handleDropdownToggle}>
-                  <FaEllipsisV size={18} />
-                </button>
-                {showDropdown && (
-                  <div className="dropdown-content">
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("rename")}
-                    >
-                      Rename
-                    </div>
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("remove")}
-                    >
-                      Remove
-                    </div>
-                  </div>
-                )}
+    <div className="lists-section-header">
+      <div className="lists-title-row">
+        <h2 className="lists-title">{watchlistName ?? "Watchlist"}</h2>
+        <div className="lists-actions">
+          <button className="lists-add-btn" onClick={openAddToWatchlistModal}>
+            <FaPlus size={12} />
+            <span>Add</span>
+          </button>
+          <div className="settings-dropdown">
+            <button className="lists-kebab" onClick={handleDropdownToggle}>
+              <FaEllipsisV size={14} />
+            </button>
+            {showDropdown && (
+              <div className="dropdown-content">
+                <div className="dropdown-option" onClick={() => handleDropdownOptionClick("rename")}>Rename</div>
+                <div className="dropdown-option" onClick={() => handleDropdownOptionClick("remove")}>Delete</div>
               </div>
-            </div>
+            )}
           </div>
-          <button className="add-investment" onClick={openAddToWatchlistModal}>
-            <FaPlus size={18} />
-            <span className="label">Add investments</span>
-          </button>{" "}
-        </>
-      )}
-    </>
+        </div>
+      </div>
+    </div>
   );
 };
 

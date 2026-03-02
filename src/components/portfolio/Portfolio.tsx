@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
-import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import NewPortfolioModal from "../modals/AddPortfolioModal";
 import { useWatchlists } from "../../context/WatchlistContext";
@@ -15,420 +15,283 @@ import WatchlistPerformance from "./WatchlistPerformance";
 import AddToWatchlistModal from "../modals/AddToWatchlist";
 import {
   WatchlistSecurity,
-  Watchlist,
-  Security,
-  Portfolio as PortfolioType,
 } from "../../types/types";
 import { useNotification } from "../../context/NotificationContext";
 import Notification from "../Notification";
 import PortfolioSummary from "../ai/PortfolioSummary";
+import ResearchChat from "../ai/ResearchChat";
 import RenameModal from "../modals/RenameModal";
+import Footer from "../Footer";
+
+/**
+ * Unified "Your Lists" page — Google Finance Beta style.
+ * All watchlists and portfolios appear as tabs in one horizontal row.
+ */
+
+interface UnifiedTab {
+  id: string;
+  title: string;
+  count: number;
+  type: "watchlist" | "portfolio";
+}
 
 const Portfolio = () => {
   const { addNotification } = useNotification();
-  const [activeTab, setActiveTab] = useState<string>("");
-  const [activeListType, setActiveListType] = useState<string>("portfolios");
-  const [activeWatchlist, setActiveWatchlist] = useState<Watchlist>();
-  const [activePortfolio, setActivePortfolio] = useState<PortfolioType>();
-  const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [addToPortfolioModalIsOpen, setAddToPortfolioModalIsOpen] =
-    useState<boolean>(false);
-  const [addToWatchlistModalIsOpen, setAddToWatchlistModalIsOpen] =
-    useState<boolean>(false);
-  const [addWatchlistModalIsOpen, setAddWatchlistModalIsOpen] =
-    useState<boolean>(false);
-  const [newPortfolioModalOpen, setNewPortfolioModalOpen] =
-    useState<boolean>(false);
-  const [renameModalOpen, setRenameModalOpen] = useState<boolean>(false);
-  const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, removeSecurityFromPortfolio, appendPortfolio } =
-    usePortfolios();
-  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } =
-    useWatchlists();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [addToPortfolioModalIsOpen, setAddToPortfolioModalIsOpen] = useState(false);
+  const [addToWatchlistModalIsOpen, setAddToWatchlistModalIsOpen] = useState(false);
+  const [newListModalOpen, setNewListModalOpen] = useState<"watchlist" | "portfolio" | null>(null);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+
+  const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, removeSecurityFromPortfolio, appendPortfolio } = usePortfolios();
+  const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } = useWatchlists();
 
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const addToWatchlistDisabled = watchlists.length >= 3;
-  const addPortfolioDisabled = portfolios.length >= 3;
-  const firstWatchlist = watchlists[0];
-  const firstPortfolio = portfolios[0];
 
-  // Detect list type from URL or ID match
+  // ── Build unified tab list ──
+  const tabs: UnifiedTab[] = [
+    ...watchlists.map((w) => ({
+      id: w.id,
+      title: w.title,
+      count: w.securities?.length ?? 0,
+      type: "watchlist" as const,
+    })),
+    ...portfolios.map((p) => ({
+      id: p.id,
+      title: p.title,
+      count: p.securities?.length ?? 0,
+      type: "portfolio" as const,
+    })),
+  ];
+
+  // ── Determine active tab ──
+  const activeTab = tabs.find((t) => t.id === id) ?? tabs[0] ?? null;
+  const activeWatchlist = activeTab?.type === "watchlist" ? watchlists.find((w) => w.id === activeTab.id) : undefined;
+  const activePortfolio = activeTab?.type === "portfolio" ? portfolios.find((p) => p.id === activeTab.id) : undefined;
+
+  // Auto-navigate to first tab if no id or invalid id
   useEffect(() => {
-    if (!id) return;
-    // If URL starts with /watchlist, force watchlist mode
-    if (location.pathname.startsWith("/watchlist")) {
-      setActiveListType("watchlists");
-      return;
+    if (tabs.length === 0) return;
+    if (!id || !tabs.find((t) => t.id === id)) {
+      const firstTab = tabs[0];
+      const prefix = firstTab.type === "watchlist" ? "/watchlist" : "/portfolio";
+      navigate(`${prefix}/${firstTab.id}`, { replace: true });
     }
-    // Auto-detect: check if ID matches a watchlist
-    if (watchlists.some((w) => w.id === id)) {
-      setActiveListType("watchlists");
-    } else if (portfolios.some((p) => p.id === id)) {
-      setActiveListType("portfolios");
-    }
-  }, [id, location.pathname, portfolios, watchlists]);
+  }, [id, tabs.length]);
 
-  useEffect(() => {
-    // Find the portfolio with the matching id and set activePortfolio
-    if (activeListType === "portfolios") {
-      const matchingPortfolio = portfolios.find((p) => p.id === id);
-      setActivePortfolio(matchingPortfolio);
-      setActiveTab(matchingPortfolio?.title ?? "");
-    }
-    if (activeListType === "watchlists") {
-      const matchingWatchlist = watchlists.find((w) => w.id === id);
-      setActiveWatchlist(matchingWatchlist);
-      setActiveTab(matchingWatchlist?.title ?? "");
-    }
-  }, [activeListType, id, portfolios, watchlists]);
-
-  const handleTabClick = (tab: React.SetStateAction<string>) => {
-    navigate(`/portfolio/${tab}`);
+  const handleTabClick = (tab: UnifiedTab) => {
+    const prefix = tab.type === "watchlist" ? "/watchlist" : "/portfolio";
+    navigate(`${prefix}/${tab.id}`);
   };
 
-  const handleDropdownToggle = () => {
-    setShowDropdown(!showDropdown);
-  };
-
-  const handleDropdownOptionClick = async (option: string) => {
+  // ── CRUD handlers ──
+  const handleDropdownOptionClick = (option: string) => {
+    if (!activeTab) return;
     if (option === "remove") {
-      if (activeListType === "portfolios") {
-        const removedPortfolio = portfolios.find((p) => p.title === activeTab);
-        if (removedPortfolio) {
-          removePortfolio(removedPortfolio);
-          addNotification(`${removedPortfolio.title} removed`, "success");
-          // Navigate to first remaining portfolio or home
-          const remaining = portfolios.filter((p) => p.id !== removedPortfolio.id);
-          if (remaining.length > 0) {
-            navigate(`/portfolio/${remaining[0].id}`);
-          } else {
-            navigate("/");
-          }
+      if (activeTab.type === "portfolio") {
+        const p = portfolios.find((p) => p.id === activeTab.id);
+        if (p) {
+          removePortfolio(p);
+          addNotification(`${p.title} removed`, "success");
+          const remaining = portfolios.filter((x) => x.id !== p.id);
+          if (remaining.length > 0) navigate(`/portfolio/${remaining[0].id}`);
+          else if (watchlists.length > 0) navigate(`/watchlist/${watchlists[0].id}`);
+          else navigate("/");
         }
-      } else if (activeListType === "watchlists") {
-        const removedWatchlist = watchlists.find((w) => w.title === activeTab);
-        if (removedWatchlist) {
-          removeWatchlist(removedWatchlist);
-          addNotification(`${removedWatchlist.title} removed`, "success");
-          const remaining = watchlists.filter((w) => w.id !== removedWatchlist.id);
-          if (remaining.length > 0) {
-            navigate(`/portfolio/${remaining[0].id}`);
-          } else {
-            navigate("/");
-          }
+      } else {
+        const w = watchlists.find((w) => w.id === activeTab.id);
+        if (w) {
+          removeWatchlist(w);
+          addNotification(`${w.title} removed`, "success");
+          const remaining = watchlists.filter((x) => x.id !== w.id);
+          if (remaining.length > 0) navigate(`/watchlist/${remaining[0].id}`);
+          else if (portfolios.length > 0) navigate(`/portfolio/${portfolios[0].id}`);
+          else navigate("/");
         }
       }
     }
-
-    if (option === "rename") {
-      setRenameModalOpen(true);
-    }
-
+    if (option === "rename") setRenameModalOpen(true);
     setShowDropdown(false);
   };
 
-  const openAddToPortfolioModal = () => {
-    setAddToPortfolioModalIsOpen(true);
-  };
-  const openAddToWatchlistModal = () => {
-    setAddToWatchlistModalIsOpen(true);
-  };
-  //
-  const addToList = async (newSecurity: Security) => {
-    if (activePortfolio && activeListType === "portfolios") {
-      addSecurityToPortfolio(activePortfolio.id, newSecurity);
-      addNotification(
-        `${newSecurity.symbol} added to ${activePortfolio.title}!`,
-        "success"
-      );
+  const handleSaveNewList = (name: string, type: "watchlist" | "portfolio") => {
+    if (type === "watchlist") {
+      const response = watchlistStorage.create({ title: name });
+      appendWatchlist(response);
+      addNotification(`${response.title} created!`, "success");
+      navigate(`/watchlist/${response.id}`);
+    } else {
+      const response = portfolioStorage.create({ title: name });
+      appendPortfolio(response);
+      addNotification(`${response.title} created!`, "success");
+      navigate(`/portfolio/${response.id}`);
     }
-  };
-  const addToWatchlist = async (newSecurity: WatchlistSecurity) => {
-    if (activeListType === "watchlists" && activeWatchlist) {
-      addSecurityToWatchlist(activeWatchlist.id, newSecurity);
-      addNotification(
-        `${newSecurity.symbol} added to ${activeWatchlist.title}!`,
-        "success"
-      );
-    }
+    setNewListModalOpen(null);
   };
 
-  const onClose = () => {
-    setAddToPortfolioModalIsOpen(false);
-    setAddToWatchlistModalIsOpen(false);
-  };
-
-  const handleSaveWatchlist = (watchlistName: string) => {
-    const response = watchlistStorage.create({
-      title: watchlistName,
-    });
-    appendWatchlist(response);
-    addNotification(`${response.title} added!`, "success");
-    onCloseWatchlist();
-    setActiveListType("watchlists");
-    navigate(`/watchlist/${response.id}`);
-  };
-
-  const handleSaveNewPortfolio = (portfolioName: string) => {
-    const response = portfolioStorage.create({
-      title: portfolioName,
-    });
-    appendPortfolio(response);
-    addNotification(`${response.title} created!`, "success");
-    setNewPortfolioModalOpen(false);
-    navigate(`/portfolio/${response.id}`);
-  };
-
-  const onCloseWatchlist = () => {
-    setAddWatchlistModalIsOpen(false);
-  };
-
-  const handleListClick = (type: string) => {
-    setActiveListType(`${type}`);
-    if (type === "watchlists" && firstWatchlist) {
-      navigate(`/portfolio/${firstWatchlist.id}`);
-    }
-    if (type === "portfolios" && firstPortfolio) {
-      navigate(`/portfolio/${firstPortfolio.id}`);
-    }
-  };
-
-  const Tooltip = () => (
-    <div className="tooltip-lists">You may not have more than 3 watchlists</div>
-  );
+  const exceedsLimit = (type: "watchlist" | "portfolio") =>
+    type === "watchlist" ? watchlists.length >= 3 : portfolios.length >= 3;
 
   return (
     <Layout>
       <Notification />
-      {addToPortfolioModalIsOpen && (
+
+      {/* ── Modals ── */}
+      {addToPortfolioModalIsOpen && activePortfolio && (
         <AddToPortfolioModal
-          isOpen={addToPortfolioModalIsOpen}
-          listName={activeTab}
-          onClose={onClose} // Close modal function
+          isOpen={true}
+          listName={activePortfolio.title}
+          onClose={() => setAddToPortfolioModalIsOpen(false)}
           onSave={(symbol, quantity, purchaseDate, purchasePrice) => {
-            const newSecurity = {
-              symbol,
-              quantity,
-              purchaseDate,
-              purchasePrice,
-            };
-            if (activeListType === "portfolios") {
-              addToList(newSecurity);
-            }
+            addSecurityToPortfolio(activePortfolio.id, { symbol, quantity, purchaseDate, purchasePrice });
+            addNotification(`${symbol.toUpperCase()} added to ${activePortfolio.title}!`, "success");
+            setAddToPortfolioModalIsOpen(false);
           }}
         />
       )}
-      {addToWatchlistModalIsOpen && (
+      {addToWatchlistModalIsOpen && activeWatchlist && (
         <AddToWatchlistModal
-          isOpen={addToWatchlistModalIsOpen}
-          listName={activeTab}
-          onClose={onClose} // Close modal function
+          isOpen={true}
+          listName={activeWatchlist.title}
+          onClose={() => setAddToWatchlistModalIsOpen(false)}
           onSave={(symbol) => {
-            const newSecurity = {
-              symbol,
-            };
-            if (activeListType === "watchlists") {
-              addToWatchlist(newSecurity);
-            }
+            addSecurityToWatchlist(activeWatchlist.id, { symbol } as WatchlistSecurity);
+            addNotification(`${symbol.toUpperCase()} added to ${activeWatchlist.title}!`, "success");
+            setAddToWatchlistModalIsOpen(false);
           }}
         />
       )}
-      {addWatchlistModalIsOpen && (
+      {newListModalOpen === "watchlist" && (
         <AddWatchlistModal
-          onCancel={onCloseWatchlist}
-          onSave={(watchlistName) => {
-            // Handle saving new watchlist
-            handleSaveWatchlist(watchlistName);
-            onClose();
-          }}
+          onCancel={() => setNewListModalOpen(null)}
+          onSave={(name) => handleSaveNewList(name, "watchlist")}
         />
       )}
-      {newPortfolioModalOpen && (
+      {newListModalOpen === "portfolio" && (
         <NewPortfolioModal
-          onCancel={() => setNewPortfolioModalOpen(false)}
-          onSave={handleSaveNewPortfolio}
+          onCancel={() => setNewListModalOpen(null)}
+          onSave={(name) => handleSaveNewList(name, "portfolio")}
         />
       )}
-      {renameModalOpen && (
+      {renameModalOpen && activeTab && (
         <RenameModal
-          currentName={activeTab}
-          itemType={activeListType === "portfolios" ? "portfolio" : "watchlist"}
+          currentName={activeTab.title}
+          itemType={activeTab.type}
           onCancel={() => setRenameModalOpen(false)}
           onSave={(newName) => {
-            if (activeListType === "portfolios" && activePortfolio) {
+            if (activeTab.type === "portfolio" && activePortfolio) {
               renamePortfolio(activePortfolio.id, newName);
-              addNotification(`Renamed to ${newName}`, "success");
-            } else if (activeListType === "watchlists" && activeWatchlist) {
+            } else if (activeTab.type === "watchlist" && activeWatchlist) {
               renameWatchlist(activeWatchlist.id, newName);
-              addNotification(`Renamed to ${newName}`, "success");
             }
+            addNotification(`Renamed to ${newName}`, "success");
             setRenameModalOpen(false);
           }}
         />
       )}
-      <div className="portfolio-container">
-        <div className="portfolio-header">
-          <div className="portfolio-header-item">
-            <Link to="/">
-              <span className="label home-label">HOME</span>
-            </Link>
-            <FaAngleRight className="arrow1" />
 
-            <span
-              className={`toggle-type ${
-                activeListType === "watchlists" ? "active-list" : ""
-              }`}
-              onClick={() => handleListClick("watchlists")}
-            >
-              {" "}
-              Watchlist
-            </span>
-
-            <span
-              className={`toggle-type ${
-                activeListType === "portfolios" ? "active-list" : ""
-              }`}
-              onClick={() => handleListClick("portfolios")}
-            >
-              {" "}
-              Portfolios
-            </span>
-          </div>
-          <div className="portfolio-header-item">
-            {activeListType === "watchlists" &&
-              watchlists.map((watchlist) => (
-                <div
-                  key={watchlist.id}
-                  className={`tab ${
-                    activeTab === watchlist.title
-                      ? "active-tab"
-                      : "inactive-tab"
-                  }`}
-                  onClick={() => handleTabClick(watchlist.id)}
-                >
-                  <div className="tab-inner">
-                    <FaList size={18} />
-                    <span className="label">{watchlist.title}</span>
-                    <span className="count">{watchlist.securities?.length ?? 0}</span>
-                  </div>
-                </div>
-              ))}
-            <div className="add-list-div">
-              {activeListType === "watchlists" && (
-                <>
-                  <button
-                    disabled={addToWatchlistDisabled}
-                    className={`add-list ${addToWatchlistDisabled ? "disabled" : ""}`}
-                    onClick={() => setAddWatchlistModalIsOpen(true)}
-                  >
-                    <FaPlus size={18} />
-                    <span className="label">New list</span>
-                  </button>
-                  {addToWatchlistDisabled && <Tooltip />}
-                </>
-              )}
-              {activeListType === "portfolios" && (
-                <button
-                  disabled={addPortfolioDisabled}
-                  className={`add-list ${addPortfolioDisabled ? "disabled" : ""}`}
-                  onClick={() => setNewPortfolioModalOpen(true)}
-                >
-                  <FaPlus size={18} />
-                  <span className="label">New Portfolio</span>
-                </button>
-              )}
-            </div>
-
-            {activeListType === "portfolios" &&
-              portfolios.map((portfolio) => (
-                <div
-                  key={portfolio.id}
-                  className={`tab ${
-                    activeTab === portfolio.title
-                      ? "active-tab"
-                      : "inactive-tab"
-                  }`}
-                  onClick={() => handleTabClick(portfolio.id)}
-                >
-                  <div className="tab-inner">
-                    <FaChartLine size={18} />
-                    <span className="label">{portfolio.title}</span>
-                    <span className="count">{portfolio.securities?.length ?? 0}</span>
-                  </div>
-                </div>
-              ))}
-          </div>
+      <div className="lists-page">
+        {/* ── Breadcrumb ── */}
+        <div className="lists-breadcrumb">
+          <Link to="/">HOME</Link>
+          <FaAngleRight size={10} />
+          <span>YOUR LISTS</span>
         </div>
-        {activeListType === "portfolios" && portfolios.length === 0 && (
-          <div className="main-container">
-            <div className="empty-state-page">
-              <FaChartLine size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
-              <p className="empty-state-text">No portfolios yet</p>
-              <p className="empty-state-subtext">Create a portfolio to track your investments and see performance over time</p>
-              <button className="add-investment" onClick={() => setNewPortfolioModalOpen(true)}>
-                <FaPlus size={18} />
-                <span className="label">New Portfolio</span>
+
+        {/* ── Unified tab bar ── */}
+        <div className="lists-tab-bar">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`lists-tab ${activeTab?.id === tab.id ? "active" : ""}`}
+              onClick={() => handleTabClick(tab)}
+            >
+              {tab.type === "watchlist" ? <FaList size={14} /> : <FaChartLine size={14} />}
+              <span className="lists-tab-name">{tab.title}</span>
+              <span className="lists-tab-count">{tab.count}</span>
+            </button>
+          ))}
+          <div className="lists-new-btns">
+            {!exceedsLimit("watchlist") && (
+              <button className="lists-new-btn" onClick={() => setNewListModalOpen("watchlist")}>
+                <FaPlus size={12} />
+                <span>New list</span>
               </button>
-            </div>
-          </div>
-        )}
-        {activeListType === "portfolios" && portfolios.length > 0 && (
-          <div className="main-container">
-            <PortfolioContent
-              portfolio={activePortfolio}
-              portfolioName={activeTab}
-              handleDropdownOptionClick={(option: string) =>
-                handleDropdownOptionClick(option)
-              }
-              handleDropdownToggle={handleDropdownToggle}
-              showDropdown={showDropdown}
-              openAddToPortfolioModal={openAddToPortfolioModal}
-              onRemoveSecurity={(symbol) => {
-                if (activePortfolio) {
-                  removeSecurityFromPortfolio(activePortfolio.id, symbol);
-                  addNotification(`${symbol.toUpperCase()} removed`, "success");
-                }
-              }}
-            />
-            <PortfolioSummary portfolio={activePortfolio} />
-          </div>
-        )}
-        {activeListType === "watchlists" && watchlists.length === 0 && (
-          <div className="main-container">
-            <div className="empty-state-page">
-              <FaList size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
-              <p className="empty-state-text">No watchlists yet</p>
-              <p className="empty-state-subtext">Create a watchlist to follow stocks you're interested in</p>
-              <button className="add-investment" onClick={() => setAddWatchlistModalIsOpen(true)}>
-                <FaPlus size={18} />
-                <span className="label">New Watchlist</span>
+            )}
+            {!exceedsLimit("portfolio") && (
+              <button className="lists-new-btn" onClick={() => setNewListModalOpen("portfolio")}>
+                <FaPlus size={12} />
+                <span>New portfolio</span>
               </button>
-            </div>
-          </div>
-        )}
-        {activeListType === "watchlists" && watchlists.length > 0 && (
-          <div className="main-container">
-            <WatchlistContent
-              watchlistName={activeTab}
-              handleDropdownOptionClick={(option: string) =>
-                handleDropdownOptionClick(option)
-              }
-              handleDropdownToggle={handleDropdownToggle}
-              showDropdown={showDropdown}
-              openAddToWatchlistModal={openAddToWatchlistModal}
-            />
-            {activeWatchlist && (
-              <WatchlistPerformance
-                watchlist={activeWatchlist}
-                onRemoveSecurity={(s) => {
-                  removeSecurityFromWatchlist(activeWatchlist.id, s);
-                  addNotification(`${s.symbol} removed`, "success");
-                }}
-              />
             )}
           </div>
+        </div>
+
+        {/* ── Empty state ── */}
+        {tabs.length === 0 && (
+          <div className="lists-empty">
+            <FaList size={40} style={{ opacity: 0.25, marginBottom: 12 }} />
+            <p className="lists-empty-title">No lists yet</p>
+            <p className="lists-empty-sub">Create a watchlist or portfolio to get started</p>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button className="lists-cta-btn" onClick={() => setNewListModalOpen("watchlist")}>
+                <FaPlus size={12} /> New Watchlist
+              </button>
+              <button className="lists-cta-btn" onClick={() => setNewListModalOpen("portfolio")}>
+                <FaPlus size={12} /> New Portfolio
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* ── Active list content ── */}
+        {activeTab && (
+          <div className="lists-content">
+            {/* ── Watchlist view ── */}
+            {activeTab.type === "watchlist" && activeWatchlist && (
+              <>
+                <WatchlistContent
+                  watchlistName={activeWatchlist.title}
+                  handleDropdownOptionClick={handleDropdownOptionClick}
+                  handleDropdownToggle={() => setShowDropdown(!showDropdown)}
+                  showDropdown={showDropdown}
+                  openAddToWatchlistModal={() => setAddToWatchlistModalIsOpen(true)}
+                />
+                <WatchlistPerformance
+                  watchlist={activeWatchlist}
+                  onRemoveSecurity={(s) => {
+                    removeSecurityFromWatchlist(activeWatchlist.id, s);
+                    addNotification(`${s.symbol} removed`, "success");
+                  }}
+                />
+              </>
+            )}
+
+            {/* ── Portfolio view ── */}
+            {activeTab.type === "portfolio" && activePortfolio && (
+              <>
+                <PortfolioContent
+                  portfolio={activePortfolio}
+                  portfolioName={activePortfolio.title}
+                  handleDropdownOptionClick={handleDropdownOptionClick}
+                  handleDropdownToggle={() => setShowDropdown(!showDropdown)}
+                  showDropdown={showDropdown}
+                  openAddToPortfolioModal={() => setAddToPortfolioModalIsOpen(true)}
+                  onRemoveSecurity={(symbol) => {
+                    removeSecurityFromPortfolio(activePortfolio.id, symbol);
+                    addNotification(`${symbol.toUpperCase()} removed`, "success");
+                  }}
+                />
+                <PortfolioSummary portfolio={activePortfolio} />
+              </>
+            )}
+
+            {/* ── AI Chat ── */}
+            <ResearchChat contextHint={activeTab?.title ?? "your lists"} />
+          </div>
+        )}
+        <Footer />
       </div>
     </Layout>
   );

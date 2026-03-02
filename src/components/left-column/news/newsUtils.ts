@@ -156,15 +156,14 @@ export const getNews = async (queryClient: QueryClient): Promise<Article[]> => {
 
 /**
  * Fetch news for a specific symbol from Seeking Alpha.
+ * In demo mode, we still try to fetch real news (can't fake per-symbol news
+ * convincingly) but fall back to DEMO_SYMBOL_NEWS if the API call fails.
  */
 export const getSymbolsNews = async (symbol: string): Promise<Article[]> => {
   if (!symbol) return [];
 
-  // Demo mode fallback
-  if (isDemoActive()) {
-    const sym = symbol.toUpperCase();
-    return DEMO_SYMBOL_NEWS[sym] ?? [];
-  }
+  // In demo mode, try API first for real news; fall back to demo data on failure
+  const useDemo = isDemoActive();
 
   try {
     const response = await saFetch(
@@ -183,9 +182,14 @@ export const getSymbolsNews = async (symbol: string): Promise<Article[]> => {
       return a;
     });
 
-    return articles;
+    if (articles.length > 0) return articles;
   } catch (error) {
     console.error(`Failed to fetch SA news for ${symbol}:`, error);
-    return [];
   }
+
+  // Fallback to demo data (only AAPL has entries, others get [])
+  if (useDemo) {
+    return DEMO_SYMBOL_NEWS[symbol.toUpperCase()] ?? [];
+  }
+  return [];
 };

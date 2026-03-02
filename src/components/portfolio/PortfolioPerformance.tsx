@@ -219,13 +219,38 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         typeof entry.value === "string" ? parseFloat(entry.value) : entry.value,
     }));
   };
-  const updatedPortfolioValue = convertPortfolioValueToNumbers(
-    portfolio?.portfolioValue || []
-  );
+
+  // Build chart data: stored history + today's live value
+  const updatedPortfolioValue = useMemo(() => {
+    const stored = convertPortfolioValueToNumbers(portfolio?.portfolioValue || []);
+    const currentVal = portfolioPerformance.totalCurrentValue;
+    if (currentVal <= 0) return stored;
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" });
+    // If today is already in stored data, replace it with live value; otherwise append
+    const withoutToday = stored.filter((e) => e.date !== today);
+    withoutToday.push({ date: today, value: currentVal });
+    // If there's only one point, add cost basis as a starting point for visual context
+    if (withoutToday.length === 1 && portfolioPerformance.totalCostBasis > 0) {
+      // Use earliest purchase date if available
+      const dates = (portfolio?.securities ?? []).map((s) => s.purchaseDate).filter(Boolean).sort();
+      const startDate = dates.length > 0
+        ? new Date(dates[0]).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" })
+        : today;
+      if (startDate !== today) {
+        withoutToday.unshift({ date: startDate, value: portfolioPerformance.totalCostBasis });
+      }
+    }
+    return withoutToday;
+  }, [portfolio?.portfolioValue, portfolioPerformance.totalCurrentValue, portfolioPerformance.totalCostBasis]);
 
   const gainClass = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
-  const gainLabel = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
   const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtPct = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatDuration = (days: number): string => {
+    if (days < 31) return `${days}d`;
+    if (days < 365) { const m = Math.floor(days / 30.44); return `${m}mo`; }
+    const y = (days / 365.25); return y >= 10 ? `${Math.round(y)}y` : `${y.toFixed(1)}y`;
+  };
 
   // Allocation pie chart data
   const PIE_COLORS = ["#4285f4", "#ea4335", "#fbbc04", "#34a853", "#ff6d01", "#46bdc6", "#a142f4", "#f538a0"];
@@ -240,59 +265,58 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   }, [securityDetails]);
 
   return (
-    <div className="portfolio-performance-container">
-      <div className="top-row">
-        <div className="portfolio-chart-container">
-          {portfolio && portfolio.title && portfolio.portfolioValue && (
-            <PortfolioChart
-              chartName={portfolio.title ?? ""}
-              data={updatedPortfolioValue || []}
-            />
-          )}
-        </div>
-        <div className="portfolio-highlights">
-          <div role="heading">Portfolio highlights</div>
-          <div className="portfolio-day-total-change">
-            <div className={`portfolio-day-${gainClass(portfolioPerformance.totalPriceChange)}`}>
-              Day {gainLabel(portfolioPerformance.totalPriceChange)}
-              <div className={`portfolio-day-change-${gainClass(portfolioPerformance.totalPriceChange)}`}>
-                <div>${fmt(Math.abs(portfolioPerformance.totalPriceChange))}</div>
-                <div>{portfolioPerformance.totalPercentChange}%</div>
-              </div>
-            </div>
-            <div className={`total-${gainClass(portfolioPerformance.totalGain)}`}>
-              Total {gainLabel(portfolioPerformance.totalGain)}
-              <div className={`portfolio-total-change-${gainClass(portfolioPerformance.totalGain)}`}>
-                <div>${fmt(Math.abs(portfolioPerformance.totalGain))}</div>
-                <div>{portfolioPerformance.totalGainPct.toFixed(2)}%</div>
-              </div>
-            </div>
-          </div>
+    <div className="perf">
+      {/* ── Highlights row ── */}
+      <div className="perf-highlights">
+        <div className="perf-value-card">
+          <span className="perf-value-label">Current Value</span>
+          <span className="perf-value-amount">${fmt(portfolioPerformance.totalCurrentValue)}</span>
           {portfolioPerformance.totalCostBasis > 0 && (
-            <div className="portfolio-summary-row" style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--text-secondary, #aaa)" }}>
-              <div>Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</div>
-              <div>Current value: ${fmt(portfolioPerformance.totalCurrentValue)}</div>
-            </div>
-          )}
-          {spyDayChange && (
-            <div className="benchmark-row">
-              <span className="benchmark-label">S&P 500 (SPY)</span>
-              <span className={`benchmark-value ${spyDayChange.pct >= 0 ? "gain" : "loss"}`}>
-                {spyDayChange.pct >= 0 ? "+" : ""}{spyDayChange.pct.toFixed(2)}%
-              </span>
-              <span className="benchmark-vs">
-                vs portfolio {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{portfolioPerformance.totalPercentChange}%
-              </span>
-            </div>
+            <span className="perf-value-cost">Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</span>
           )}
         </div>
+        <div className={`perf-change-card ${gainClass(portfolioPerformance.totalPriceChange)}`}>
+          <span className="perf-change-label">Today</span>
+          <span className="perf-change-num">
+            {portfolioPerformance.totalPriceChange >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalPriceChange))}
+          </span>
+          <span className="perf-change-pct">
+            {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalPercentChange)}%
+          </span>
+        </div>
+        <div className={`perf-change-card ${gainClass(portfolioPerformance.totalGain)}`}>
+          <span className="perf-change-label">Total Return</span>
+          <span className="perf-change-num">
+            {portfolioPerformance.totalGain >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalGain))}
+          </span>
+          <span className="perf-change-pct">
+            {portfolioPerformance.totalGainPct >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalGainPct)}%
+          </span>
+        </div>
+        {spyDayChange && (
+          <div className="perf-benchmark-card">
+            <span className="perf-change-label">S&amp;P 500 Today</span>
+            <span className={`perf-change-num ${spyDayChange.pct >= 0 ? "gain" : "loss"}`}>
+              {spyDayChange.pct >= 0 ? "+" : ""}{fmtPct(spyDayChange.pct)}%
+            </span>
+          </div>
+        )}
       </div>
-      {/* Allocation pie chart */}
+
+      {/* ── Performance chart ── */}
+      {updatedPortfolioValue.length >= 1 && (
+        <div className="perf-chart-section">
+          <h3 className="perf-section-title">Performance</h3>
+          <PortfolioChart chartName={portfolio.title ?? ""} data={updatedPortfolioValue} />
+        </div>
+      )}
+
+      {/* ── Allocation pie ── */}
       {allocationData.length > 1 && (
-        <div className="allocation-section">
-          <div className="allocation-heading">Allocation</div>
-          <div className="allocation-chart-row">
-            <ResponsiveContainer width={220} height={220}>
+        <div className="perf-allocation">
+          <h3 className="perf-section-title">Allocation</h3>
+          <div className="perf-allocation-row">
+            <ResponsiveContainer width={180} height={180}>
               <PieChart>
                 <Pie
                   data={allocationData}
@@ -300,8 +324,8 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
+                  innerRadius={40}
+                  outerRadius={80}
                   paddingAngle={2}
                   stroke="none"
                 >
@@ -319,66 +343,62 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="allocation-legend">
+            <div className="perf-legend">
               {allocationData.map((d, i) => (
-                <div key={d.name} className="allocation-legend-item">
-                  <span className="allocation-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="allocation-symbol">{d.name}</span>
-                  <span className="allocation-pct">{d.pct}%</span>
+                <div key={d.name} className="perf-legend-item">
+                  <span className="perf-legend-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="perf-legend-symbol">{d.name}</span>
+                  <span className="perf-legend-pct">{d.pct}%</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
       )}
-      {/* Detailed securities table */}
+
+      {/* ── Investments table ── */}
       {securityDetails.length > 0 && (
-        <div className="bottom-row">
-          <table className="security-details-table">
+        <div className="perf-table-wrap">
+          <h3 className="perf-section-title">Investments</h3>
+          <table className="perf-table">
             <thead>
               <tr>
                 <th className="sortable-th" onClick={() => handleSort("symbol")}>Symbol <PSortIcon field="symbol" /></th>
                 <th className="sortable-th" onClick={() => handleSort("name")}>Name <PSortIcon field="name" /></th>
-                <th className="sortable-th" onClick={() => handleSort("quantity")}>Qty <PSortIcon field="quantity" /></th>
-                <th className="sortable-th" onClick={() => handleSort("purchasePrice")}>Avg Cost <PSortIcon field="purchasePrice" /></th>
-                <th className="sortable-th" onClick={() => handleSort("purchaseDate")}>Purchase Date <PSortIcon field="purchaseDate" /></th>
-                <th className="sortable-th" onClick={() => handleSort("currentPrice")}>Price <PSortIcon field="currentPrice" /></th>
-                <th className="sortable-th" onClick={() => handleSort("dayChange")}>Day Chg <PSortIcon field="dayChange" /></th>
-                <th className="sortable-th" onClick={() => handleSort("totalGain")}>Total Gain <PSortIcon field="totalGain" /></th>
-                <th className="sortable-th" onClick={() => handleSort("totalGainPct")}>Total % <PSortIcon field="totalGainPct" /></th>
-                <th className="sortable-th" onClick={() => handleSort("holdingPeriodReturn")}>HPR <PSortIcon field="holdingPeriodReturn" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("quantity")}>Qty <PSortIcon field="quantity" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("purchasePrice")}>Avg Cost <PSortIcon field="purchasePrice" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("currentPrice")}>Price <PSortIcon field="currentPrice" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("dayChange")}>Today <PSortIcon field="dayChange" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("totalGain")}>Total <PSortIcon field="totalGain" /></th>
+                <th className="sortable-th num" onClick={() => handleSort("totalGainPct")}>Return <PSortIcon field="totalGainPct" /></th>
                 {onRemoveSecurity && <th></th>}
               </tr>
             </thead>
             <tbody>
               {sortedDetails.map((d) => (
-                <tr key={d.symbol}>
-                  <td className="security-symbol-cell">{d.symbol}</td>
-                  <td>{d.name}</td>
-                  <td>{d.quantity}</td>
-                  <td>${fmt(d.purchasePrice)}</td>
-                  <td>{d.purchaseDate || "—"}</td>
-                  <td>${fmt(d.currentPrice)}</td>
-                  <td className={gainClass(d.dayChange)}>
-                    {d.dayChange >= 0 ? "+" : ""}${fmt(d.dayChange)} ({d.dayChangePct.toFixed(2)}%)
+                <tr key={d.symbol} className="perf-table-row">
+                  <td>
+                    <span className="perf-symbol-badge">{d.symbol}</span>
                   </td>
-                  <td className={gainClass(d.totalGain)}>
-                    {d.totalGain >= 0 ? "+" : ""}${fmt(d.totalGain)}
+                  <td className="perf-name-cell">{d.name}</td>
+                  <td className="num">{d.quantity}</td>
+                  <td className="num">${fmt(d.purchasePrice)}</td>
+                  <td className="num">${fmt(d.currentPrice)}</td>
+                  <td className={`num ${gainClass(d.dayChange)}`}>
+                    {d.dayChange >= 0 ? "+" : ""}${fmt(Math.abs(d.dayChange))}
+                    <span className="perf-sub-pct">{d.dayChangePct >= 0 ? "+" : ""}{fmtPct(d.dayChangePct)}%</span>
                   </td>
-                  <td className={gainClass(d.totalGainPct)}>
-                    {d.totalGainPct >= 0 ? "+" : ""}{d.totalGainPct.toFixed(2)}%
+                  <td className={`num ${gainClass(d.totalGain)}`}>
+                    {d.totalGain >= 0 ? "+" : ""}${fmt(Math.abs(d.totalGain))}
                   </td>
-                  <td className={gainClass(d.holdingPeriodReturn)} title={`${d.holdingPeriodDays}d held`}>
-                    {d.holdingPeriodReturn >= 0 ? "+" : ""}{d.holdingPeriodReturn.toFixed(2)}%
+                  <td className={`num ${gainClass(d.totalGainPct)}`}>
+                    {d.totalGainPct >= 0 ? "+" : ""}{fmtPct(d.totalGainPct)}%
+                    <span className="perf-sub-pct" title={`${d.holdingPeriodDays} days held`}>{formatDuration(d.holdingPeriodDays)}</span>
                   </td>
                   {onRemoveSecurity && (
                     <td>
-                      <button
-                        className="security-remove-btn"
-                        title={`Remove ${d.symbol}`}
-                        onClick={() => onRemoveSecurity(d.symbol.toLowerCase())}
-                      >
-                        <FaTimes size={14} />
+                      <button className="perf-remove-btn" title={`Remove ${d.symbol}`} onClick={() => onRemoveSecurity(d.symbol.toLowerCase())}>
+                        <FaTimes size={12} />
                       </button>
                     </td>
                   )}

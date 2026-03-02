@@ -2,9 +2,7 @@ import React from "react";
 import { FaEllipsisV, FaPlus } from "react-icons/fa";
 import "./Portfolio.css";
 import PortfolioPerformance from "./PortfolioPerformance";
-import { usePortfolios } from "../../context/PortfoliosContext";
 import { Portfolio } from "../../types/types";
-
 
 interface PortfolioContentProps {
   portfolio: Portfolio | undefined;
@@ -25,51 +23,41 @@ const PortfolioContent: React.FC<PortfolioContentProps> = ({
   openAddToPortfolioModal,
   onRemoveSecurity,
 }) => {
-  const { portfolios } = usePortfolios();
   return (
     <>
-      {portfolios.length > 0 && (
-        <>
-          <div className="chart">
-            <div className="chart-header">
-              <span className="portfolio-title">{portfolioName}</span>
-
-              <div className="settings-dropdown">
-                <button className="settings" onClick={handleDropdownToggle}>
-                  <FaEllipsisV size={18} />
-                </button>
-                {showDropdown && (
-                  <div className="dropdown-content">
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("rename")}
-                    >
-                      Rename
-                    </div>
-                    <div
-                      className="dropdown-option"
-                      onClick={() => handleDropdownOptionClick("remove")}
-                    >
-                      Remove
-                    </div>
-                  </div>
-                )}
-              </div>
+      <div className="lists-section-header">
+        <div className="lists-title-row">
+          <h2 className="lists-title">{portfolioName}</h2>
+          <div className="lists-actions">
+            <button className="lists-add-btn" onClick={openAddToPortfolioModal}>
+              <FaPlus size={12} />
+              <span>Add</span>
+            </button>
+            <div className="settings-dropdown">
+              <button className="lists-kebab" onClick={handleDropdownToggle}>
+                <FaEllipsisV size={14} />
+              </button>
+              {showDropdown && (
+                <div className="dropdown-content">
+                  <div className="dropdown-option" onClick={() => handleDropdownOptionClick("rename")}>Rename</div>
+                  <div className="dropdown-option" onClick={() => handleDropdownOptionClick("remove")}>Delete</div>
+                </div>
+              )}
             </div>
-            {portfolio && portfolio.securities && portfolio.securities.length > 0 ? (
-              <PortfolioPerformance portfolio={portfolio} onRemoveSecurity={onRemoveSecurity} />
-            ) : (
-              <div className="empty-state">
-                <p className="empty-state-text">No holdings yet</p>
-                <p className="empty-state-subtext">Add your first investment to start tracking performance</p>
-              </div>
-            )}
           </div>
-          <button className="add-investment" onClick={openAddToPortfolioModal}>
-            <FaPlus size={18} />
-            <span className="label">Add investments</span>
+        </div>
+      </div>
+
+      {portfolio && portfolio.securities && portfolio.securities.length > 0 ? (
+        <PortfolioPerformance portfolio={portfolio} onRemoveSecurity={onRemoveSecurity} />
+      ) : (
+        <div className="lists-empty-holdings">
+          <p className="lists-empty-title">No holdings yet</p>
+          <p className="lists-empty-sub">Add your first investment to start tracking performance</p>
+          <button className="lists-cta-btn" onClick={openAddToPortfolioModal}>
+            <FaPlus size={12} /> Add Investment
           </button>
-        </>
+        </div>
       )}
     </>
   );

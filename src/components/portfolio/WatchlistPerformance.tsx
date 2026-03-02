@@ -4,7 +4,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { LineChart, Line } from "recharts";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -103,15 +103,22 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   /** Generate a deterministic mini sparkline from price + percentChange */
   const genSparkline = (price: number, pctChange: number): { v: number }[] => {
-    const points = 12;
+    const points = 16;
     const data: { v: number }[] = [];
-    // Start from approximate previous close, end at current price
     const prevClose = price / (1 + pctChange / 100);
+    const range = Math.abs(price - prevClose) || price * 0.005;
+    // Seed from price for deterministic but varied look
+    const seed = (price * 137.03) % 100;
     for (let i = 0; i < points; i++) {
       const t = i / (points - 1);
-      // Smooth interpolation with a little deterministic wobble
-      const wobble = Math.sin(i * 2.1 + price * 0.01) * price * 0.003;
-      data.push({ v: prevClose + (price - prevClose) * t + wobble });
+      const base = prevClose + (price - prevClose) * t;
+      // Two sine waves at different frequencies for organic feel
+      const w1 = Math.sin(i * 1.9 + seed * 0.37) * range * 0.55;
+      const w2 = Math.sin(i * 3.4 + seed * 0.13) * range * 0.3;
+      // Small dip/spike at 1/3 and 2/3 through
+      const w3 = (i === Math.floor(points * 0.33) ? -range * 0.4 : 0)
+               + (i === Math.floor(points * 0.66) ? range * 0.35 : 0);
+      data.push({ v: base + w1 + w2 + w3 });
     }
     return data;
   };
@@ -122,17 +129,17 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   if (rows.length === 0) {
     return (
-      <div className="empty-state" style={{ marginTop: "1rem" }}>
-        <p className="empty-state-text">No securities in this watchlist yet</p>
-        <p className="empty-state-subtext">Add symbols to track their price, change, and trends</p>
+      <div className="lists-empty-holdings" style={{ marginTop: "1rem" }}>
+        <p className="lists-empty-title">No securities in this watchlist yet</p>
+        <p className="lists-empty-sub">Add symbols to track their price, change, and trends</p>
       </div>
     );
   }
 
   return (
-    <div className="portfolio-performance-container">
-      <div className="bottom-row">
-        <table className="security-details-table">
+    <div className="perf">
+      <div className="perf-table-wrap">
+        <table className="perf-table">
           <thead>
             <tr>
               <th className="sortable-th" onClick={() => handleSort("symbol")}>
@@ -141,13 +148,13 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
               <th className="sortable-th" onClick={() => handleSort("name")}>
                 Name <SortIcon field="name" />
               </th>
-              <th className="sortable-th" onClick={() => handleSort("price")}>
+              <th className="sortable-th num" onClick={() => handleSort("price")}>
                 Price <SortIcon field="price" />
               </th>
-              <th className="sortable-th" onClick={() => handleSort("priceChange")}>
+              <th className="sortable-th num" onClick={() => handleSort("priceChange")}>
                 Change <SortIcon field="priceChange" />
               </th>
-              <th className="sortable-th" onClick={() => handleSort("percentChange")}>
+              <th className="sortable-th num" onClick={() => handleSort("percentChange")}>
                 % Change <SortIcon field="percentChange" />
               </th>
               <th>Chart</th>
@@ -156,51 +163,41 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
           </thead>
           <tbody>
             {sortedRows.map((row) => (
-              <tr key={row.symbol}>
-                <td
-                  className="security-symbol-cell clickable-cell"
-                  onClick={() => handleClick(row.symbol)}
-                >
-                  {row.symbol}
+              <tr key={row.symbol} className="perf-table-row" onClick={() => handleClick(row.symbol)} style={{ cursor: "pointer" }}>
+                <td>
+                  <span className="perf-symbol-badge">{row.symbol}</span>
                 </td>
-                <td
-                  className="clickable-cell"
-                  onClick={() => handleClick(row.symbol)}
-                >
-                  {row.name}
+                <td className="perf-name-cell">{row.name}</td>
+                <td className="num">${fmt(row.price)}</td>
+                <td className={`num ${gainClass(row.priceChange)}`}>
+                  {row.priceChange >= 0 ? "+" : ""}${fmt(Math.abs(row.priceChange))}
                 </td>
-                <td>${fmt(row.price)}</td>
-                <td className={gainClass(row.priceChange)}>
-                  {row.priceChange >= 0 ? "+" : ""}${fmt(row.priceChange)}
-                </td>
-                <td className={gainClass(row.percentChange)}>
-                  {row.percentChange >= 0 ? "+" : ""}
-                  {row.percentChange}%
+                <td className={`num ${gainClass(row.percentChange)}`}>
+                  {row.percentChange >= 0 ? "+" : ""}{row.percentChange}%
                 </td>
                 <td className="sparkline-cell">
-                  <ResponsiveContainer width={80} height={30}>
-                    <LineChart data={genSparkline(row.price, row.percentChange)}>
-                      <Line
-                        type="monotone"
-                        dataKey="v"
-                        stroke={row.percentChange >= 0 ? "#00c853" : "#e53935"}
-                        strokeWidth={1.5}
-                        dot={false}
-                        isAnimationActive={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <LineChart width={80} height={32} data={genSparkline(row.price, row.percentChange)}>
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke={row.percentChange >= 0 ? "var(--positive, #34a853)" : "var(--negative, #ea4335)"}
+                      strokeWidth={1.5}
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
                 </td>
                 {onRemoveSecurity && (
                   <td>
                     <button
-                      className="security-remove-btn"
+                      className="perf-remove-btn"
                       title={`Remove ${row.symbol}`}
-                      onClick={() =>
-                        onRemoveSecurity({ symbol: row.symbol.toLowerCase() })
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveSecurity({ symbol: row.symbol.toLowerCase() });
+                      }}
                     >
-                      <FaTimes size={14} />
+                      <FaTimes size={12} />
                     </button>
                   </td>
                 )}

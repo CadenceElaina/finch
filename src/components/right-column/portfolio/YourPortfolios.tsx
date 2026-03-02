@@ -38,6 +38,7 @@ const YourPortfolios = () => {
         symbol: string;
         price: number;
         percentChange: number;
+        priceChange: number;
         quantity: number;
       }[]
     >
@@ -67,6 +68,7 @@ const YourPortfolios = () => {
         symbol,
         price: quoteData?.price || 0,
         percentChange: quoteData?.percentChange || 0,
+        priceChange: quoteData?.priceChange || 0,
         quantity,
       };
     });
@@ -127,7 +129,11 @@ const YourPortfolios = () => {
         <div className="add-portfolio-icon">
           <FaChartBar size={30} />
         </div>
-        <div className="add-portfolio-text">Your portfolios</div>
+        <div className="add-portfolio-text">
+          <Link to="/portfolio" style={{ textDecoration: "none", color: "var(--text-primary)" }}>
+            Your portfolios
+          </Link>
+        </div>
       </div>
       <div className="portfolio-value">
         {isLoading && portfolios.length > 0 ? (
@@ -178,6 +184,11 @@ const YourPortfolios = () => {
                 return acc + security.price * security.quantity;
               }, 0);
 
+              // Daily $ gain/loss: sum of (priceChange × quantity) for each security
+              const dailyGainLoss = securities.reduce((acc, security) => {
+                return acc + security.priceChange * security.quantity;
+              }, 0);
+
               // Weighted average percent change:
               // weight each security's %change by its $ value in the portfolio
               const totalPercentChange =
@@ -204,6 +215,17 @@ const YourPortfolios = () => {
                           : "$0.00"}
                       </span>
                       <span
+                        className={`portfolio-daily-change ${
+                          dailyGainLoss > 0
+                            ? "p-positive"
+                            : dailyGainLoss < 0
+                            ? "p-negative"
+                            : ""
+                        }`}
+                      >
+                        {dailyGainLoss >= 0 ? "+" : ""}${Math.abs(dailyGainLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      <span
                         className={`portfolio-percent-change ${
                           totalPercentChange > 0
                             ? "p-positive"
@@ -212,7 +234,7 @@ const YourPortfolios = () => {
                             : ""
                         }`}
                       >
-                        {totalPercentChange.toFixed(2)}%
+                        {totalPercentChange >= 0 ? "+" : ""}{totalPercentChange.toFixed(2)}%
                       </span>
                     </Link>
                   </div>
