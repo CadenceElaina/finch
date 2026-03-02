@@ -32,21 +32,42 @@ CACHING BEHAVIOR: If providing a stock snapshot (not a user-initiated question),
 limit to: 3-sentence trend summary + 3 key metrics to watch + 1 risk factor.`;
 
 /**
+/**
  * Generate content from Gemini (no web access).
  * For prompts that only need the data we already have in-app.
  */
+
+/** Detect Gemini quota / rate-limit errors and throw a user-friendly message */
+function handleGeminiError(err: unknown): never {
+  const msg = err instanceof Error ? err.message : String(err);
+  const json = typeof err === "object" && err !== null && "message" in err
+    ? (err as { message?: string }).message ?? ""
+    : msg;
+  if (
+    /429|quota|rate.limit|resource.exhausted/i.test(msg) ||
+    /429|quota|rate.limit|resource.exhausted/i.test(json)
+  ) {
+    throw new Error("Gemini API rate limit reached — try again in a few minutes.");
+  }
+  throw err;
+}
+
 export async function askGemini(prompt: string): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.4,
-      topP: 0.8,
-      maxOutputTokens: 4096,
-    },
-  });
-  return response.text ?? "";
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.4,
+        topP: 0.8,
+        maxOutputTokens: 4096,
+      },
+    });
+    return response.text ?? "";
+  } catch (err) {
+    handleGeminiError(err);
+  }
 }
 
 /**
@@ -59,22 +80,26 @@ export async function askGeminiGrounded(prompt: string): Promise<string> {
   // Retry up to 2 times with a short delay if that happens.
   const MAX_ATTEMPTS = 2;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.4,
-        topP: 0.8,
-        maxOutputTokens: 4096,
-        tools: [{ googleSearch: {} }],
-      },
-    });
-    const text = (response.text ?? "").trim();
-    if (text) return text;
-    // Empty response — wait briefly before retrying
-    if (attempt < MAX_ATTEMPTS) {
-      await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          temperature: 0.4,
+          topP: 0.8,
+          maxOutputTokens: 4096,
+          tools: [{ googleSearch: {} }],
+        },
+      });
+      const text = (response.text ?? "").trim();
+      if (text) return text;
+      // Empty response — wait briefly before retrying
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    } catch (err) {
+      handleGeminiError(err);
     }
   }
   throw new Error("Gemini returned an empty response. Please try again.");
@@ -96,18 +121,22 @@ export async function askGeminiChat(
     { role: "user" as const, parts: [{ text: newMessage }] },
   ];
 
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.4,
-      topP: 0.8,
-      maxOutputTokens: 4096,
-      tools: [{ googleSearch: {} }],
-    },
-  });
-  return response.text ?? "";
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.4,
+        topP: 0.8,
+        maxOutputTokens: 4096,
+        tools: [{ googleSearch: {} }],
+      },
+    });
+    return response.text ?? "";
+  } catch (err) {
+    handleGeminiError(err);
+  }
 }
 
 /** Check if Gemini is configured (API key present) */

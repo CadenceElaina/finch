@@ -280,10 +280,15 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
     const { interval: apiInterval, limit } = periodToParams(interval);
 
     try {
+      // Map period labels to Yahoo Finance range strings
+      const rangeMap: Record<string, string> = {
+        "1D": "1d", "5D": "5d", "1M": "1mo", "6M": "6mo",
+        "YTD": "ytd", "1Y": "1y", "5Y": "5y", "MAX": "max",
+      };
       const response = await yhFetch(ENDPOINTS.history.path, {
         symbol,
         interval: apiInterval,
-        range: interval.toLowerCase(),
+        range: rangeMap[interval] ?? interval.toLowerCase(),
         region: "US",
       });
 

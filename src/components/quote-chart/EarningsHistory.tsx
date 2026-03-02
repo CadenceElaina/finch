@@ -248,7 +248,10 @@ const EarningsHistory: React.FC<Props> = ({ symbol }) => {
         return DEMO_EARNINGS[upper] ?? generateDemoEarnings(upper);
       }
 
-      if (!saId) return [];
+      if (!saId) {
+        console.warn(`[EarningsHistory] No SA ID for ${symbol} — skipping`);
+        return [];
+      }
 
       const res = await saFetch(SA_ENDPOINTS.earnings, {
         ticker_ids: String(saId),
@@ -258,7 +261,20 @@ const EarningsHistory: React.FC<Props> = ({ symbol }) => {
           "eps_normalized_actual,eps_normalized_consensus_mean,revenue_actual,revenue_consensus_mean",
       });
 
-      return parseEarningsResponse(res.data, String(saId));
+      const body = res.data;
+      // Try the expected shape first, then fallback to common variants
+      let parsed = parseEarningsResponse(body, String(saId));
+      if (parsed.length === 0 && body?.estimates) {
+        // The API might key by a different ID — try the first available key
+        const keys = Object.keys(body.estimates);
+        if (keys.length > 0) {
+          parsed = parseEarningsResponse(body, keys[0]);
+        }
+      }
+      if (parsed.length === 0) {
+        console.warn(`[EarningsHistory] No earnings data found for ${symbol} (saId=${saId})`, body);
+      }
+      return parsed;
     },
     enabled: Boolean(symbol),
     staleTime: 24 * 60 * 60 * 1000, // 24h — earnings don't change often
