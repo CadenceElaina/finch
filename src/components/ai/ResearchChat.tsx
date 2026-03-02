@@ -75,6 +75,7 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ contextHint }) => {
           </button>
         )}
       </div>
+      <div className="research-chat-gradient-line" />
 
       {(history.length > 0 || loading) && (
         <div className="research-chat-messages">

@@ -5,7 +5,8 @@
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.05) 0%, var(--bg-secondary) 50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .portfolio-summary-header {
@@ -17,7 +18,29 @@
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.portfolio-summary-gradient-line {
+  height: 3px;
+  border-radius: 2px;
   margin-bottom: 10px;
+  background: linear-gradient(
+    90deg,
+    #4285f4 0%,
+    #9b72cb 25%,
+    #d96570 50%,
+    #d7a66e 75%,
+    #4285f4 100%
+  );
+  background-size: 200% 100%;
+  animation: ps-gradient-shift 4s ease infinite;
+}
+
+@keyframes ps-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .portfolio-summary-content p {

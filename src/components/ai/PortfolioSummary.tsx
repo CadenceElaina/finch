@@ -89,6 +89,7 @@ Keep it under 100 words. Be factual, not advisory.`;
         <FaRobot size={14} />
         <span>AI Commentary</span>
       </div>
+      <div className="portfolio-summary-gradient-line" />
 
       {summary ? (
         <div className="portfolio-summary-content">
