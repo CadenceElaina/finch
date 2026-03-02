@@ -452,15 +452,18 @@ export async function getStockMetadata(
     `metadata_${sym}`,
     METADATA_TTL
   );
-  // Validate cached data: if we have hardcoded ETF data but the cache says
-  // EQUITY, the cache is stale from a failed API call — discard it.
+  // Validate cached data against known good DEMO_METADATA.
+  // Discard stale cache from failed API calls (wrong quoteType or "Unknown" sector).
   if (cached) {
     const known = DEMO_METADATA[sym];
-    if (
-      known?.quoteType &&
-      cached.quoteType !== known.quoteType
-    ) {
-      // Stale/wrong — fall through to re-fetch or fallback
+    if (known) {
+      const typeStale = known.quoteType && cached.quoteType !== known.quoteType;
+      const sectorStale = known.sector && cached.sector === "Unknown";
+      if (typeStale || sectorStale) {
+        // Stale/wrong — fall through to re-fetch or fallback
+      } else {
+        return cached;
+      }
     } else {
       return cached;
     }
