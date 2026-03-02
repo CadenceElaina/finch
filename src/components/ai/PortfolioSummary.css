@@ -1,12 +1,19 @@
 /* PortfolioSummary — AI commentary card on Portfolio page */
 
 .portfolio-summary {
-  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.05) 0%, var(--bg-secondary) 50%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  margin-bottom: 0;
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.06) 0%, var(--bg-secondary) 50%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(0, 0, 0, 0.25);
+  border-right-color: rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 1px 0 0 rgba(255, 255, 255, 0.04);
 }
 
 .portfolio-summary-header {
