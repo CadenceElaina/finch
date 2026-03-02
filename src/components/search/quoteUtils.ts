@@ -763,8 +763,8 @@ export const getTrending = async (queryClient: QueryClient): Promise<DemoTrendin
           symbol: sym,
           name: q?.name ?? "",
           price: q?.price ?? 0,
-          priceChange: Number((q?.priceChange ?? 0)).toFixed(2),
-          percentChange: Number((q?.percentChange ?? 0)).toFixed(2),
+          priceChange: parseFloat(Number(q?.priceChange ?? 0).toFixed(2)),
+          percentChange: parseFloat(Number(q?.percentChange ?? 0).toFixed(2)),
         };
       })
       // Filter out symbols with no data (price=0 means API didn't return data)
