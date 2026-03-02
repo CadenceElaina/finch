@@ -23,6 +23,10 @@ const ALLOWED_PATHS = new Set([
   "/symbols/get-summary",
   "/symbols/get-profile",
   "/market/get-realtime-quotes",
+  "/symbols/get-earnings",
+  "/symbols/get-estimates",
+  "/symbols/get-estimated-earning-announces",
+  "/symbols/get-financials",
 ]);
 
 // Cache-Control headers per endpoint (seconds)
@@ -35,6 +39,10 @@ const CACHE_HEADERS: Record<string, string> = {
   "/symbols/get-summary": "s-maxage=3600, stale-while-revalidate=600",
   "/symbols/get-profile": "s-maxage=3600, stale-while-revalidate=600",
   "/market/get-realtime-quotes": "s-maxage=30, stale-while-revalidate=60",
+  "/symbols/get-financials": "s-maxage=86400, stale-while-revalidate=3600",
+  "/symbols/get-earnings": "s-maxage=86400, stale-while-revalidate=3600",
+  "/symbols/get-estimates": "s-maxage=86400, stale-while-revalidate=3600",
+  "/symbols/get-estimated-earning-announces": "s-maxage=86400, stale-while-revalidate=3600",
 };
 
 export default async function handler(request: Request): Promise<Response> {

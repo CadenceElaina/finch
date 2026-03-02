@@ -13,7 +13,11 @@ import {
 import { IoAddSharp } from "react-icons/io5";
 import QuoteNews from "../../components/quote-chart/news/QuoteNews";
 import RelatedStocks from "../../components/quote-chart/RelatedStocks";
+import AnalystRatings from "../../components/quote-chart/AnalystRatings";
+import EarningsHistory from "../../components/quote-chart/EarningsHistory";
+import Financials from "../../components/quote-chart/Financials";
 import AiPanel from "../../components/ai/AiPanel";
+import QuoteListsColumn from "../../components/quote-chart/QuoteListsColumn";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQuotePageData } from "../../components/search/quoteUtils";
 import { ENDPOINTS, getQuoteRefreshInterval } from "../../config/api";
@@ -23,8 +27,13 @@ import Skeleton from "@mui/material/Skeleton";
 import ErrorState from "../../components/ErrorState";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { useNotification } from "../../context/NotificationContext";
+import {
+  getInstrumentAbout,
+  getMarketCategory,
+  CATEGORY_LABELS,
+} from "../../data/instrumentInfo";
 
-type QuoteTab = "overview" | "financials" | "about";
+type QuoteTab = "overview" | "earnings" | "financials";
 
 interface QuoteProps {
   symbol?: string;
@@ -38,19 +47,32 @@ const Quote: React.FC<QuoteProps> = () => {
   const location = useLocation();
   const { quote: urlParam } = useParams<{ quote: string }>();
   const { state } = location;
-  const { watchlists, addSecurityToWatchlist } = useWatchlists();
+  const { watchlists, addSecurityToWatchlist, removeSecurityFromWatchlist } = useWatchlists();
   const { addNotification } = useNotification();
 
   const isIndex = state?.[0] ?? false;
   const symbol = state?.[1] ? `${state[1]}` : (urlParam ?? "");
   const symbolState = state?.[1] || (urlParam ?? "");
 
-  const KNOWN_INDEXES = ["DJI", "GSPC", "IXIC", "RUT", "VIX", "GDAXI", "FTSE", "IBEX", "N225", "HSI", "BSEN"];
+  const KNOWN_INDEXES = ["DJI", "GSPC", "IXIC", "RUT", "VIX", "GDAXI", "FTSE", "FCHI", "IBEX", "STOXX50E", "N225", "HSI", "BSESN", "BSEN", "NSEI", "000001.SS"];
+  const KNOWN_CRYPTO = ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "DOGE-USD"];
+  const KNOWN_CURRENCIES = ["EURUSD=X", "JPY=X", "GBPUSD=X", "CAD=X", "AUDUSD=X"];
+
   const strippedSymbol = symbolState.replace("^", "");
   const detectedIndex = KNOWN_INDEXES.includes(strippedSymbol);
+  const isCrypto = KNOWN_CRYPTO.includes(symbolState.toUpperCase());
+  const isCurrency = KNOWN_CURRENCIES.includes(symbolState.toUpperCase());
+  /** True for any non-stock instrument (index, crypto, currency) */
+  const isNonStock = isIndex === true || detectedIndex || isCrypto || isCurrency;
+
   const chartSymbol = detectedIndex
     ? (symbolState.startsWith("^") ? symbolState : `^${symbolState}`)
     : symbol;
+
+  /** Resolve the instrument about text (if any) */
+  const instrumentAbout = getInstrumentAbout(symbolState);
+  const marketCategory = getMarketCategory(symbolState);
+  const categoryLabel = marketCategory ? CATEGORY_LABELS[marketCategory] : null;
 
   const [selectedInterval, setSelectedInterval] = useState("1D");
   const [activeTab, setActiveTab] = useState<QuoteTab>("overview");
@@ -77,11 +99,20 @@ const Quote: React.FC<QuoteProps> = () => {
   const quoteData = quotePageData?.quoteData;
   const quoteSidebarData = quotePageData?.quoteSidebarData;
   const quoteSidebarAboutData = quotePageData?.quoteSidebarAboutData;
-  const quoteFinancialData = quotePageData?.quoteFinancialData;
 
   const handleFollow = () => {
-    if (isFollowing) return;
     const upper = symbol.toUpperCase();
+    if (isFollowing) {
+      // Unfollow: remove from all watchlists containing this symbol
+      for (const wl of watchlists) {
+        const sec = wl.securities?.find((s) => s.symbol.toUpperCase() === upper);
+        if (sec) {
+          removeSecurityFromWatchlist(wl.id, sec);
+        }
+      }
+      addNotification(`${upper} removed from watchlist`, "info");
+      return;
+    }
     if (watchlists.length === 0) {
       addNotification("Create a watchlist first to follow stocks.", "info");
       return;
@@ -101,6 +132,7 @@ const Quote: React.FC<QuoteProps> = () => {
   useEffect(() => {
     const getCurrentTime = () => {
       const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
       const hours = now.getHours();
       const minutes = now.getMinutes();
       const currentTimeInMinutes = hours * 60 + minutes;
@@ -111,12 +143,14 @@ const Quote: React.FC<QuoteProps> = () => {
 
       if (isHoliday(now)) {
         setMarketStatus("Closed - Holiday");
+      } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+        setMarketStatus("Closed - Weekend");
       } else if (currentTimeInMinutes >= marketOpen && currentTimeInMinutes < marketClose) {
         setMarketStatus("Regular Market Hours");
       } else if (currentTimeInMinutes >= afterStart && currentTimeInMinutes <= afterEnd) {
         setMarketStatus("After-Hours Trading");
       } else if (currentTimeInMinutes >= marketClose) {
-        setMarketStatus("Closed");
+        setMarketStatus("After-Hours");
       } else {
         setMarketStatus("Pre-Market");
       }
@@ -141,7 +175,9 @@ const Quote: React.FC<QuoteProps> = () => {
   if (isLoading && !quotePageData) {
     return (
       <Layout>
-        <div className="quote-page">
+        <div className="quote-page quote-page--with-lists">
+          <QuoteListsColumn />
+          <div className="quote-page-center">
           <div className="quote-header">
             <div className="quote-breadcrumb">
               <Link to="/">HOME</Link>
@@ -160,6 +196,7 @@ const Quote: React.FC<QuoteProps> = () => {
               <Skeleton variant="rectangular" width="100%" height={300} sx={{ bgcolor: "var(--skeleton-bg)", borderRadius: "8px" }} />
             </aside>
           </div>
+          </div>{/* quote-page-center */}
         </div>
       </Layout>
     );
@@ -169,7 +206,9 @@ const Quote: React.FC<QuoteProps> = () => {
   if (isError) {
     return (
       <Layout>
-        <div className="quote-page">
+        <div className="quote-page quote-page--with-lists">
+          <QuoteListsColumn />
+          <div className="quote-page-center">
           <div className="quote-header">
             <div className="quote-breadcrumb">
               <Link to="/">HOME</Link>
@@ -178,6 +217,7 @@ const Quote: React.FC<QuoteProps> = () => {
             </div>
           </div>
           <ErrorState message={`Unable to load data for ${symbol}.`} onRetry={() => refetch()} />
+          </div>{/* quote-page-center */}
         </div>
       </Layout>
     );
@@ -226,11 +266,19 @@ const Quote: React.FC<QuoteProps> = () => {
     </div>
   );
 
-  // ── Index view ──
-  if (isIndex === true) {
+  // ── Index / instrument view ──
+  if (isNonStock) {
+    const indexSidebarEntries = [
+      { label: "Previous Close", key: "previousClose" },
+      { label: "Day Range", key: "dayRange" },
+      { label: "52 Week Range", key: "fiftyTwoWeekRange" },
+    ];
+
     return (
       <Layout>
-        <div className="quote-page">
+        <div className="quote-page quote-page--with-lists">
+          <QuoteListsColumn />
+          <div className="quote-page-center">
           <div className="quote-header">
             <div className="quote-breadcrumb">
               <Link to="/">HOME</Link>
@@ -239,36 +287,75 @@ const Quote: React.FC<QuoteProps> = () => {
               <span className="quote-meta-sep">·</span>
               <span className="quote-exchange">{quoteSidebarData?.primaryExchange}</span>
             </div>
-            <h1 className="quote-title">{quoteData?.name}</h1>
+            <div className="quote-title-row">
+              <h1 className="quote-title">{quoteData?.name}</h1>
+              <button
+                className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
+                onClick={handleFollow}
+                title={isFollowing ? "Unfollow" : "Add to watchlist"}
+              >
+                {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
+                <span>{isFollowing ? "Following" : "Follow"}</span>
+              </button>
+            </div>
           </div>
-          <div className="quote-layout quote-layout--single">
+
+          <div className="quote-layout">
             <div className="quote-main">
               {PriceBlock}
               {IntervalButtons}
-              <QuoteChart interval={selectedInterval} symbol={chartSymbol || ""} previousClosePrice="" />
+              <QuoteChart interval={selectedInterval} symbol={chartSymbol || ""} previousClosePrice={quoteSidebarData?.previousClose || ""} />
+
+              {/* Related instruments from same market category */}
+              <RelatedStocks currentSymbol={symbolState} />
+
+              {/* General news */}
+              <QuoteNews useGeneralNews />
             </div>
+
+            <aside className="quote-sidebar">
+              {/* Category badge */}
+              {categoryLabel && (
+                <div className="quote-sidebar-card" style={{ padding: "8px 12px" }}>
+                  <span className="quote-category-badge">{categoryLabel}</span>
+                </div>
+              )}
+
+              {/* Key stats */}
+              {quoteSidebarData && (
+                <div className="quote-sidebar-card">
+                  {indexSidebarEntries.map(({ label, key }) => {
+                    const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
+                    if (!value) return null;
+                    return (
+                      <div key={key} className="quote-kv-row">
+                        <span>{label}</span>
+                        <span>{value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* About */}
+              {instrumentAbout && (
+                <div className="quote-sidebar-card">
+                  <div className="quote-sidebar-card-title">About</div>
+                  <p className="quote-sidebar-about-text quote-sidebar-about-full">
+                    {instrumentAbout}
+                  </p>
+                </div>
+              )}
+            </aside>
           </div>
           <Footer />
+          </div>
         </div>
       </Layout>
     );
   }
 
   // ── Stock view ──
-  const hasFinancials = quoteFinancialData && (
-    quoteFinancialData.annualRevenue ||
-    quoteFinancialData.netIncome ||
-    quoteFinancialData.netProfitMargin ||
-    quoteFinancialData.ebitda
-  );
-
-  const financialRows = [
-    { label: "Revenue (TTM)", value: quoteFinancialData?.annualRevenue },
-    { label: "Net Income (TTM)", value: quoteFinancialData?.netIncome },
-    { label: "Net Profit Margin", value: quoteFinancialData?.netProfitMargin },
-    { label: "EBITDA", value: quoteFinancialData?.ebitda },
-  ].filter((r) => r.value);
-
   const hasAbout = Boolean(
     quoteSidebarAboutData?.summary ||
     quoteSidebarAboutData?.ceo ||
@@ -279,33 +366,35 @@ const Quote: React.FC<QuoteProps> = () => {
 
   const tabs: { key: QuoteTab; label: string }[] = [
     { key: "overview", label: "Overview" },
-    ...(hasFinancials ? [{ key: "financials" as QuoteTab, label: "Financials" }] : []),
-    ...(hasAbout ? [{ key: "about" as QuoteTab, label: "About" }] : []),
+    { key: "earnings", label: "Earnings" },
+    { key: "financials", label: "Financials" },
   ];
 
   return (
     <Layout>
-      <div className="quote-page">
+      <div className="quote-page quote-page--with-lists">
+        <QuoteListsColumn />
+        <div className="quote-page-center">
         {/* Header */}
         <div className="quote-header">
-          <div className="quote-header-top">
-            <div className="quote-breadcrumb">
-              <Link to="/">HOME</Link>
-              <FaAngleRight className="quote-breadcrumb-sep" />
-              <span>{symbol}</span>
-              <span className="quote-meta-sep">·</span>
-              <span className="quote-exchange">{quoteSidebarData?.primaryExchange}</span>
-            </div>
+          <div className="quote-breadcrumb">
+            <Link to="/">HOME</Link>
+            <FaAngleRight className="quote-breadcrumb-sep" />
+            <span>{symbol}</span>
+            <span className="quote-meta-sep">·</span>
+            <span className="quote-exchange">{quoteSidebarData?.primaryExchange}</span>
+          </div>
+          <div className="quote-title-row">
+            <h1 className="quote-title">{quoteData?.name}</h1>
             <button
               className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
               onClick={handleFollow}
-              title={isFollowing ? "Already following" : "Add to watchlist"}
+              title={isFollowing ? "Unfollow" : "Add to watchlist"}
             >
               {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
               <span>{isFollowing ? "Following" : "Follow"}</span>
             </button>
           </div>
-          <h1 className="quote-title">{quoteData?.name}</h1>
         </div>
 
         {/* Two-column layout */}
@@ -338,122 +427,34 @@ const Quote: React.FC<QuoteProps> = () => {
             {/* ── Overview ── */}
             {activeTab === "overview" && (
               <div className="quote-tab-content">
-                {/* Stats grid — inline */}
-                {quoteSidebarData && (
-                  <div className="quote-stats-grid">
-                    {sidebarEntries.map(({ label, key }) => {
-                      const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
-                      if (!value) return null;
-                      return (
-                        <div key={key} className="quote-stat-item">
-                          <span className="quote-stat-label">{label}</span>
-                          <span className="quote-stat-value">{value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                {/* News */}
+                <QuoteNews />
 
                 {/* Related stocks */}
                 <RelatedStocks currentSymbol={symbol} />
+              </div>
+            )}
 
-                {/* News */}
-                <QuoteNews />
+            {/* ── Earnings ── */}
+            {activeTab === "earnings" && (
+              <div className="quote-tab-content">
+                <EarningsHistory symbol={symbol} />
+                <AnalystRatings symbol={symbol} />
               </div>
             )}
 
             {/* ── Financials ── */}
             {activeTab === "financials" && (
               <div className="quote-tab-content">
-                {hasFinancials ? (
-                  <div className="quote-financials-section">
-                    <p className="quote-section-subheading">Income Statement (Annual)</p>
-                    <table className="quote-financials-table">
-                      <tbody>
-                        {financialRows.map((row) => (
-                          <tr key={row.label}>
-                            <td className="quote-fin-label">{row.label}</td>
-                            <td className="quote-fin-value">{row.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="quote-empty-state">Financial data not available for this symbol.</p>
-                )}
+                <Financials symbol={symbol} />
               </div>
             )}
 
-            {/* ── About ── */}
-            {activeTab === "about" && (
-              <div className="quote-tab-content">
-                {hasAbout ? (
-                  <div className="quote-about-section">
-                    {quoteSidebarAboutData?.summary && (
-                      <p className="quote-about-summary">{quoteSidebarAboutData.summary}</p>
-                    )}
-                    <div className="quote-about-details">
-                      {quoteSidebarAboutData?.ceo && (
-                        <div className="quote-about-row">
-                          <span className="quote-about-label">CEO</span>
-                          <span className="quote-about-value">{quoteSidebarAboutData.ceo}</span>
-                        </div>
-                      )}
-                      {quoteSidebarAboutData?.headquarters && (
-                        <div className="quote-about-row">
-                          <span className="quote-about-label">Headquarters</span>
-                          <span className="quote-about-value">{quoteSidebarAboutData.headquarters}</span>
-                        </div>
-                      )}
-                      {quoteSidebarAboutData?.employees && (
-                        <div className="quote-about-row">
-                          <span className="quote-about-label">Employees</span>
-                          <span className="quote-about-value">
-                            {!isNaN(parseInt(quoteSidebarAboutData.employees, 10))
-                              ? parseInt(quoteSidebarAboutData.employees, 10).toLocaleString()
-                              : quoteSidebarAboutData.employees}
-                          </span>
-                        </div>
-                      )}
-                      {quoteSidebarAboutData?.website && (
-                        <div className="quote-about-row">
-                          <span className="quote-about-label">Website</span>
-                          <span className="quote-about-value">
-                            <a href={quoteSidebarAboutData.website} target="_blank" rel="noopener noreferrer">
-                              {quoteSidebarAboutData.website.replace(/(https?:\/\/)?(www\.)?/g, "").replace(/\/$/, "")}
-                            </a>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="quote-empty-state">Company information not available for this symbol.</p>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* ── Sidebar: Stats + About + AI ── */}
+          {/* ── Sidebar: About + Stats + AI ── */}
           <aside className="quote-sidebar">
-            {/* Key stats — always visible */}
-            {quoteSidebarData && (
-              <div className="quote-sidebar-card">
-                {sidebarEntries.map(({ label, key }) => {
-                  const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
-                  if (!value) return null;
-                  return (
-                    <div key={key} className="quote-kv-row">
-                      <span>{label}</span>
-                      <span>{value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* About snippet — always visible in sidebar */}
+            {/* About snippet — always visible at top of sidebar */}
             {hasAbout && (
               <div className="quote-sidebar-card">
                 <div className="quote-sidebar-card-title">About</div>
@@ -501,11 +502,28 @@ const Quote: React.FC<QuoteProps> = () => {
               </div>
             )}
 
+            {/* Key stats */}
+            {quoteSidebarData && (
+              <div className="quote-sidebar-card">
+                {sidebarEntries.map(({ label, key }) => {
+                  const value = quoteSidebarData?.[key as keyof typeof quoteSidebarData];
+                  if (!value) return null;
+                  return (
+                    <div key={key} className="quote-kv-row">
+                      <span>{label}</span>
+                      <span>{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* AI Research */}
             <AiPanel symbol={symbol} quotePageData={quotePageData ?? null} />
           </aside>
         </div>
         <Footer />
+        </div>{/* quote-page-center */}
       </div>
     </Layout>
   );

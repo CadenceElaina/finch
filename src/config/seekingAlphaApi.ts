@@ -76,6 +76,14 @@ export const SA_ENDPOINTS = {
   symbolSummary: "/symbols/get-summary",
   /** Symbol profile */
   symbolProfile: "/symbols/get-profile",
+  /** Earnings data (EPS, revenue actuals vs estimates) */
+  earnings: "/symbols/get-earnings",
+  /** Earnings estimates (revenue / EPS) */
+  estimates: "/symbols/get-estimates",
+  /** Next estimated earnings announce date */
+  earningsAnnounce: "/symbols/get-estimated-earning-announces",
+  /** Financial statements (income, balance sheet, cash flow) */
+  financials: "/symbols/get-financials",
 } as const;
 
 // ── SA ID Lookup ─────────────────────────────────────────

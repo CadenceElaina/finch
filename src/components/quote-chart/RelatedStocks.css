@@ -1,35 +1,33 @@
 .related-stocks {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  margin-top: 16px;
 }
 
 .related-stocks-heading {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .related-stocks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 10px;
+  padding-bottom: 4px;
 }
 
 .related-stock-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
+  gap: 2px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   text-decoration: none;
   color: inherit;
   transition: background-color 0.15s ease, border-color 0.15s;
-  min-width: 0;
+  flex: 0 0 calc((100% - 30px) / 4);
+  min-width: 120px;
 }
 
 .related-stock-card:hover {
@@ -38,13 +36,13 @@
 }
 
 .related-stock-symbol {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .related-stock-name {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -52,16 +50,16 @@
 }
 
 .related-stock-price {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .related-stock-change {
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
@@ -72,5 +70,3 @@
 .related-stock-change.negative {
   color: var(--negative);
 }
-
-

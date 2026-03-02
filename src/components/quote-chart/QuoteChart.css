@@ -1,5 +1,5 @@
 .chart-quote {
-  max-width: 675px;
+  width: 100%;
   height: auto;
   background-color: transparent;
   border-radius: var(--radius-sm);
@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 528px;
+  min-height: 280px;
   color: var(--text-secondary);
   font-size: 0.875rem;
 }

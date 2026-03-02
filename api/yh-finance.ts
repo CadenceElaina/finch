@@ -1,44 +1,52 @@
 /**
- * Vercel Edge Function — YH Finance API Proxy
- * ─────────────────────────────────────────────
- * Proxies requests to yh-finance.p.rapidapi.com.
+ * Vercel Edge Function — Yahoo Finance 166 API Proxy
+ * ─────────────────────────────────────────────────────
+ * Proxies requests to yahoo-finance166.p.rapidapi.com.
  * API key is stored as a Vercel environment variable (never exposed to client).
  *
- * Usage: Client calls /api/yh-finance?endpoint=/market/v2/get-quotes&symbols=AAPL,MSFT
- *
- * Supported endpoints:
- *   - /market/v2/get-quotes  (batch quotes)
- *   - /auto-complete         (search)
- *   - /stock/v3/get-chart    (price history)
- *   - /market/v2/get-movers  (gainers/losers/active)
- *   - /stock/v3/get-profile  (company profile)
- *   - /market/get-trending-tickers (trending)
+ * Usage: Client calls /api/yh-finance?endpoint=/api/market/get-quote&symbols=AAPL,MSFT
  */
 
 export const config = {
   runtime: "edge",
 };
 
-const YH_HOST = "yh-finance.p.rapidapi.com";
+const YH_HOST = "yahoo-finance166.p.rapidapi.com";
 
-// Allowlist of YH Finance paths we proxy (prevents abuse)
+// Allowlist of Yahoo Finance 166 paths we proxy (prevents abuse)
 const ALLOWED_PATHS = new Set([
-  "/market/v2/get-quotes",
-  "/auto-complete",
-  "/stock/v3/get-chart",
-  "/market/v2/get-movers",
-  "/stock/v3/get-profile",
-  "/market/get-trending-tickers",
+  "/api/market/get-quote",
+  "/api/market/get-quote-v2",
+  "/api/autocomplete",
+  "/api/stock/get-chart",
+  "/api/market/get-day-gainers",
+  "/api/market/get-day-losers",
+  "/api/market/get-most-actives",
+  "/api/stock/get-financial-data",
+  "/api/stock/get-statistics",
+  "/api/market/get-trending",
+  "/api/stock/get-upgrade-downgrade-history",
+  "/api/market/get-world-indices",
+  "/api/market/get-market-summary",
+  "/api/stock/get-company-outlook-summary",
 ]);
 
 // Cache-Control headers per endpoint (seconds)
 const CACHE_HEADERS: Record<string, string> = {
-  "/market/v2/get-quotes": "s-maxage=30, stale-while-revalidate=60",
-  "/auto-complete": "s-maxage=86400, stale-while-revalidate=3600",
-  "/stock/v3/get-chart": "s-maxage=300, stale-while-revalidate=120",
-  "/market/v2/get-movers": "s-maxage=60, stale-while-revalidate=30",
-  "/stock/v3/get-profile": "s-maxage=3600, stale-while-revalidate=600",
-  "/market/get-trending-tickers": "s-maxage=60, stale-while-revalidate=30",
+  "/api/market/get-quote": "s-maxage=30, stale-while-revalidate=60",
+  "/api/market/get-quote-v2": "s-maxage=30, stale-while-revalidate=60",
+  "/api/autocomplete": "s-maxage=86400, stale-while-revalidate=3600",
+  "/api/stock/get-chart": "s-maxage=300, stale-while-revalidate=120",
+  "/api/market/get-day-gainers": "s-maxage=60, stale-while-revalidate=30",
+  "/api/market/get-day-losers": "s-maxage=60, stale-while-revalidate=30",
+  "/api/market/get-most-actives": "s-maxage=60, stale-while-revalidate=30",
+  "/api/stock/get-financial-data": "s-maxage=3600, stale-while-revalidate=600",
+  "/api/stock/get-statistics": "s-maxage=3600, stale-while-revalidate=600",
+  "/api/market/get-trending": "s-maxage=60, stale-while-revalidate=30",
+  "/api/stock/get-upgrade-downgrade-history": "s-maxage=3600, stale-while-revalidate=600",
+  "/api/market/get-world-indices": "s-maxage=60, stale-while-revalidate=30",
+  "/api/market/get-market-summary": "s-maxage=60, stale-while-revalidate=30",
+  "/api/stock/get-company-outlook-summary": "s-maxage=3600, stale-while-revalidate=600",
 };
 
 export default async function handler(request: Request): Promise<Response> {

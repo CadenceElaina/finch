@@ -25,7 +25,7 @@ export const config = { runtime: "nodejs" };
 const KV_SNAPSHOT_KEY = "market:snapshot";
 const KV_SNAPSHOT_TTL = 15 * 60; // 15 minutes
 
-const YH_HOST = "yh-finance.p.rapidapi.com";
+const YH_HOST = "yahoo-finance166.p.rapidapi.com";
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
 
 export interface MarketSnapshot {
@@ -71,15 +71,15 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   // Fetch indices, movers, and trending in parallel (3 API calls)
   const [indicesRes, moversRes, trendingRes] = await Promise.allSettled([
     fetch(
-      `https://${YH_HOST}/market/v2/get-quotes?region=US&symbols=${INDEX_SYMBOLS}`,
+      `https://${YH_HOST}/api/market/get-quote?region=US&symbols=${INDEX_SYMBOLS}`,
       { headers }
     ),
     fetch(
-      `https://${YH_HOST}/market/v2/get-movers?region=US&lang=en-US&count=25&start=0`,
+      `https://${YH_HOST}/api/market/get-day-gainers?region=US&count=25&start=0`,
       { headers }
     ),
     fetch(
-      `https://${YH_HOST}/market/get-trending-tickers?region=US`,
+      `https://${YH_HOST}/api/market/get-trending?region=US`,
       { headers }
     ),
   ]);

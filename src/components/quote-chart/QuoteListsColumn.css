@@ -1,0 +1,221 @@
+/* ─────────────────────────────────────────────
+   QuoteListsColumn — Google Finance "Lists" panel
+   ───────────────────────────────────────────── */
+
+.qlc-column {
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  padding-right: 12px;
+
+  /* Thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.qlc-column::-webkit-scrollbar {
+  width: 4px;
+}
+
+.qlc-column::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* ── Header ── */
+.qlc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.qlc-title-link {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.qlc-title-link:hover {
+  color: var(--accent);
+}
+
+/* ── Section (each watchlist / portfolio) ── */
+.qlc-section {
+  margin-bottom: 2px;
+}
+
+.qlc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 0 6px;
+}
+
+.qlc-section-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.qlc-section-label:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.qlc-section-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+}
+
+.qlc-section-icon {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.qlc-section-icon:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.qlc-collapse-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.qlc-collapse-btn:hover {
+  background: var(--bg-hover);
+}
+
+/* ── Empty state for a section ── */
+.qlc-empty {
+  padding: 8px 0;
+}
+
+.qlc-empty-add {
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.qlc-empty-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Item row ── */
+.qlc-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.qlc-item {
+  display: grid;
+  grid-template-columns: 1fr 56px auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s;
+  cursor: pointer;
+}
+
+.qlc-item:hover {
+  background: var(--bg-hover);
+}
+
+/* Left: symbol + name */
+.qlc-item-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.qlc-symbol {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.qlc-name {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+/* Mid: sparkline */
+.qlc-item-mid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Right: price + change */
+.qlc-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.qlc-price {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.qlc-change {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.qlc-change.positive {
+  color: var(--positive);
+}
+
+.qlc-change.negative {
+  color: var(--negative);
+}
+
+/* ── Responsive: hide on small screens ── */
+@media (max-width: 1100px) {
+  .qlc-column {
+    display: none;
+  }
+}

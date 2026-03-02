@@ -76,11 +76,12 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
 
     try {
       const response = await yhFetch(ENDPOINTS.search.path, {
-        q: searchInput,
+        query: searchInput,
         region: "US",
       });
 
-      const results = response.data?.quotes ?? response.data?.body ?? [];
+      const d = response.data;
+      const results = d?.quotes ?? d?.body ?? d?.ResultSet?.Result ?? [];
       const matches: suggestionType[] = results
         .slice(0, 5)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,15 +123,24 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
         region: "US",
         symbols: symbolsStr,
       });
-      const data = response.data?.quoteResponse?.result ?? [];
+      const data =
+        response.data?.quoteResponse?.result ??
+        response.data?.quoteSummary?.result ??
+        [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const quotes = (Array.isArray(data) ? data : [data]).map((q: any) => ({
-        symbol: (q.symbol ?? "").toLowerCase(),
-        price: q.regularMarketPrice ?? 0,
-        name: q.shortName ?? "",
-        priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
-        percentChange: q.regularMarketChangePercent ?? 0,
-      }));
+      const quotes = (Array.isArray(data) ? data : [data]).map((q: any) => {
+        // Handle nested quoteSummary format (q.price.*) or flat format
+        const p = q.price ?? q;
+        return {
+          symbol: (p.symbol ?? q.symbol ?? "").toLowerCase(),
+          price: p.regularMarketPrice?.raw ?? p.regularMarketPrice ?? 0,
+          name: p.shortName ?? p.longName ?? "",
+          priceChange: Number((p.regularMarketChange?.raw ?? p.regularMarketChange ?? 0).toFixed(2)),
+          percentChange: p.regularMarketChangePercent?.raw != null
+            ? p.regularMarketChangePercent.raw * 100
+            : p.regularMarketChangePercent ?? 0,
+        };
+      });
 
       return utils.checkCachedQuotesType(
         quotes.filter(

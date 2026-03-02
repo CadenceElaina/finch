@@ -129,12 +129,26 @@ export const DEMO_QUOTES: Record<string, quoteType> = {
     priceChange: -18.50,
     percentChange: -0.21,
   },
-  " ^IBEX": {
-    symbol: " ^ibex",
+  "^FCHI": {
+    symbol: "^fchi",
+    name: "CAC 40",
+    price: 8580.75,
+    priceChange: -40.18,
+    percentChange: -0.47,
+  },
+  "^IBEX": {
+    symbol: "^ibex",
     name: "IBEX 35",
     price: 13100.50,
     priceChange: 45.80,
     percentChange: 0.35,
+  },
+  "^STOXX50E": {
+    symbol: "^stoxx50e",
+    name: "STOXX 50",
+    price: 5438.41,
+    priceChange: -23.15,
+    percentChange: -0.42,
   },
   "^N225": {
     symbol: "^n225",
@@ -150,12 +164,26 @@ export const DEMO_QUOTES: Record<string, quoteType> = {
     priceChange: 320.12,
     percentChange: 1.41,
   },
+  "000001.SS": {
+    symbol: "000001.ss",
+    name: "SSE Composite Index",
+    price: 3298.88,
+    priceChange: 16.25,
+    percentChange: 0.50,
+  },
   "^BSESN": {
     symbol: "^bsesn",
     name: "S&P BSE SENSEX",
     price: 73198.10,
     priceChange: 187.45,
     percentChange: 0.26,
+  },
+  "^NSEI": {
+    symbol: "^nsei",
+    name: "NIFTY 50",
+    price: 22124.65,
+    priceChange: -89.30,
+    percentChange: -0.40,
   },
   // ── Currencies ──
   "EURUSD=X": {
@@ -186,6 +214,13 @@ export const DEMO_QUOTES: Record<string, quoteType> = {
     priceChange: 0.0031,
     percentChange: 0.21,
   },
+  "AUDUSD=X": {
+    symbol: "audusd=x",
+    name: "AUD/USD",
+    price: 0.6388,
+    priceChange: -0.0022,
+    percentChange: -0.34,
+  },
   // ── Crypto ──
   "BTC-USD": {
     symbol: "btc-usd",
@@ -200,6 +235,27 @@ export const DEMO_QUOTES: Record<string, quoteType> = {
     price: 2294.30,
     priceChange: -45.80,
     percentChange: -1.96,
+  },
+  "SOL-USD": {
+    symbol: "sol-usd",
+    name: "Solana USD",
+    price: 142.78,
+    priceChange: -3.21,
+    percentChange: -2.20,
+  },
+  "XRP-USD": {
+    symbol: "xrp-usd",
+    name: "XRP USD",
+    price: 2.3412,
+    priceChange: -0.0360,
+    percentChange: -1.51,
+  },
+  "DOGE-USD": {
+    symbol: "doge-usd",
+    name: "Dogecoin USD",
+    price: 0.2609,
+    priceChange: -0.0032,
+    percentChange: -1.21,
   },
   "BAT-USD": {
     symbol: "bat-usd",

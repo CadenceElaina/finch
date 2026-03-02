@@ -1,0 +1,166 @@
+/* ─────────────────────────────────────────────
+   Financials component — Google Finance style
+   ───────────────────────────────────────────── */
+
+.fin-section {
+  padding-top: 4px;
+}
+
+/* ── Sub-tabs ── */
+.fin-sub-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.fin-sub-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+}
+
+.fin-sub-tab:hover {
+  color: var(--text-primary);
+}
+
+.fin-sub-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.fin-period-badge {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+}
+
+/* ── Chart heading + legend ── */
+.fin-chart-heading {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.fin-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.fin-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.fin-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Chart wrapper ── */
+.fin-chart-wrap {
+  margin-bottom: 24px;
+}
+
+/* ── Data table ── */
+.fin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 500px;
+}
+
+.fin-table thead {
+  position: sticky;
+  top: 0;
+}
+
+.fin-table-label-th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  padding: 10px 8px 10px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.fin-table-val-th {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 10px 0 10px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.fin-table-label-td {
+  color: var(--text-secondary);
+  padding: 10px 8px 10px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.fin-table-val-td {
+  text-align: right;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 10px 0 10px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.fin-table tbody tr:last-child .fin-table-label-td,
+.fin-table tbody tr:last-child .fin-table-val-td {
+  border-bottom: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .fin-sub-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .fin-sub-tab {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .fin-period-badge {
+    font-size: 11px;
+  }
+
+  .fin-table {
+    font-size: 12px;
+  }
+}

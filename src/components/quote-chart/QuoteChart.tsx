@@ -187,8 +187,11 @@ const QuoteChart: React.FC<{
 
   const chartData = (data.chartData as ChartData[]).map((entry) => {
     if (interval === "5Y" || interval === "MAX") {
-      const year = entry.formattedXAxis;
-      uniqueYearsSet.add(year);
+      const label = entry.formattedXAxis;
+      // Collect pure year strings (e.g. "2022") as tick markers
+      if (/^\d{4}$/.test(label)) {
+        uniqueYearsSet.add(label);
+      }
       return {
         time: entry.time,
         close: entry.close,
@@ -215,7 +218,10 @@ const QuoteChart: React.FC<{
     }
   });
 
-  const uniqueDaysArray = Array.from(uniqueDaysSet);
+  // Use year markers for 5Y/MAX, day labels for everything else
+  const ticksArray = (interval === "5Y" || interval === "MAX")
+    ? Array.from(uniqueYearsSet)
+    : Array.from(uniqueDaysSet);
 
   let lineStrokeColor = colors.positive; // Default color
 
@@ -237,7 +243,7 @@ const QuoteChart: React.FC<{
     lineStrokeColor === colors.negative ? colors.negativeArea : colors.positiveArea;
   return (
     <div className="chart-quote">
-      <ResponsiveContainer width="100%" height={528}>
+      <ResponsiveContainer width="100%" height={280}>
         <ComposedChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -246,7 +252,7 @@ const QuoteChart: React.FC<{
           <XAxis
             dataKey="formattedXAxis"
             tick={{ fontSize: 12, fill: colors.tick }}
-            ticks={uniqueDaysArray as (string | number)[]}
+            ticks={ticksArray as (string | number)[]}
           />
           <YAxis
             scale="linear"

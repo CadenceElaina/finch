@@ -1,12 +1,12 @@
 /**
- * Finch — YH Finance API Configuration & Cache Policy
+ * Finch — Yahoo Finance 166 API Configuration & Cache Policy
  * -------------------------------------------------------
  * Single source of truth for API endpoints, rate limits, cache TTLs,
  * and refresh strategies. Import from here instead of scattering magic
  * numbers across components.
  *
- * Provider : YH Finance via RapidAPI
- * Host     : yh-finance.p.rapidapi.com
+ * Provider : Yahoo Finance 166 via RapidAPI
+ * Host     : yahoo-finance166.p.rapidapi.com
  * Tier     : Free (Basic)
  *
  * HARD LIMITS (free tier)
@@ -21,7 +21,7 @@
 
 // ── API keys & host ──────────────────────────────────────
 
-export const YH_API_HOST = "yh-finance.p.rapidapi.com";
+export const YH_API_HOST = "yahoo-finance166.p.rapidapi.com";
 
 // Key is read from env at runtime (Vite injects it)
 // Falls back to the old apidojo key since it's the same RapidAPI account
@@ -93,12 +93,12 @@ export const ENDPOINTS = {
    * Batch stock/index quotes (snapshots)
    * Used by: Homepage hero, IndexCards, MarketIndexes, Watchlists,
    *          Portfolios, MostFollowed, Gainers/Losers/Active
-   * Path:  GET /market/v2/get-quotes?region=US&symbols=AAPL,MSFT,^DJI
+   * Path:  GET /api/market/get-quote?symbols=AAPL,MSFT,^DJI
    * Notes: Comma-separated symbols (supports ^DJI style index tickers).
    *        Up to ~50 symbols per call. This is our PRIMARY query endpoint.
    */
   batchQuotes: {
-    path: "/market/v2/get-quotes",
+    path: "/api/market/get-quote",
     params: { region: "US" },
     cache: { stale: 30_000, gc: 5 * 60_000 }, // 30 s stale, 5 min gc
   },
@@ -106,10 +106,10 @@ export const ENDPOINTS = {
   /**
    * Auto-complete / search
    * Used by: Search bar
-   * Path:  GET /auto-complete?q=micro&region=US
+   * Path:  GET /api/autocomplete?query=micro&region=US
    */
   search: {
-    path: "/auto-complete",
+    path: "/api/autocomplete",
     params: { region: "US" },
     cache: { stale: 15 * 60_000, gc: 30 * 60_000 },
   },
@@ -117,11 +117,11 @@ export const ENDPOINTS = {
   /**
    * Stock chart / price history
    * Used by: QuoteChart (1D / 5D / 1M / 6M / YTD / 1Y / 5Y)
-   * Path:  GET /stock/v3/get-chart?interval=1d&symbol=AAPL&range=1y&region=US
+   * Path:  GET /api/stock/get-chart?interval=1d&symbol=AAPL&range=1y&region=US
    * Params: interval (1m|5m|15m|1d|1wk|1mo), range (1d|5d|1mo|6mo|ytd|1y|5y|max)
    */
   history: {
-    path: "/stock/v3/get-chart",
+    path: "/api/stock/get-chart",
     params: { region: "US" },
     cache: {
       stale: 5 * 60_000,
@@ -130,24 +130,70 @@ export const ENDPOINTS = {
   },
 
   /**
-   * Market movers — gainers, losers, most-active in one call
-   * Used by: MarketTrends tabs (Gainers/Losers/MostActive)
-   * Path:  GET /market/v2/get-movers?region=US&lang=en-US&count=25&start=0
-   * Notes: Returns gainers + losers + most-active all in one response.
+   * Market movers — gainers
+   * Used by: MarketTrends "Gainers" tab
+   * Path:  GET /api/market/get-day-gainers?region=US&count=25
    */
-  movers: {
-    path: "/market/v2/get-movers",
-    params: { region: "US", lang: "en-US", count: 25, start: 0 },
+  moversGainers: {
+    path: "/api/market/get-day-gainers",
+    params: { region: "US", language: "en-US", count: 25, offset: 0 },
     cache: { stale: 60_000, gc: 5 * 60_000 },
   },
 
   /**
-   * Stock profile (summary, financials)
+   * Market movers — losers
+   * Used by: MarketTrends "Losers" tab
+   * Path:  GET /api/market/get-day-losers?region=US&count=25
+   */
+  moversLosers: {
+    path: "/api/market/get-day-losers",
+    params: { region: "US", language: "en-US", count: 25, offset: 0 },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Market movers — most active
+   * Used by: MarketTrends "Most Active" tab
+   * Path:  GET /api/market/get-most-actives?region=US&count=25
+   */
+  moversActive: {
+    path: "/api/market/get-most-actives",
+    params: { region: "US", language: "en-US", count: 25, offset: 0 },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Kept for backward compat — routes to gainers by default.
+   * Legacy code that references ENDPOINTS.movers will still work.
+   */
+  movers: {
+    path: "/api/market/get-day-gainers",
+    params: { region: "US", language: "en-US", count: 25, offset: 0 },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Stock profile / financial data
    * Used by: Quote page
-   * Path:  GET /stock/v3/get-profile?symbol=AAPL&region=US
+   * Path:  GET /api/stock/get-financial-data?symbol=AAPL&region=US
    */
   profile: {
-    path: "/stock/v3/get-profile",
+    path: "/api/stock/get-financial-data",
+    params: { region: "US" },
+    cache: {
+      stale: 60 * 60_000,
+      gc: 2 * 60 * 60_000,
+      ls: 24 * 60 * 60_000,
+    },
+  },
+
+  /**
+   * Stock statistics (key stats, valuation, profile)
+   * Used by: Quote page sidebar
+   * Path:  GET /api/stock/get-statistics?symbol=AAPL&region=US
+   */
+  statistics: {
+    path: "/api/stock/get-statistics",
     params: { region: "US" },
     cache: {
       stale: 60 * 60_000,
@@ -159,12 +205,63 @@ export const ENDPOINTS = {
   /**
    * Trending tickers
    * Used by: MarketTrends "Trending" tab
-   * Path:  GET /market/get-trending-tickers?region=US
+   * Path:  GET /api/market/get-trending?region=US
    */
   trending: {
-    path: "/market/get-trending-tickers",
-    params: { region: "US" },
+    path: "/api/market/get-trending",
+    params: { region: "US", language: "en-US", quote_type: "ALL" },
     cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Analyst upgrade/downgrade history
+   * Used by: Quote page (new feature)
+   * Path:  GET /api/stock/get-upgrade-downgrade-history?symbol=AAPL&region=US
+   */
+  upgradeDowngrade: {
+    path: "/api/stock/get-upgrade-downgrade-history",
+    params: { region: "US" },
+    cache: {
+      stale: 60 * 60_000,
+      gc: 2 * 60 * 60_000,
+    },
+  },
+
+  /**
+   * World indices — for all global market indices
+   * Used by: Markets component (Europe, Asia tabs)
+   * Path:  GET /api/market/get-world-indices?region=US
+   */
+  worldIndices: {
+    path: "/api/market/get-world-indices",
+    params: { region: "US", language: "en-US" },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Market summary — US indexes with spark data
+   * Used by: Markets component (US tab)
+   * Path:  GET /api/market/get-market-summary?market_region=US
+   */
+  marketSummary: {
+    path: "/api/market/get-market-summary",
+    params: { market_region: "US" },
+    cache: { stale: 60_000, gc: 5 * 60_000 },
+  },
+
+  /**
+   * Company outlook summary
+   * Used by: Quote page about section
+   * Path:  GET /api/stock/get-company-outlook-summary?symbol=AAPL&region=US
+   */
+  companyOutlook: {
+    path: "/api/stock/get-company-outlook-summary",
+    params: { region: "US" },
+    cache: {
+      stale: 60 * 60_000,
+      gc: 2 * 60 * 60_000,
+      ls: 24 * 60 * 60_000,
+    },
   },
 } as const;
 

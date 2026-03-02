@@ -26,7 +26,21 @@ const LS_TTL = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseQuote(q: any, fallbackSymbol?: string): quoteType {
-  // YH Finance format (primary)
+  // Yahoo Finance 166 — quoteSummary format (nested {raw, fmt} objects)
+  if (q.price?.regularMarketPrice?.raw !== undefined) {
+    const p = q.price;
+    return {
+      symbol: (p.symbol ?? fallbackSymbol ?? "").toLowerCase(),
+      price: p.regularMarketPrice?.raw ?? 0,
+      name: p.shortName ?? p.longName ?? "",
+      priceChange: Number((p.regularMarketChange?.raw ?? 0).toFixed(2)),
+      percentChange: p.regularMarketChangePercent?.raw
+        ? p.regularMarketChangePercent.raw * 100
+        : 0,
+    };
+  }
+
+  // Old YH Finance format (flat keys) or flat yahoo-finance166 format
   return {
     symbol: (q.symbol ?? fallbackSymbol ?? "").toLowerCase(),
     price: q.regularMarketPrice ?? 0,
@@ -87,7 +101,7 @@ export const getBatchQuotes = async (
 
   if (stillUncached.length === 0) return result;
 
-  // 3. Batch fetch remaining symbols in one YH Finance call
+  // 3. Batch fetch remaining symbols in one Yahoo Finance call
   try {
     const symbolsParam = stillUncached.join(",");
     const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
@@ -95,12 +109,20 @@ export const getBatchQuotes = async (
       symbols: symbolsParam,
     });
 
-    const rawQuotes = response.data?.quoteResponse?.result ?? [];
+    // Handle both response formats:
+    // Old yh-finance: quoteResponse.result[]
+    // New yahoo-finance166: quoteSummary.result[] (with nested price objects) or quoteResponse.result[]
+    const rawQuotes =
+      response.data?.quoteResponse?.result ??
+      response.data?.quoteSummary?.result ??
+      [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bySymbol: Record<string, any> = {};
     for (const q of rawQuotes) {
-      if (q.symbol) {
-        bySymbol[q.symbol] = q;
+      // Handle both formats: flat q.symbol or nested q.price.symbol
+      const sym = q.symbol ?? q.price?.symbol;
+      if (sym) {
+        bySymbol[sym] = q;
       }
     }
 
@@ -203,16 +225,13 @@ export const getQuote = async (
       symbols: symbol,
     });
 
-    const q = response.data?.quoteResponse?.result?.[0];
+    // Handle both response formats
+    const q =
+      response.data?.quoteResponse?.result?.[0] ??
+      response.data?.quoteSummary?.result?.[0];
     if (!q) throw new Error("No quote data returned");
 
-    const quoteData: quoteType = {
-      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
-      price: q.regularMarketPrice ?? 0,
-      name: q.shortName ?? "",
-      priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
-      percentChange: q.regularMarketChangePercent ?? 0,
-    };
+    const quoteData: quoteType = parseQuote(q, symbol);
 
     queryClient.setQueryData(["quote", symbol], quoteData);
     return quoteData;
@@ -235,10 +254,167 @@ export const getQuotePageData = async (
   symbol: string,
   isIndex?: boolean
 ): Promise<QuotePageData | null> => {
-  // Demo mode fallback
-  if (isDemoActive()) {
-    const sym = symbol.toUpperCase();
-    return DEMO_QUOTE_PAGE_DATA[sym] ?? null;
+  const inDemo = isDemoActive();
+  const sym = symbol.toUpperCase();
+
+  // Demo mode: use known demo data as baseline, but still fetch about/profile
+  // from API for unknown symbols (can't fake About/CEO convincingly)
+  if (inDemo) {
+    const knownDemo = DEMO_QUOTE_PAGE_DATA[sym];
+    if (knownDemo) {
+      // Known demo symbol — use cached data, no API calls needed
+      return knownDemo;
+    }
+
+    // Unknown symbol in demo mode — try fetching quote + about from API
+    // (limited API usage: 2 calls max for quote data + profile)
+    try {
+      const response = await yhFetch(ENDPOINTS.batchQuotes.path, {
+        region: "US",
+        symbols: symbol,
+      });
+
+      const q =
+        response.data?.quoteResponse?.result?.[0] ??
+        response.data?.quoteSummary?.result?.[0];
+
+      if (q) {
+        const quoteData: quoteType = parseQuote(q, symbol);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawVal = (v: any): number | undefined =>
+          v?.raw !== undefined ? v.raw : typeof v === "number" ? v : undefined;
+        const priceData = q.price ?? q;
+        const summaryDetail = q.summaryDetail ?? q;
+
+        const quoteSidebarData: QuotePageSidebarData = {
+          previousClose: (() => {
+            const v = rawVal(priceData.regularMarketPreviousClose) ?? rawVal(summaryDetail.previousClose);
+            return v ? `$${v}` : "";
+          })(),
+          dayRange: (() => {
+            const lo = rawVal(priceData.regularMarketDayLow) ?? rawVal(summaryDetail.dayLow);
+            const hi = rawVal(priceData.regularMarketDayHigh) ?? rawVal(summaryDetail.dayHigh);
+            if (lo && hi) return `$${lo} - $${hi}`;
+            return priceData.regularMarketDayRange ?? summaryDetail.dayRange ?? "";
+          })(),
+          fiftyTwoWeekRange: (() => {
+            const lo = rawVal(summaryDetail.fiftyTwoWeekLow) ?? rawVal(priceData.fiftyTwoWeekLow);
+            const hi = rawVal(summaryDetail.fiftyTwoWeekHigh) ?? rawVal(priceData.fiftyTwoWeekHigh);
+            if (lo && hi) return `$${lo} - $${hi}`;
+            if (hi) return `$${hi}`;
+            return "";
+          })(),
+          marketCap: (() => {
+            const v = rawVal(priceData.marketCap) ?? rawVal(summaryDetail.marketCap);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          volume: (() => {
+            const v = rawVal(priceData.regularMarketVolume) ?? rawVal(summaryDetail.volume);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          average3MonthVolume: (() => {
+            const v = rawVal(priceData.averageDailyVolume3Month) ?? rawVal(summaryDetail.averageVolume);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          trailingPE: (() => {
+            const v = rawVal(summaryDetail.trailingPE) ?? rawVal(priceData.trailingPE);
+            return v ? `${v.toFixed(2)}` : "";
+          })(),
+          dividendYield: (() => {
+            const v = rawVal(summaryDetail.dividendYield) ?? rawVal(priceData.dividendYield);
+            return v ? `${(v * 100).toFixed(2)}%` : "";
+          })(),
+          primaryExchange: priceData.fullExchangeName ?? priceData.exchangeName ?? "",
+        };
+
+        // In demo mode, also fetch profile/about (can't fake CEO/description)
+        let quoteSidebarAboutData: QuotePageSidebarAboutData = {
+          summary: "", website: "", headquarters: "", employees: "", ceo: "",
+        };
+        let quoteFinancialData: QuotePageFinancialData = {
+          annualRevenue: "", netIncome: "", netProfitMargin: "", ebitda: "",
+        };
+
+        if (!isIndex) {
+          try {
+            const profileRes = await yhFetch(ENDPOINTS.profile.path, {
+              symbol,
+              region: "US",
+            });
+            const d = profileRes.data ?? {};
+            const result0 = d.quoteSummary?.result?.[0] ?? {};
+            const profile = result0.assetProfile ?? d.summaryProfile ?? d.assetProfile;
+            if (profile) {
+              const officers = profile.companyOfficers ?? [];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const ceoEntry = officers.find((o: any) =>
+                (o.title ?? "").toLowerCase().includes("ceo") ||
+                (o.title ?? "").toLowerCase().includes("chief executive")
+              );
+              quoteSidebarAboutData = {
+                summary: profile.longBusinessSummary ?? "",
+                website: profile.website ?? "",
+                headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
+                employees: profile.fullTimeEmployees
+                  ? `${typeof profile.fullTimeEmployees === "object" ? profile.fullTimeEmployees.longFmt ?? profile.fullTimeEmployees.fmt ?? profile.fullTimeEmployees.raw : profile.fullTimeEmployees.toLocaleString()}`
+                  : "",
+                ceo: ceoEntry?.name ?? "",
+              };
+            }
+            // Skip financial data in demo — can be generated to save API calls
+          } catch (err) {
+            console.warn(`[Finch] Demo profile fetch failed for ${symbol}:`, err);
+          }
+        }
+
+        const quotePageData: QuotePageData = {
+          quoteData,
+          quoteSidebarData,
+          quoteSidebarAboutData,
+          quoteFinancialData,
+        };
+        queryClient.setQueryData(["quotePageData", symbol], quotePageData);
+        return quotePageData;
+      }
+    } catch (err) {
+      console.warn(`[Finch] Demo quote fetch failed for ${symbol}:`, err);
+    }
+
+    // API calls failed — return minimal placeholder so page isn't blank
+    return {
+      quoteData: {
+        symbol: symbol.toLowerCase(),
+        name: sym,
+        price: 0,
+        priceChange: 0,
+        percentChange: 0,
+      },
+      quoteSidebarData: {
+        previousClose: "",
+        dayRange: "",
+        fiftyTwoWeekRange: "",
+        marketCap: "",
+        volume: "",
+        average3MonthVolume: "",
+        trailingPE: "",
+        dividendYield: "",
+        primaryExchange: "",
+      },
+      quoteSidebarAboutData: {
+        summary: "",
+        website: "",
+        headquarters: "",
+        employees: "",
+        ceo: "",
+      },
+      quoteFinancialData: {
+        annualRevenue: "",
+        netIncome: "",
+        netProfitMargin: "",
+        ebitda: "",
+      },
+    };
   }
 
   try {
@@ -271,18 +447,24 @@ export const getQuotePageData = async (
       symbols: symbol,
     });
 
-    const q = response.data?.quoteResponse?.result?.[0];
+    // Handle both response formats
+    const q =
+      response.data?.quoteResponse?.result?.[0] ??
+      response.data?.quoteSummary?.result?.[0];
     if (!q) throw new Error("No quote data returned");
 
-    const quoteData: quoteType = {
-      symbol: q.symbol?.toLowerCase() ?? symbol.toLowerCase(),
-      price: q.regularMarketPrice ?? 0,
-      name: q.shortName ?? "",
-      priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
-      percentChange: q.regularMarketChangePercent ?? 0,
-    };
+    const quoteData: quoteType = parseQuote(q, symbol);
 
-    // Populate sidebar from the flat quote response
+    // Helper to extract value from flat or nested {raw, fmt} format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawVal = (v: any): number | undefined =>
+      v?.raw !== undefined ? v.raw : typeof v === "number" ? v : undefined;
+
+    // For quoteSummary format, data may be in q.price or q.summaryDetail
+    const priceData = q.price ?? q;
+    const summaryDetail = q.summaryDetail ?? q;
+
+    // Populate sidebar from the flat or nested quote response
     const quoteSidebarData: QuotePageSidebarData = isIndex
       ? {
           previousClose: "",
@@ -296,31 +478,44 @@ export const getQuotePageData = async (
           primaryExchange: "",
         }
       : {
-          previousClose: q.regularMarketPreviousClose
-            ? `$${q.regularMarketPreviousClose}`
-            : "",
-          dayRange:
-            q.regularMarketDayLow && q.regularMarketDayHigh
-              ? `$${q.regularMarketDayLow} - $${q.regularMarketDayHigh}`
-              : q.regularMarketDayRange ?? "",
-          fiftyTwoWeekRange:
-            q.fiftyTwoWeekLow && q.fiftyTwoWeekHigh
-              ? `$${q.fiftyTwoWeekLow} - $${q.fiftyTwoWeekHigh}`
-              : q.fiftyTwoWeekHigh
-                ? `$${q.fiftyTwoWeekHigh}`
-                : "",
-          marketCap: q.marketCap ? formatLargeNumber(q.marketCap) : "",
-          volume: q.regularMarketVolume
-            ? formatLargeNumber(q.regularMarketVolume)
-            : "",
-          average3MonthVolume: q.averageDailyVolume3Month
-            ? formatLargeNumber(q.averageDailyVolume3Month)
-            : "",
-          trailingPE: q.trailingPE ? `${q.trailingPE.toFixed(2)}` : "",
-          dividendYield: q.dividendYield
-            ? `${q.dividendYield.toFixed(2)}%`
-            : "",
-          primaryExchange: q.fullExchangeName ?? "",
+          previousClose: (() => {
+            const v = rawVal(priceData.regularMarketPreviousClose) ?? rawVal(summaryDetail.previousClose);
+            return v ? `$${v}` : "";
+          })(),
+          dayRange: (() => {
+            const lo = rawVal(priceData.regularMarketDayLow) ?? rawVal(summaryDetail.dayLow);
+            const hi = rawVal(priceData.regularMarketDayHigh) ?? rawVal(summaryDetail.dayHigh);
+            if (lo && hi) return `$${lo} - $${hi}`;
+            return priceData.regularMarketDayRange ?? summaryDetail.dayRange ?? "";
+          })(),
+          fiftyTwoWeekRange: (() => {
+            const lo = rawVal(summaryDetail.fiftyTwoWeekLow) ?? rawVal(priceData.fiftyTwoWeekLow);
+            const hi = rawVal(summaryDetail.fiftyTwoWeekHigh) ?? rawVal(priceData.fiftyTwoWeekHigh);
+            if (lo && hi) return `$${lo} - $${hi}`;
+            if (hi) return `$${hi}`;
+            return "";
+          })(),
+          marketCap: (() => {
+            const v = rawVal(priceData.marketCap) ?? rawVal(summaryDetail.marketCap);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          volume: (() => {
+            const v = rawVal(priceData.regularMarketVolume) ?? rawVal(summaryDetail.volume);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          average3MonthVolume: (() => {
+            const v = rawVal(priceData.averageDailyVolume3Month) ?? rawVal(summaryDetail.averageVolume);
+            return v ? formatLargeNumber(v) : "";
+          })(),
+          trailingPE: (() => {
+            const v = rawVal(summaryDetail.trailingPE) ?? rawVal(priceData.trailingPE);
+            return v ? `${v.toFixed(2)}` : "";
+          })(),
+          dividendYield: (() => {
+            const v = rawVal(summaryDetail.dividendYield) ?? rawVal(priceData.dividendYield);
+            return v ? `${(v * 100).toFixed(2)}%` : "";
+          })(),
+          primaryExchange: priceData.fullExchangeName ?? priceData.exchangeName ?? "",
         };
 
     // Profile data requires a separate call
@@ -347,9 +542,11 @@ export const getQuotePageData = async (
 
         const d = profileRes.data ?? {};
 
-        // /stock/v3/get-profile returns flat keys: summaryProfile, financialData, etc.
+        // yahoo-finance166: /api/stock/get-financial-data returns quoteSummary.result[]
+        // Also try assetProfile, summaryProfile for backward compat
+        const result0 = d.quoteSummary?.result?.[0] ?? {};
         const profile =
-          d.quoteSummary?.result?.[0]?.assetProfile ??
+          result0.assetProfile ??
           d.summaryProfile ??
           d.assetProfile;
         if (profile) {
@@ -366,17 +563,16 @@ export const getQuotePageData = async (
             website: profile.website ?? "",
             headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
             employees: profile.fullTimeEmployees
-              ? `${profile.fullTimeEmployees.toLocaleString()}`
+              ? `${typeof profile.fullTimeEmployees === "object" ? profile.fullTimeEmployees.longFmt ?? profile.fullTimeEmployees.fmt ?? profile.fullTimeEmployees.raw : profile.fullTimeEmployees.toLocaleString()}`
               : "",
             ceo: ceoEntry?.name ?? "",
           };
         }
 
         const fin =
-          d.quoteSummary?.result?.[0]?.financialData ??
+          result0.financialData ??
           d.financialData;
-        // netIncomeToCommon lives in defaultKeyStatistics, not financialData
-        const keyStats = d.quoteSummary?.result?.[0]?.defaultKeyStatistics ?? d.defaultKeyStatistics;
+        const keyStats = result0.defaultKeyStatistics ?? d.defaultKeyStatistics;
         if (fin) {
           quoteFinancialData = {
             annualRevenue: fin.totalRevenue?.fmt ?? "",
@@ -405,7 +601,8 @@ export const getQuotePageData = async (
     }
     return quotePageData;
   } catch (error) {
-    return null;
+    // Re-throw so React Query treats it as an error (shows error state + retry)
+    throw error;
   }
 };
 
@@ -426,11 +623,23 @@ export const getMoversSymbols = async (
   title: string,
   queryClient?: QueryClient
 ): Promise<string[]> => {
-  // Map UI title strings to the canonicalName returned by /market/v2/get-movers
+  // Map UI title strings to canonical names and endpoint paths
   let canonicalName = "MOST_ACTIVES";
-  if (title === "active") canonicalName = "MOST_ACTIVES";
-  else if (title === "losers") canonicalName = "DAY_LOSERS";
-  else canonicalName = "DAY_GAINERS";
+  let endpointPath: string = ENDPOINTS.moversActive.path;
+  let endpointParams: Record<string, string | number> = { ...ENDPOINTS.moversActive.params };
+  if (title === "active") {
+    canonicalName = "MOST_ACTIVES";
+    endpointPath = ENDPOINTS.moversActive.path;
+    endpointParams = { ...ENDPOINTS.moversActive.params };
+  } else if (title === "losers") {
+    canonicalName = "DAY_LOSERS";
+    endpointPath = ENDPOINTS.moversLosers.path;
+    endpointParams = { ...ENDPOINTS.moversLosers.params };
+  } else {
+    canonicalName = "DAY_GAINERS";
+    endpointPath = ENDPOINTS.moversGainers.path;
+    endpointParams = { ...ENDPOINTS.moversGainers.params };
+  }
 
   // Demo mode fallback
   if (isDemoActive()) {
@@ -456,42 +665,47 @@ export const getMoversSymbols = async (
   }
 
   try {
-    const response = await yhFetch(ENDPOINTS.movers.path, {
-      ...ENDPOINTS.movers.params,
+    // yahoo-finance166 has separate endpoints per mover category
+    const response = await yhFetch(endpointPath, {
+      ...endpointParams,
     });
 
-    // Response shape: { finance: { result: [{ canonicalName, quotes: [...] }] } }
-    const results = response.data?.finance?.result ?? [];
+    // Response may be: finance.result[0].quotes[] or quoteSummary.result[]
+    const finResults = response.data?.finance?.result ?? [];
+    const quoteSummaryResults = response.data?.quoteSummary?.result ?? [];
 
-    // Cache ALL categories from this single API call to avoid re-fetching on tab switch
+    // Extract quotes from whichever format we got
+    let quotes: any[] = [];
+    if (finResults.length > 0) {
+      // Old format: { finance: { result: [{ quotes: [...] }] } }
+      for (const cat of finResults) {
+        quotes = quotes.concat(cat?.quotes ?? []);
+      }
+    } else if (quoteSummaryResults.length > 0) {
+      // quoteSummary format — each result item IS a quote
+      quotes = quoteSummaryResults;
+    }
+
+    const topQuotes = quotes.slice(0, 5);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const symbols: string[] = topQuotes
+      .map((q: any) => q.symbol ?? q.price?.symbol)
+      .filter(Boolean);
+
+    // Cache results
     if (queryClient) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const cat of results) {
-        const catQuotes = (cat?.quotes ?? []).slice(0, 5);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const catSymbols: string[] = catQuotes.map((q: any) => q.symbol);
-        queryClient.setQueryData(["movers", cat.canonicalName], catSymbols);
-        cacheStorage.set(`movers_${cat.canonicalName}`, catSymbols);
-        // Pre-cache individual quote data
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        for (const q of catQuotes) {
-          if (q.symbol) {
-            const parsed = parseQuote(q, q.symbol);
-            queryClient.setQueryData(["quote", q.symbol], parsed);
-            cacheStorage.set(`quote_${q.symbol}`, parsed);
-          }
+      queryClient.setQueryData(["movers", canonicalName], symbols);
+      cacheStorage.set(`movers_${canonicalName}`, symbols);
+      // Pre-cache individual quote data
+      for (const q of topQuotes) {
+        const sym = q.symbol ?? q.price?.symbol;
+        if (sym) {
+          const parsed = parseQuote(q, sym);
+          queryClient.setQueryData(["quote", sym], parsed);
+          cacheStorage.set(`quote_${sym}`, parsed);
         }
       }
     }
-
-    const category = results.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (r: any) => r.canonicalName === canonicalName
-    );
-    const quotes = category?.quotes ?? [];
-    const topQuotes = quotes.slice(0, 5);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const symbols: string[] = topQuotes.map((q: any) => q.symbol);
 
     return symbols;
   } catch (error) {
@@ -518,11 +732,23 @@ export const getTrending = async (queryClient: QueryClient) => {
       ...ENDPOINTS.trending.params,
     });
 
-    // Response shape: { finance: { result: [{ count, quotes: [{ symbol }] }] } }
-    const results = response.data?.finance?.result ?? [];
-    const rawQuotes = results[0]?.quotes ?? [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const symbols = rawQuotes.slice(0, 10).map((q: any) => q.symbol);
+    // yahoo-finance166 trending: might return quoteSummary.result[] or finance.result[].quotes[]
+    let symbols: string[] = [];
+    const finResults = response.data?.finance?.result ?? [];
+    const quoteSummaryResults = response.data?.quoteSummary?.result ?? [];
+
+    if (finResults.length > 0) {
+      const rawQuotes = finResults[0]?.quotes ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      symbols = rawQuotes.slice(0, 10).map((q: any) => q.symbol);
+    } else if (quoteSummaryResults.length > 0) {
+      // quoteSummary format: each result has price.symbol
+      symbols = quoteSummaryResults
+        .slice(0, 10)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((q: any) => q.symbol ?? q.price?.symbol)
+        .filter(Boolean);
+    }
 
     if (symbols.length === 0) return [];
 

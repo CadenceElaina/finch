@@ -1,9 +1,8 @@
 .app-container {
-  margin: 25px auto 0 auto;
-  padding: 30px;
+  margin: 8px auto 0 auto;
+  padding: 16px 30px;
   border-radius: 12px;
   overflow: hidden;
-  /*   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); */
   max-height: 60px;
   width: 60%;
   position: relative;
