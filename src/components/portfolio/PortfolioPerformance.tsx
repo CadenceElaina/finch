@@ -308,15 +308,6 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             <span className="perf-value-cost">Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</span>
           )}
         </div>
-        <div className={`perf-change-card ${gainClass(portfolioPerformance.totalPriceChange)}`}>
-          <span className="perf-change-label">Today</span>
-          <span className="perf-change-num">
-            {portfolioPerformance.totalPriceChange >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalPriceChange))}
-          </span>
-          <span className="perf-change-pct">
-            {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalPercentChange)}%
-          </span>
-        </div>
         <div className={`perf-change-card ${gainClass(portfolioPerformance.totalGain)}`}>
           <span className="perf-change-label">Total Return</span>
           <span className="perf-change-num">
@@ -324,6 +315,15 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
           </span>
           <span className="perf-change-pct">
             {portfolioPerformance.totalGainPct >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalGainPct)}%
+          </span>
+        </div>
+        <div className={`perf-change-card ${gainClass(portfolioPerformance.totalPriceChange)}`}>
+          <span className="perf-change-label">Today</span>
+          <span className="perf-change-num">
+            {portfolioPerformance.totalPriceChange >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalPriceChange))}
+          </span>
+          <span className="perf-change-pct">
+            {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalPercentChange)}%
           </span>
         </div>
         {spyDayChange && (

@@ -23,7 +23,7 @@ interface PortfolioAnalysisProps {
   totalValue: number;
 }
 
-type AllocTab = "sector" | "marketCap" | "geography" | "assetType";
+type AllocTab = "holdings" | "sector" | "marketCap" | "geography" | "assetType";
 
 // ── Constants ────────────────────────────────────────────
 
@@ -43,6 +43,7 @@ const PIE_COLORS = [
 ];
 
 const TAB_LABELS: Record<AllocTab, string> = {
+  holdings: "Holdings",
   sector: "Sector",
   marketCap: "Market Cap",
   geography: "Geography",
@@ -82,10 +83,16 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
   holdings,
   totalValue,
 }) => {
-  const [allocTab, setAllocTab] = useState<AllocTab>("sector");
+  const [allocTab, setAllocTab] = useState<AllocTab>("holdings");
 
   // ── Allocation data by category ──
   const allocations = useMemo(() => {
+    // Per-position (holdings)
+    const byHolding: Record<string, number> = {};
+    for (const h of holdings) {
+      byHolding[h.symbol] = (byHolding[h.symbol] || 0) + h.currentValue;
+    }
+
     const bySector: Record<string, number> = {};
     const byMarketCap: Record<string, number> = {};
     const byGeo: Record<string, number> = {};
@@ -107,6 +114,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
     }
 
     return {
+      holdings: toEntries(byHolding, totalValue),
       sector: toEntries(bySector, totalValue),
       marketCap: toEntries(byMarketCap, totalValue),
       geography: toEntries(byGeo, totalValue),
@@ -135,8 +143,9 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
           )
         : 0;
 
-    // Concentration: any single holding > 25% of portfolio
+    // Concentration: only flag individual STOCKS > 25% (ETFs/funds are fine per Bogleheads strategies)
     const concentrated = holdings
+      .filter((h) => h.metadata.quoteType?.toUpperCase() === "EQUITY")
       .map((h) => ({
         symbol: h.symbol,
         pct: (h.currentValue / totalValue) * 100,
@@ -340,8 +349,8 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
               </span>
               <span className="pa-risk-hint">
                 {riskMetrics.concentrated.length > 0
-                  ? "Single holding exceeds 25% — consider rebalancing"
-                  : "No single position exceeds 25%"}
+                  ? "Single stock exceeds 25% of portfolio"
+                  : "No single stock exceeds 25%"}
               </span>
             </div>
 
