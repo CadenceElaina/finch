@@ -10,7 +10,7 @@
  * Cost: 1 SA API call per batch (all ETFs in portfolio).
  */
 
-import { saFetch } from \"../config/seekingAlphaApi\";
+import { saFetch } from "../config/seekingAlphaApi";
 import { isDemoActive } from "../data/demo/demoState";
 import { cacheStorage } from "./storage";
 
