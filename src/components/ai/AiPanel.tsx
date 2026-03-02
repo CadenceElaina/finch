@@ -11,6 +11,7 @@ import ResearchChat from "./ResearchChat";
 import { QuotePageData } from "../search/types";
 import { FaRobot, FaChevronDown, FaChevronUp, FaInfoCircle } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
+import { FiExternalLink } from "react-icons/fi";
 import "./AiPanel.css";
 
 interface AiPanelProps {
@@ -67,6 +68,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ symbol, quotePageData }) => {
             >
               <BsStars size={12} />
               <span>Gemini 2.5 Flash</span>
+              <FiExternalLink size={10} />
             </a>
           </div>
         </>

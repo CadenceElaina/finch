@@ -8,6 +8,7 @@ import { useAi } from "../../context/AiContext";
 import { cacheStorage } from "../../services/storage";
 import { FaRobot, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
+import { FiExternalLink } from "react-icons/fi";
 import "./MarketOverview.css";
 
 const CACHE_KEY = "ai_market_overview";
@@ -150,6 +151,7 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
       >
         <BsStars size={12} />
         <span>Gemini 2.5 Flash</span>
+        <FiExternalLink size={10} />
       </a>
     </div>
   );

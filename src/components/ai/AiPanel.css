@@ -124,6 +124,8 @@
 .ai-model-badge:hover {
   color: var(--accent);
   border-color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .ai-model-badge svg {

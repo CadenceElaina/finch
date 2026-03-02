@@ -9,6 +9,7 @@ import { cacheStorage } from "../../services/storage";
 import { Portfolio } from "../../types/types";
 import { FaRobot } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
+import { FiExternalLink } from "react-icons/fi";
 import "./PortfolioSummary.css";
 
 const CACHE_TTL = 12 * 60 * 60_000; // 12 hours
@@ -135,6 +136,7 @@ Keep it under 100 words. Be factual, not advisory.`;
       >
         <BsStars size={12} />
         <span>Gemini 2.5 Flash</span>
+        <FiExternalLink size={10} />
       </a>
     </div>
   );
