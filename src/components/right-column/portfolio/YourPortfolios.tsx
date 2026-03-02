@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaChartBar } from "react-icons/fa";
 import { usePortfolios } from "../../../context/PortfoliosContext";
 import CustomButton from "../../CustomButton";
 import { portfolioStorage } from "../../../services/storage";
@@ -124,57 +123,34 @@ const YourPortfolios = () => {
   }, 0);
   return (
     <div className="add-portfolio-container">
-      <div className="add-portfolio-header">
-        {/* Portfolio/Graph icon */}
-        <div className="add-portfolio-icon">
-          <FaChartBar size={30} />
-        </div>
-        <div className="add-portfolio-text">
-          <Link to="/portfolio" style={{ textDecoration: "none", color: "var(--text-primary)" }}>
-            Your portfolios
-          </Link>
-        </div>
+      {/* ── Header ── */}
+      <div className="yp-header">
+        <Link to="/portfolio" className="yp-title-link">
+          Your portfolios
+        </Link>
       </div>
-      <div className="portfolio-value">
+
+      {/* ── Total value ── */}
+      <div className="yp-total-value">
         {isLoading && portfolios.length > 0 ? (
           <Skeleton
             variant="text"
-            width={100}
-            height={20}
+            width={140}
+            height={36}
             sx={{ bgcolor: "var(--skeleton-bg)" }}
           />
-        ) : totalPortfolioValue ? (
-          `$${totalPortfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         ) : (
-          "$0.00"
+          `$${totalPortfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         )}
       </div>
-      <div className="border-top"></div>
-      {portfolios.length > 0 ? (
-        <div className="portfolio-list">
+
+      {portfolios.length > 0 && (
+        <div className="yp-list">
           {isLoading ? (
             <>
-              <Skeleton
-                variant="rounded"
-                width={300}
-                height={50}
-                sx={{ bgcolor: "var(--skeleton-bg)" }}
-                style={{ marginBottom: "10px" }}
-              />
-              <Skeleton
-                variant="rounded"
-                width={300}
-                height={50}
-                sx={{ bgcolor: "var(--skeleton-bg)" }}
-                style={{ marginBottom: "10px" }}
-              />
-              <Skeleton
-                variant="rounded"
-                width={300}
-                height={50}
-                sx={{ bgcolor: "var(--skeleton-bg)" }}
-                style={{ marginBottom: "10px" }}
-              />
+              <Skeleton variant="rounded" width="100%" height={52} sx={{ bgcolor: "var(--skeleton-bg)" }} style={{ marginBottom: 6 }} />
+              <Skeleton variant="rounded" width="100%" height={52} sx={{ bgcolor: "var(--skeleton-bg)" }} style={{ marginBottom: 6 }} />
+              <Skeleton variant="rounded" width="100%" height={52} sx={{ bgcolor: "var(--skeleton-bg)" }} />
             </>
           ) : (
             portfolios.map((portfolio) => {
@@ -184,66 +160,53 @@ const YourPortfolios = () => {
                 return acc + security.price * security.quantity;
               }, 0);
 
-              // Daily $ gain/loss: sum of (priceChange × quantity) for each security
               const dailyGainLoss = securities.reduce((acc, security) => {
                 return acc + security.priceChange * security.quantity;
               }, 0);
 
-              // Weighted average percent change:
-              // weight each security's %change by its $ value in the portfolio
               const totalPercentChange =
                 portfolioValue > 0
                   ? securities.reduce((acc, security) => {
-                      const weight =
-                        (security.price * security.quantity) / portfolioValue;
+                      const weight = (security.price * security.quantity) / portfolioValue;
                       return acc + weight * security.percentChange;
                     }, 0)
                   : 0;
 
+              const changeDir =
+                totalPercentChange > 0 ? "p-positive" : totalPercentChange < 0 ? "p-negative" : "";
+
               return (
-                <div key={portfolio.id} className="portfolio">
-                  <div className="portfolio-inner">
-                    <Link
-                      to={`/portfolio/${portfolio.id}`}
-                      style={{ textDecoration: "none", color: "var(--text-primary)" }}
-                      className="portfolio-link"
-                    >
-                      <span className="portfolio-label">{portfolio.title}</span>
-                      <span className="portfolio-value">
-                        {portfolioValue
-                          ? `$${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          : "$0.00"}
-                      </span>
-                      <span
-                        className={`portfolio-daily-change ${
-                          dailyGainLoss > 0
-                            ? "p-positive"
-                            : dailyGainLoss < 0
-                            ? "p-negative"
-                            : ""
-                        }`}
-                      >
-                        {dailyGainLoss >= 0 ? "+" : ""}${Math.abs(dailyGainLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      <span
-                        className={`portfolio-percent-change ${
-                          totalPercentChange > 0
-                            ? "p-positive"
-                            : totalPercentChange < 0
-                            ? "p-negative"
-                            : ""
-                        }`}
-                      >
-                        {totalPercentChange >= 0 ? "+" : ""}{totalPercentChange.toFixed(2)}%
-                      </span>
-                    </Link>
+                <Link
+                  key={portfolio.id}
+                  to={`/portfolio/${portfolio.id}`}
+                  className="yp-row"
+                >
+                  {/* Top line: name + value */}
+                  <div className="yp-row-top">
+                    <span className="yp-row-name">{portfolio.title}</span>
+                    <span className="yp-row-value">
+                      {portfolioValue
+                        ? `$${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : "$0.00"}
+                    </span>
                   </div>
-                </div>
+                  {/* Bottom line: daily change */}
+                  <div className="yp-row-bottom">
+                    <span className={`yp-row-change ${changeDir}`}>
+                      {dailyGainLoss >= 0 ? "+" : "-"}${Math.abs(dailyGainLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span className="yp-row-pct">
+                        &nbsp;{totalPercentChange >= 0 ? "+" : ""}{totalPercentChange.toFixed(2)}%
+                      </span>
+                    </span>
+                  </div>
+                </Link>
               );
             })
           )}
         </div>
-      ) : null}
+      )}
+
+      {/* ── New Portfolio button ── */}
       <div className="add-portfolio-button">
         {canCreateNewPortfolio() ? (
           <CustomButton
@@ -265,6 +228,7 @@ const YourPortfolios = () => {
           </>
         )}
       </div>
+
       {isModalOpen && (
         <NewPortfolioModal onCancel={closeModal} onSave={handleSavePortfolio} />
       )}

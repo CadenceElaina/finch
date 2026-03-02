@@ -117,11 +117,13 @@
   padding-top: 1rem;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 /* ── Section header (title + actions) ── */
 .lists-section-header {
   margin-bottom: 0.75rem;
+  width: 100%;
 }
 
 .lists-title-row {
@@ -210,14 +212,26 @@
 }
 
 /* ── Empty states ── */
-.lists-empty,
-.lists-empty-holdings {
+.lists-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
   text-align: center;
+  width: 100%;
+}
+
+.lists-empty-holdings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  text-align: center;
+  width: 100%;
+  border: 1px dashed var(--border-strong, #444);
+  border-radius: var(--radius-md, 10px);
 }
 
 .lists-empty-title {
@@ -260,6 +274,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  width: 100%;
 }
 
 /* ── Highlights row ── */
@@ -422,6 +437,7 @@
 /* ── Table ── */
 .perf-table-wrap {
   overflow-x: auto;
+  width: 100%;
 }
 
 .perf-table {
@@ -521,9 +537,9 @@
 
 /* Sparkline cells */
 .sparkline-cell {
-  padding: 2px 6px !important;
-  width: 90px;
-  min-width: 90px;
+  padding: 2px 4px !important;
+  width: 104px;
+  min-width: 104px;
 }
 
 /* ── Responsive ── */

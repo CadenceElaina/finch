@@ -4,7 +4,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { LineChart, Line } from "recharts";
+import { AreaChart, Area } from "recharts";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -176,16 +176,35 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                   {row.percentChange >= 0 ? "+" : ""}{row.percentChange}%
                 </td>
                 <td className="sparkline-cell">
-                  <LineChart width={80} height={32} data={genSparkline(row.price, row.percentChange)}>
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke={row.percentChange >= 0 ? "var(--positive, #34a853)" : "var(--negative, #ea4335)"}
-                      strokeWidth={1.5}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
+                  {(() => {
+                    const isUp = row.percentChange >= 0;
+                    const strokeColor = isUp ? "var(--positive, #34a853)" : "var(--negative, #ea4335)";
+                    const gradId = `sg-${row.symbol}`;
+                    return (
+                      <AreaChart
+                        width={100}
+                        height={32}
+                        data={genSparkline(row.price, row.percentChange)}
+                        margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                      >
+                        <defs>
+                          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={strokeColor} stopOpacity={0.22} />
+                            <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="v"
+                          stroke={strokeColor}
+                          strokeWidth={1.5}
+                          fill={`url(#${gradId})`}
+                          dot={false}
+                          isAnimationActive={false}
+                        />
+                      </AreaChart>
+                    );
+                  })()}
                 </td>
                 {onRemoveSecurity && (
                   <td>
