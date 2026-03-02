@@ -9,7 +9,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
 import { FaSortUp, FaSortDown, FaSort, FaTimes } from "react-icons/fa";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { getBatchStockMetadata, StockMetadata } from "../../services/stockMetadata";
+import { xirr } from "../../utils/xirr";
+import PortfolioAnalysis from "./PortfolioAnalysis";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -54,6 +56,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     totalGainPct: 0,
   });
   const [spyDayChange, setSpyDayChange] = useState<{ pct: number; price: number } | null>(null);
+  const [metadataMap, setMetadataMap] = useState<Record<string, StockMetadata>>({});
   const queryClient = useQueryClient();
 
   const handleSort = (field: PortfolioSortField) => {
@@ -252,17 +255,47 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     const y = (days / 365.25); return y >= 10 ? `${Math.round(y)}y` : `${y.toFixed(1)}y`;
   };
 
-  // Allocation pie chart data
-  const PIE_COLORS = ["#4285f4", "#ea4335", "#fbbc04", "#34a853", "#ff6d01", "#46bdc6", "#a142f4", "#f538a0"];
-  const allocationData = useMemo(() => {
-    const totalValue = securityDetails.reduce((s, d) => s + d.currentValue, 0);
-    if (totalValue <= 0) return [];
-    return securityDetails.map((d) => ({
-      name: d.symbol,
-      value: d.currentValue,
-      pct: ((d.currentValue / totalValue) * 100).toFixed(1),
+  // ── Fetch stock metadata for portfolio analysis ──
+  const symbolsKey = useMemo(
+    () => securityDetails.map((d) => d.symbol).sort().join(","),
+    [securityDetails]
+  );
+
+  useEffect(() => {
+    if (!symbolsKey) return;
+    getBatchStockMetadata(symbolsKey.split(",")).then(setMetadataMap);
+  }, [symbolsKey]);
+
+  // ── XIRR (annualized money-weighted return) ──
+  const xirrReturn = useMemo(() => {
+    if (
+      securityDetails.length === 0 ||
+      portfolioPerformance.totalCurrentValue <= 0
+    )
+      return null;
+    const flows = securityDetails.map((d) => ({
+      date: new Date(d.purchaseDate),
+      amount: -(d.purchasePrice * d.quantity),
     }));
-  }, [securityDetails]);
+    flows.push({
+      date: new Date(),
+      amount: portfolioPerformance.totalCurrentValue,
+    });
+    flows.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return xirr(flows);
+  }, [securityDetails, portfolioPerformance.totalCurrentValue]);
+
+  // ── Build holdings with metadata for analysis component ──
+  const holdingsWithMeta = useMemo(() => {
+    return securityDetails
+      .filter((d) => metadataMap[d.symbol])
+      .map((d) => ({
+        symbol: d.symbol,
+        currentValue: d.currentValue,
+        quantity: d.quantity,
+        metadata: metadataMap[d.symbol],
+      }));
+  }, [securityDetails, metadataMap]);
 
   return (
     <div className="perf">
@@ -301,6 +334,15 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             </span>
           </div>
         )}
+        {xirrReturn !== null && (
+          <div className={`perf-change-card ${gainClass(xirrReturn)}`}>
+            <span className="perf-change-label">Annualized</span>
+            <span className="perf-change-num">
+              {xirrReturn >= 0 ? "+" : ""}{fmtPct(xirrReturn * 100)}%
+            </span>
+            <span className="perf-change-pct">XIRR</span>
+          </div>
+        )}
       </div>
 
       {/* ── Performance chart ── */}
@@ -311,49 +353,12 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         </div>
       )}
 
-      {/* ── Allocation pie ── */}
-      {allocationData.length > 1 && (
-        <div className="perf-allocation">
-          <h3 className="perf-section-title">Allocation</h3>
-          <div className="perf-allocation-row">
-            <ResponsiveContainer width={180} height={180}>
-              <PieChart>
-                <Pie
-                  data={allocationData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  stroke="none"
-                >
-                  {allocationData.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                    name,
-                  ]}
-                  contentStyle={{ background: "var(--bg-elevated)", border: "1px solid var(--border-strong)", borderRadius: 8, fontSize: "0.85rem" }}
-                  itemStyle={{ color: "var(--text-primary)" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="perf-legend">
-              {allocationData.map((d, i) => (
-                <div key={d.name} className="perf-legend-item">
-                  <span className="perf-legend-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="perf-legend-symbol">{d.name}</span>
-                  <span className="perf-legend-pct">{d.pct}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* ── Portfolio Analysis (allocation + risk) ── */}
+      {holdingsWithMeta.length > 0 && (
+        <PortfolioAnalysis
+          holdings={holdingsWithMeta}
+          totalValue={portfolioPerformance.totalCurrentValue}
+        />
       )}
 
       {/* ── Investments table ── */}
