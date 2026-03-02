@@ -27,6 +27,7 @@ const ALLOWED_PATHS = new Set([
   "/symbols/get-estimates",
   "/symbols/get-estimated-earning-announces",
   "/symbols/get-financials",
+  "/symbols/get-holdings",
 ]);
 
 // Cache-Control headers per endpoint (seconds)

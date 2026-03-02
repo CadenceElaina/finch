@@ -10,6 +10,8 @@ import { portfolioStorage } from "../../services/storage";
 import PortfolioChart from "../PortfolioChart";
 import { FaSortUp, FaSortDown, FaSort, FaTimes } from "react-icons/fa";
 import { getBatchStockMetadata, StockMetadata } from "../../services/stockMetadata";
+import { getEtfSectorBreakdowns } from "../../services/etfHoldings";
+import type { EtfSectorBreakdown } from "../../services/etfHoldings";
 import { xirr } from "../../utils/xirr";
 import PortfolioAnalysis from "./PortfolioAnalysis";
 import "./Portfolio.css";
@@ -57,6 +59,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   });
   const [spyDayChange, setSpyDayChange] = useState<{ pct: number; price: number } | null>(null);
   const [metadataMap, setMetadataMap] = useState<Record<string, StockMetadata>>({});
+  const [etfSectors, setEtfSectors] = useState<Record<string, EtfSectorBreakdown>>({});
   const queryClient = useQueryClient();
 
   const handleSort = (field: PortfolioSortField) => {
@@ -263,7 +266,17 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
 
   useEffect(() => {
     if (!symbolsKey) return;
-    getBatchStockMetadata(symbolsKey.split(",")).then(setMetadataMap);
+    const syms = symbolsKey.split(",");
+    getBatchStockMetadata(syms).then((meta) => {
+      setMetadataMap(meta);
+      // Fetch ETF sector breakdowns for any ETF symbols
+      const etfSyms = syms.filter(
+        (s) => meta[s]?.quoteType?.toUpperCase() === "ETF"
+      );
+      if (etfSyms.length > 0) {
+        getEtfSectorBreakdowns(etfSyms).then(setEtfSectors);
+      }
+    });
   }, [symbolsKey]);
 
   // ── XIRR (annualized money-weighted return) ──
@@ -358,6 +371,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         <PortfolioAnalysis
           holdings={holdingsWithMeta}
           totalValue={portfolioPerformance.totalCurrentValue}
+          etfSectors={etfSectors}
         />
       )}
 

@@ -161,6 +161,21 @@
   text-align: center;
 }
 
+/* ── Methodology note ── */
+.pa-method-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bg-primary, #111);
+  border: 1px solid var(--border, #333);
+  font-size: 0.72rem;
+  color: var(--text-tertiary, #888);
+  line-height: 1.45;
+}
+
 /* ── Risk Metrics ── */
 .pa-risk-grid {
   display: grid;

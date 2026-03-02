@@ -2,11 +2,10 @@ import React, { useState, useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   StockMetadata,
-  classifyMarketCap,
-  classifyGeography,
   classifyAssetType,
 } from "../../services/stockMetadata";
-import { FaExclamationTriangle, FaShieldAlt, FaChartPie } from "react-icons/fa";
+import { FaExclamationTriangle, FaShieldAlt, FaChartPie, FaInfoCircle } from "react-icons/fa";
+import type { EtfSectorBreakdown } from "../../services/etfHoldings";
 import "./PortfolioAnalysis.css";
 
 // ── Types ────────────────────────────────────────────────
@@ -21,9 +20,11 @@ export interface HoldingWithMeta {
 interface PortfolioAnalysisProps {
   holdings: HoldingWithMeta[];
   totalValue: number;
+  /** ETF sector breakdowns keyed by symbol (from SA API) */
+  etfSectors?: Record<string, EtfSectorBreakdown>;
 }
 
-type AllocTab = "holdings" | "sector" | "marketCap" | "geography" | "assetType";
+type AllocTab = "holdings" | "sector" | "assetType";
 
 // ── Constants ────────────────────────────────────────────
 
@@ -45,10 +46,29 @@ const PIE_COLORS = [
 const TAB_LABELS: Record<AllocTab, string> = {
   holdings: "Holdings",
   sector: "Sector",
-  marketCap: "Market Cap",
-  geography: "Geography",
   assetType: "Asset Type",
 };
+
+// Standardise SA sector names → display names
+const SECTOR_DISPLAY: Record<string, string> = {
+  technology: "Technology",
+  financials: "Financials",
+  healthcare: "Healthcare",
+  consumerCyclical: "Consumer Cyclical",
+  consumerDefensive: "Consumer Defensive",
+  communication: "Communication Services",
+  industrials: "Industrials",
+  energy: "Energy",
+  utilities: "Utilities",
+  realEstate: "Real Estate",
+  basicMaterials: "Basic Materials",
+};
+
+const ASSET_TYPE_METHOD =
+  "Asset type is determined by the instrument's quoteType field " +
+  "(EQUITY, ETF, CRYPTOCURRENCY, etc.). ETFs that hold commodities " +
+  "(e.g. gold) or bonds are still classified as ETFs because the " +
+  "underlying composition isn't available from the quote data.";
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -82,8 +102,10 @@ function toEntries(
 const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
   holdings,
   totalValue,
+  etfSectors,
 }) => {
   const [allocTab, setAllocTab] = useState<AllocTab>("holdings");
+  const [showInfo, setShowInfo] = useState(false);
 
   // ── Allocation data by category ──
   const allocations = useMemo(() => {
@@ -93,34 +115,61 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
       byHolding[h.symbol] = (byHolding[h.symbol] || 0) + h.currentValue;
     }
 
+    // ── Sector: look-through for ETFs ──
     const bySector: Record<string, number> = {};
-    const byMarketCap: Record<string, number> = {};
-    const byGeo: Record<string, number> = {};
     const byType: Record<string, number> = {};
 
     for (const h of holdings) {
       const m = h.metadata;
 
-      bySector[m.sector] = (bySector[m.sector] || 0) + h.currentValue;
-
-      const mcCat = classifyMarketCap(m.marketCapRaw);
-      byMarketCap[mcCat] = (byMarketCap[mcCat] || 0) + h.currentValue;
-
-      const geo = classifyGeography(m.country);
-      byGeo[geo] = (byGeo[geo] || 0) + h.currentValue;
-
+      // Asset type — straightforward
       const aType = classifyAssetType(m.quoteType);
       byType[aType] = (byType[aType] || 0) + h.currentValue;
+
+      // Sector: if ETF and we have SA sector breakdown, distribute value
+      const etfBreakdown = etfSectors?.[h.symbol];
+      if (etfBreakdown && m.quoteType?.toUpperCase() === "ETF") {
+        // Sum total sector weight so we can normalise (may not sum to 100)
+        const totalWeight = Object.values(etfBreakdown.stockHoldings).reduce(
+          (s, v) => s + v,
+          0
+        );
+        if (totalWeight > 0) {
+          for (const [sectorKey, weight] of Object.entries(etfBreakdown.stockHoldings)) {
+            const label = SECTOR_DISPLAY[sectorKey] || sectorKey;
+            const portion = (weight / totalWeight) * h.currentValue;
+            bySector[label] = (bySector[label] || 0) + portion;
+          }
+          // Any remainder (bond/cash holdings) goes to "Other"
+          if (etfBreakdown.bondHoldings) {
+            const bondWeight = Object.values(etfBreakdown.bondHoldings).reduce(
+              (s, v) => s + v,
+              0
+            );
+            if (bondWeight > 0) {
+              const portion = (bondWeight / (totalWeight + bondWeight)) * h.currentValue;
+              bySector["Other (Bonds/Cash)"] = (bySector["Other (Bonds/Cash)"] || 0) + portion;
+            }
+          }
+        } else {
+          // No stock holdings (commodity ETF like IAU)
+          bySector["Other (Non-Equity)"] = (bySector["Other (Non-Equity)"] || 0) + h.currentValue;
+        }
+      } else if (m.quoteType?.toUpperCase() === "EQUITY") {
+        // Individual stock — use its sector directly
+        bySector[m.sector] = (bySector[m.sector] || 0) + h.currentValue;
+      } else {
+        // Crypto, mutual fund, etc. without breakdown
+        bySector[m.sector || "Unknown"] = (bySector[m.sector || "Unknown"] || 0) + h.currentValue;
+      }
     }
 
     return {
       holdings: toEntries(byHolding, totalValue),
       sector: toEntries(bySector, totalValue),
-      marketCap: toEntries(byMarketCap, totalValue),
-      geography: toEntries(byGeo, totalValue),
       assetType: toEntries(byType, totalValue),
     };
-  }, [holdings, totalValue]);
+  }, [holdings, totalValue, etfSectors]);
 
   const activeData = allocations[allocTab];
 
@@ -198,6 +247,18 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
                 onClick={() => setAllocTab(tab)}
               >
                 {TAB_LABELS[tab]}
+                {tab === "assetType" && (
+                  <FaInfoCircle
+                    size={10}
+                    style={{ marginLeft: 4, opacity: 0.6 }}
+                    title="Classification methodology"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAllocTab("assetType");
+                      setShowInfo((v) => !v);
+                    }}
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -271,6 +332,23 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
             </div>
           ) : (
             <p className="pa-empty">No allocation data available</p>
+          )}
+
+          {/* Methodology notes */}
+          {allocTab === "assetType" && showInfo && (
+            <div className="pa-method-note">
+              <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+              <span>{ASSET_TYPE_METHOD}</span>
+            </div>
+          )}
+          {allocTab === "sector" && etfSectors && Object.keys(etfSectors).length > 0 && (
+            <div className="pa-method-note">
+              <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+              <span>
+                ETF sector weights use look-through analysis — each ETF's value is
+                distributed across sectors based on its underlying holdings data.
+              </span>
+            </div>
           )}
         </div>
       </div>

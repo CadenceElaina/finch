@@ -84,6 +84,8 @@ export const SA_ENDPOINTS = {
   earningsAnnounce: "/symbols/get-estimated-earning-announces",
   /** Financial statements (income, balance sheet, cash flow) */
   financials: "/symbols/get-financials",
+  /** ETF holdings / sector breakdown (batch) */
+  holdings: "/symbols/get-holdings",
 } as const;
 
 // ── SA ID Lookup ─────────────────────────────────────────
