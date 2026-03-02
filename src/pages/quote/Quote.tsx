@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useParams, Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import QuoteChartLW, { type ChartMode } from "../../components/quote-chart/QuoteChartLW";
@@ -27,6 +27,7 @@ import Skeleton from "@mui/material/Skeleton";
 import ErrorState from "../../components/ErrorState";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { useNotification } from "../../context/NotificationContext";
+import WatchlistModal from "../../components/modals/WatchlistModal";
 import {
   getInstrumentAbout,
   getMarketCategory,
@@ -43,6 +44,8 @@ interface QuoteProps {
 
 const Quote: React.FC<QuoteProps> = () => {
   const [marketStatus, setMarketStatus] = useState<string>("Closed");
+  const [showWatchlistPicker, setShowWatchlistPicker] = useState(false);
+  const followBtnRef = useRef<HTMLButtonElement>(null);
   const queryClient = useQueryClient();
   const location = useLocation();
   const { quote: urlParam } = useParams<{ quote: string }>();
@@ -119,12 +122,18 @@ const Quote: React.FC<QuoteProps> = () => {
       addNotification("Create a watchlist first to follow stocks.", "info");
       return;
     }
-    const target = watchlists[0];
-    addSecurityToWatchlist(target.id, {
-      symbol: upper,
-      name: quoteData?.name || upper,
-    });
-    addNotification(`${upper} added to ${target.title}`, "success");
+    // If only one watchlist, add directly
+    if (watchlists.length === 1) {
+      const target = watchlists[0];
+      addSecurityToWatchlist(target.id, {
+        symbol: upper,
+        name: quoteData?.name || upper,
+      });
+      addNotification(`${upper} added to ${target.title}`, "success");
+      return;
+    }
+    // Multiple watchlists: show picker
+    setShowWatchlistPicker(true);
   };
 
   const handleIntervalChange = (interval: string) => {
@@ -317,14 +326,25 @@ const Quote: React.FC<QuoteProps> = () => {
             </div>
             <div className="quote-title-row">
               <h1 className="quote-title">{quoteData?.name}</h1>
-              <button
-                className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
-                onClick={handleFollow}
-                title={isFollowing ? "Unfollow" : "Add to watchlist"}
-              >
-                {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
-                <span>{isFollowing ? "Following" : "Follow"}</span>
-              </button>
+              <div style={{ position: "relative" }}>
+                <button
+                  ref={followBtnRef}
+                  className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
+                  onClick={handleFollow}
+                  title={isFollowing ? "Unfollow" : "Add to watchlist"}
+                >
+                  {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
+                  <span>{isFollowing ? "Following" : "Follow"}</span>
+                </button>
+                {showWatchlistPicker && (
+                  <WatchlistModal
+                    watchlists={watchlists}
+                    onClose={() => setShowWatchlistPicker(false)}
+                    selectedSecurity={symbol.toUpperCase()}
+                    style={{ top: "100%", right: 0, marginTop: 4 }}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -420,14 +440,24 @@ const Quote: React.FC<QuoteProps> = () => {
           </div>
           <div className="quote-title-row">
             <h1 className="quote-title">{quoteData?.name}</h1>
-            <button
-              className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
-              onClick={handleFollow}
-              title={isFollowing ? "Unfollow" : "Add to watchlist"}
-            >
-              {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
-              <span>{isFollowing ? "Following" : "Follow"}</span>
-            </button>
+            <div style={{ position: "relative" }}>
+              <button
+                className={`quote-follow-btn ${isFollowing ? "following" : ""}`}
+                onClick={handleFollow}
+                title={isFollowing ? "Unfollow" : "Add to watchlist"}
+              >
+                {isFollowing ? <FaCheck size={12} /> : <IoAddSharp size={14} />}
+                <span>{isFollowing ? "Following" : "Follow"}</span>
+              </button>
+              {showWatchlistPicker && (
+                <WatchlistModal
+                  watchlists={watchlists}
+                  onClose={() => setShowWatchlistPicker(false)}
+                  selectedSecurity={symbol.toUpperCase()}
+                  style={{ top: "100%", right: 0, marginTop: 4 }}
+                />
+              )}
+            </div>
           </div>
         </div>
 

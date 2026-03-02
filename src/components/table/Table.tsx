@@ -3,6 +3,7 @@ import { FaArrowUp, FaArrowDown, FaCheckCircle } from "react-icons/fa";
 import "./Table.css";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { TableProps, AllowedFields } from "./types";
+import Sparkline from "../quote-chart/Sparkline";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { usePortfolios } from "../../context/PortfoliosContext";
@@ -271,6 +272,15 @@ const Table: React.FC<TableProps> = ({
                                 )}
                               </div>
                             </div>
+                          </div>
+                        )}
+                        {field === "sparkline" && (
+                          <div
+                            className="item-field sparkline"
+                            key={`sparkline-${item.symbol}`}
+                            onClick={() => handleClick(item.symbol)}
+                          >
+                            <Sparkline up={item.percentChange >= 0} />
                           </div>
                         )}
                         {field === "priceChange" && (

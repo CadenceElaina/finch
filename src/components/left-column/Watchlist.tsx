@@ -182,7 +182,7 @@ const Watchlist = () => {
   }, [portfolioQuotes]);
 
   const watchlistConfig: RowConfig = {
-    fields: ["symbol", "name", "price", "percentChange", "priceChange"],
+    fields: ["symbol", "name", "sparkline", "price", "percentChange", "priceChange"],
     removeIcon: true,
   };
   useEffect(() => {

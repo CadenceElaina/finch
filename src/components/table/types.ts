@@ -18,7 +18,8 @@ export type AllowedFields =
   | "price"
   | "priceChange"
   | "percentChange"
-  | "followers";
+  | "followers"
+  | "sparkline";
 
 export interface TableProps {
   data: Data[];

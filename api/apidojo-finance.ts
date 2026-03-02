@@ -49,6 +49,11 @@ function mapParams(
     delete mapped.query;
   }
 
+  // fundamentals: ApiDojo requires a `modules` parameter
+  if (endpoint === "/api/stock/get-financial-data" && !mapped.modules) {
+    mapped.modules = "assetProfile,defaultKeyStatistics,summaryDetail,price";
+  }
+
   return mapped;
 }
 

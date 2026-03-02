@@ -29,7 +29,7 @@ export interface StockMetadata {
 
 const METADATA_TTL = 7 * 24 * 60 * 60_000; // 7 days
 // Bump version to invalidate all stale cache entries from prior API failures
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const cacheKey = (sym: string) => `metadata_v${CACHE_VERSION}_${sym}`;
 
 // ── Demo metadata (approximate Feb 2026 values) ─────────
