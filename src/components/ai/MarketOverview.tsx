@@ -24,7 +24,7 @@ import { FiExternalLink, FiInfo } from "react-icons/fi";
 import "./MarketOverview.css";
 
 const CACHE_KEY = "ai_market_overview";
-const CACHE_TTL = 60 * 60_000; // 1 hour
+const CACHE_TTL = 12 * 60 * 60_000; // 12 hours — overview is daily, no need to expire quickly
 
 /** Static overview shown in demo mode — no API call needed. */
 const DEMO_OVERVIEW = `**Market Summary**
@@ -56,22 +56,28 @@ const MarketOverview: React.FC = () => {
   const { generateGrounded, configured, creditsRemaining } = useAi();
   const { snapshot } = useSnapshot();
 
-  const [summary, setSummary] = useState<string>("");
-  const [generatedAt, setGeneratedAt] = useState<string>("");
+  // Initialize from localStorage cache immediately (synchronous) so the
+  // summary survives route navigation without waiting for useEffect
+  const [summary, setSummary] = useState<string>(() => {
+    if (isDemoActive()) return DEMO_OVERVIEW;
+    return cacheStorage.get<string>(CACHE_KEY, CACHE_TTL) ?? "";
+  });
+  const [generatedAt, setGeneratedAt] = useState<string>(() => {
+    if (isDemoActive()) return "Pre-built demo data";
+    return "";
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
 
-  // Populate from snapshot (server-prefetched) or localStorage cache
+  // Update from snapshot when it arrives (server-prefetched takes priority)
   useEffect(() => {
-    // Demo mode — use static overview
     if (isDemoActive()) {
       setSummary(DEMO_OVERVIEW);
       setGeneratedAt("Pre-built demo data");
       return;
     }
 
-    // Priority 1: snapshot from cron job (freshest)
     if (snapshot?.aiOverview) {
       setSummary(snapshot.aiOverview);
       setGeneratedAt(
@@ -79,16 +85,7 @@ const MarketOverview: React.FC = () => {
           ? formatGeneratedAt(snapshot.aiOverviewGeneratedAt)
           : ""
       );
-      // Also persist to localStorage as fallback
       cacheStorage.set(CACHE_KEY, snapshot.aiOverview);
-      return;
-    }
-
-    // Priority 2: localStorage cache (covers dev / stale snapshot)
-    const cached = cacheStorage.get<string>(CACHE_KEY, CACHE_TTL);
-    if (cached) {
-      setSummary(cached);
-      setGeneratedAt(""); // unknown time for cached data
     }
   }, [snapshot]);
 
