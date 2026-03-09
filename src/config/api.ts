@@ -9,9 +9,10 @@
  * ──────────────────────────────────
  *  1. YH Finance 166     yahoo-finance166.p.rapidapi.com       500/month
  *  2. ApiDojo YF v1       apidojo-yahoo-finance-v1.p.rapidapi.com  500/month
- *  3. Yahoo Finance 15    yahoo-finance15.p.rapidapi.com           500/month
+ *  3. YF Real Time        yahoo-finance-real-time1.p.rapidapi.com  500/month
+ *  4. Yahoo Finance 15    yahoo-finance15.p.rapidapi.com           500/month
  *  ─────────────────────────────────────
- *  Total budget: ~1,500 req/month across 3 Yahoo providers
+ *  Total budget: ~2,000 req/month across 4 Yahoo providers
  *  + Seeking Alpha 500/month for news/analysis
  *
  * CIRCUIT BREAKER:
@@ -24,6 +25,7 @@
 
 export const YH_API_HOST = "yahoo-finance166.p.rapidapi.com";
 export const APIDOJO_HOST = "apidojo-yahoo-finance-v1.p.rapidapi.com";
+export const YFREALTIME_HOST = "yahoo-finance-real-time1.p.rapidapi.com";
 
 // Key is read from env at runtime (Vite injects it)
 export const YH_API_KEY = (
@@ -47,6 +49,7 @@ const CIRCUIT_COOLDOWN = 10 * 60 * 1000; // 10 minutes
 const circuitTripped: Record<string, number> = {
   yh166: 0,
   apidojo: 0,
+  yfrealtime: 0,
   yf15: 0,
 };
 
@@ -130,6 +133,26 @@ const APIDOJO_PATH_MAP: Record<string, string> = {
 };
 
 /**
+ * Yahoo Finance Real Time endpoint mapping.
+ * Uses the same standard YF response format — paths have no version prefix.
+ */
+const YFREALTIME_PATH_MAP: Record<string, string> = {
+  "/api/market/get-quote":                  "/market/get-quotes",
+  "/api/autocomplete":                      "/search",
+  "/api/stock/get-chart":                   "/stock/get-chart",
+  "/api/market/get-day-gainers":            "/market/get-movers",
+  "/api/market/get-day-losers":             "/market/get-movers",
+  "/api/market/get-most-actives":           "/market/get-movers",
+  "/api/market/get-trending":               "/market/get-trending-tickers",
+  "/api/market/get-world-indices":          "/market/get-summary",
+  "/api/market/get-market-summary":         "/market/get-summary",
+  "/api/stock/get-financial-data":          "/stock/get-analysis",
+  "/api/stock/get-statistics":              "/stock/get-quote-summary",
+  "/api/stock/get-company-outlook-summary": "/stock/get-insights",
+  "/api/stock/get-upgrade-downgrade-history": "/stock/get-recommendations",
+};
+
+/**
  * Map YH166 params to ApiDojo params.
  * ApiDojo uses `symbols` (same as YH166 for quotes), and the standard
  * Yahoo Finance query format. Most params pass through unchanged.
@@ -179,11 +202,35 @@ async function tryApiDojoFetch(
   });
 }
 
+async function tryYfRealtimeFetch(
+  endpoint: string,
+  params: Record<string, string | number>
+): Promise<{ data: unknown }> {
+  const realtimePath = YFREALTIME_PATH_MAP[endpoint];
+  if (!realtimePath) throw new Error(`[YFRealtime] No mapping for ${endpoint}`);
+
+  // Params are mostly the same; autocomplete uses `query` → keep as-is since
+  // the RealTime API /search also accepts `query`.
+  if (import.meta.env.PROD) {
+    return await axios.get("/api/yf-realtime", {
+      params: { endpoint, ...params },
+    });
+  }
+
+  return await axios.get(`https://${YFREALTIME_HOST}${realtimePath}`, {
+    params,
+    headers: {
+      "x-rapidapi-host": YFREALTIME_HOST,
+      "x-rapidapi-key": YH_API_KEY,
+    },
+  });
+}
+
 /**
  * Make a GET request to a Yahoo Finance endpoint with automatic
  * multi-provider fallback and circuit breaker protection.
  *
- * Cascade: YH166 → ApiDojo v1 → YF15 → throw
+ * Cascade: YH166 → ApiDojo v1 → YF RealTime → YF15 → throw
  *
  * @param endpoint - The YH Finance path, e.g. "/api/market/get-quote"
  * @param params   - Query parameters (region, symbols, etc.)
@@ -241,7 +288,18 @@ async function _yhFetchImpl(
     }
   }
 
-  // ── Tier 3: Yahoo Finance 15 ──
+  // ── Tier 3: Yahoo Finance Real Time ──
+  if (!isCircuitOpen("yfrealtime") && YFREALTIME_PATH_MAP[endpoint]) {
+    try {
+      return await tryYfRealtimeFetch(endpoint, params);
+    } catch (error: unknown) {
+      if (isRateLimitError(error)) tripCircuit("yfrealtime");
+      if (!isRetriableError(error)) throw error;
+      console.warn(`[yhFetch] YFRealtime failed for ${endpoint} — trying next provider`);
+    }
+  }
+
+  // ── Tier 4: Yahoo Finance 15 ──
   if (!isCircuitOpen("yf15") && hasYf15Fallback(endpoint)) {
     try {
       if (import.meta.env.PROD) {

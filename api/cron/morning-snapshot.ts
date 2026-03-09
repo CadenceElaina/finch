@@ -29,8 +29,8 @@ const KV_SNAPSHOT_TTL = 24 * 60 * 60; // 24 hours — one snapshot per trading d
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
 
 // ── Provider cascade (mirrors client-side api.ts) ────────
-// Try YH166 → ApiDojo → YF15 — same API key works for all.
-// ~1,500 req/month total across 3 providers (500 each).
+// Try YH166 → ApiDojo → YF RealTime → YF15 — same API key works for all.
+// ~2,000 req/month total across 4 providers (500 each).
 // During heavy dev months quotas burn fast; once they reset, normal
 // usage is well within budget.
 type EndpointConfig = { path: string; qs: string } | null;
@@ -60,6 +60,15 @@ const PROVIDERS: Provider[] = [
     endpoints: {
       indices:  { path: "/market/v2/get-quotes",          qs: `region=US&symbols=${INDEX_SYMBOLS}` },
       movers:   { path: "/market/v2/get-movers",          qs: "region=US&count=25&start=0" },
+      trending: { path: "/market/get-trending-tickers",   qs: "region=US" },
+    },
+  },
+  {
+    name: "yfrealtime",
+    host: "yahoo-finance-real-time1.p.rapidapi.com",
+    endpoints: {
+      indices:  { path: "/market/get-quotes",             qs: `region=US&symbols=${INDEX_SYMBOLS}` },
+      movers:   { path: "/market/get-movers",             qs: "region=US&count=25&start=0" },
       trending: { path: "/market/get-trending-tickers",   qs: "region=US" },
     },
   },
