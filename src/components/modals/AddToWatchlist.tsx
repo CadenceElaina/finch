@@ -65,13 +65,9 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
       setValidating(false);
       return true;
     } catch {
-      // API providers unavailable (circuit breakers open) —
-      // accept the symbol with a warning rather than blocking the user
-      setSymbol(sym);
-      setResolvedName(sym);
-      setValidated(true);
+      setError("Could not validate symbol — API temporarily unavailable. Try again in a few minutes.");
       setValidating(false);
-      return true;
+      return false;
     }
   };
 
