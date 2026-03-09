@@ -126,7 +126,7 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
   const contextValue = useMemo(
     () => ({
       watchlists,
-      setWatchlists: updateWatchlistsState,
+      setWatchlists,
       appendWatchlist,
       removeWatchlist,
       renameWatchlist,
