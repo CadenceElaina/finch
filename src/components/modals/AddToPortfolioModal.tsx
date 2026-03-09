@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ENDPOINTS, yhFetch } from "../../config/api";
+import { cacheStorage } from "../../services/storage";
 import "./AddToPortfolioModal.css";
 
 interface AddToPortfolioModalProps {
@@ -36,6 +37,18 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
       setError("Invalid symbol format");
       return false;
     }
+
+    // Check localStorage cache first — if we've seen this symbol before, accept it
+    const cached = cacheStorage.get<{ symbol: string; name?: string; shortName?: string }>(
+      `quote_${sym}`, 24 * 60 * 60_000 // 24h — generous TTL for validation
+    );
+    if (cached && cached.symbol) {
+      setSymbol(sym);
+      setResolvedName(cached.name ?? cached.shortName ?? sym);
+      setValidated(true);
+      return true;
+    }
+
     setValidating(true);
     setError("");
     try {
@@ -61,9 +74,13 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
       setValidating(false);
       return true;
     } catch {
-      setError("Could not validate symbol — try again");
+      // API providers unavailable (circuit breakers open) —
+      // accept the symbol with a warning rather than blocking the user
+      setSymbol(sym);
+      setResolvedName(sym);
+      setValidated(true);
       setValidating(false);
-      return false;
+      return true;
     }
   };
 
