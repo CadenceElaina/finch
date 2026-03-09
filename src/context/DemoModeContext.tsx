@@ -18,6 +18,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
 import axios from "axios";
 import { setDemoActive } from "../data/demo/demoState";
+import { cacheStorage } from "../services/storage";
 
 interface DemoModeContextType {
   /** Whether the app is currently showing demo data */
@@ -112,9 +113,12 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const exitDemoMode = useCallback(() => {
     setIsDemoMode(false);
+    setDemoActive(false); // Sync module-level flag immediately so isDemoActive() is correct
     setFailureCount(0);
     localStorage.removeItem(LS_KEY);
     localStorage.removeItem(LS_FAILURES_KEY);
+    // Flush stale API response caches so fresh data is fetched after reload
+    cacheStorage.clearAll();
     // Record exit timestamp so the interceptor respects a grace period
     localStorage.setItem(LS_EXIT_TS_KEY, String(Date.now()));
     // Mark that user explicitly disabled — prevents auto-re-entry until next session
@@ -123,6 +127,7 @@ export const DemoModeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const enterDemoMode = useCallback(() => {
     setIsDemoMode(true);
+    setDemoActive(true); // Sync module-level flag immediately
     // User chose to enable, so clear the disabled flag
     localStorage.removeItem(LS_USER_DISABLED_KEY);
   }, []);

@@ -101,7 +101,7 @@ const etfPortfolio: Portfolio = {
       purchaseDate: "2024-03-15",
     },
   ],
-  portfolioValue: synthHistory("2024-03-15", 14250, 17800),
+  portfolioValue: synthHistory("2024-03-15", 18900, 20900),
 };
 
 // ── Portfolio 2: Aggressive Growth + BTC ─────────────────
@@ -163,7 +163,7 @@ const growthPortfolio: Portfolio = {
       purchaseDate: "2023-08-01",
     },
   ],
-  portfolioValue: synthHistory("2023-01-20", 28500, 68000),
+  portfolioValue: synthHistory("2023-01-20", 31800, 76650),
 };
 
 // ── Portfolio 3: Dividend & Blue Chip ────────────────────
@@ -225,7 +225,7 @@ const dividendPortfolio: Portfolio = {
       purchaseDate: "2024-05-01",
     },
   ],
-  portfolioValue: synthHistory("2024-01-10", 42000, 48500),
+  portfolioValue: synthHistory("2024-01-10", 27840, 28240),
 };
 
 // ── Default Watchlist ────────────────────────────────────

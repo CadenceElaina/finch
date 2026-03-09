@@ -51,6 +51,21 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
         patched = true;
       }
     }
+
+    // v2: Refresh demo portfolio value histories (fixes incorrect synth values)
+    const seedVersion = Number(seeded || "0");
+    if (seedVersion < 2) {
+      const demoByTitle = new Map(DEFAULT_PORTFOLIOS.map((dp) => [dp.title, dp]));
+      for (const p of list) {
+        const freshDemo = demoByTitle.get(p.title);
+        if (p.isDemo && freshDemo) {
+          p.portfolioValue = freshDemo.portfolioValue;
+          patched = true;
+        }
+      }
+      localStorage.setItem("finch_demo_portfolios_seeded", "2");
+    }
+
     if (patched || !seeded) {
       localStorage.setItem("finch_portfolios", JSON.stringify(list));
     }

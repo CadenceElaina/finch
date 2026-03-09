@@ -334,8 +334,12 @@ const QuoteChartLW: React.FC<QuoteChartLWProps> = ({
       return data.slice(-limit);
     } catch (error) {
       console.error("[QuoteChartLW] fetch error:", error);
-      // Fall back to demo data
-      return generateDemoOHLCV(symbol, interval);
+      // Only fall back to demo data if demo mode is active;
+      // otherwise let the error propagate to React Query for proper error handling
+      if (isDemoActive()) {
+        return generateDemoOHLCV(symbol, interval);
+      }
+      throw error;
     }
   }, [symbol, interval]);
 
