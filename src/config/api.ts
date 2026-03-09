@@ -76,9 +76,23 @@ if (typeof window !== "undefined") {
   (window as any).__finchCircuits = circuitTripped;
 }
 
+/**
+ * Returns true when 2+ of the 4 providers have open circuits.
+ * Callers (e.g. symbol validation) can use this to show
+ * "API temporarily unavailable" instead of "Symbol not found"
+ * when results are empty.
+ */
+export function areProvidersImpaired(): boolean {
+  const openCount = Object.keys(circuitTripped).filter((p) => isCircuitOpen(p)).length;
+  return openCount >= 2;
+}
+
 function isRateLimitError(error: unknown): boolean {
   const status = (error as { response?: { status?: number } })?.response?.status;
-  return status === 429 || status === 403;
+  // Only 429 is a definitive rate-limit.  403 can mean "endpoint not
+  // available on this tier" — tripping the whole provider for 10 min
+  // on a single unsupported endpoint is too aggressive.
+  return status === 429;
 }
 
 function isRetriableError(error: unknown): boolean {

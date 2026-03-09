@@ -131,8 +131,9 @@ export const watchlistStorage = {
     const watchlists = watchlistStorage.getAll();
     const watchlist = watchlists.find((w) => w.id === id);
     if (!watchlist) throw new Error(`Watchlist ${id} not found`);
+    const sym = symbol.toUpperCase();
     watchlist.securities = (watchlist.securities ?? []).filter(
-      (s) => s.symbol !== symbol
+      (s) => s.symbol.toUpperCase() !== sym
     );
     write(WATCHLISTS_KEY, watchlists);
     return watchlist;

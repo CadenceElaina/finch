@@ -66,27 +66,21 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     setWatchlists(list);
   }, []);
 
-  const updateWatchlistsState: Dispatch<SetStateAction<Watchlist[]>> = (
-    updatedWatchlists
-  ) => {
-    setWatchlists(updatedWatchlists);
-  };
-
   const appendWatchlist = (newWatchlist: Watchlist) => {
-    updateWatchlistsState([...watchlists, newWatchlist]);
+    setWatchlists((prev) => [...prev, newWatchlist]);
   };
 
   const removeWatchlist = (removedWatchlist: Watchlist) => {
     watchlistStorage.remove(removedWatchlist.id);
-    updateWatchlistsState(
-      watchlists.filter((w) => w.id !== removedWatchlist.id)
+    setWatchlists((prev) =>
+      prev.filter((w) => w.id !== removedWatchlist.id)
     );
   };
 
   const renameWatchlist = (watchlistId: string, newTitle: string) => {
     watchlistStorage.rename(watchlistId, newTitle);
-    updateWatchlistsState(
-      watchlists.map((w) =>
+    setWatchlists((prev) =>
+      prev.map((w) =>
         w.id === watchlistId ? { ...w, title: newTitle } : w
       )
     );
@@ -97,8 +91,8 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     security: WatchlistSecurity
   ) => {
     watchlistStorage.addSecurity(watchlistId, security);
-    updateWatchlistsState(
-      watchlists.map((watchlist) =>
+    setWatchlists((prev) =>
+      prev.map((watchlist) =>
         watchlist.id === watchlistId
           ? {
               ...watchlist,
@@ -114,13 +108,14 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     security: WatchlistSecurity
   ) => {
     watchlistStorage.removeSecurity(watchlistId, security.symbol);
-    updateWatchlistsState(
-      watchlists.map((watchlist) =>
+    const sym = security.symbol.toUpperCase();
+    setWatchlists((prev) =>
+      prev.map((watchlist) =>
         watchlist.id === watchlistId
           ? {
               ...watchlist,
               securities: watchlist.securities?.filter(
-                (s) => s.symbol !== security.symbol
+                (s) => s.symbol.toUpperCase() !== sym
               ),
             }
           : watchlist

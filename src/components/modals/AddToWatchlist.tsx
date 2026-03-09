@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ENDPOINTS, yhFetch } from "../../config/api";
+import { ENDPOINTS, yhFetch, areProvidersImpaired } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
 import "./AddToPortfolioModal.css";
 
@@ -54,7 +54,11 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
       const firstResult = results[0];
       const sym0 = firstResult?.symbol ?? firstResult?.price?.symbol;
       if (results.length === 0 || !sym0) {
-        setError(`Symbol "${sym}" not found`);
+        if (areProvidersImpaired()) {
+          setError("Could not validate — API temporarily unavailable. Try again in a few minutes.");
+        } else {
+          setError(`Symbol "${sym}" not found`);
+        }
         setValidating(false);
         return false;
       }
