@@ -76,8 +76,9 @@ export const portfolioStorage = {
     const portfolios = portfolioStorage.getAll();
     const portfolio = portfolios.find((p) => p.id === id);
     if (!portfolio) throw new Error(`Portfolio ${id} not found`);
+    const sym = symbol.toUpperCase();
     portfolio.securities = (portfolio.securities ?? []).filter(
-      (s) => s.symbol !== symbol
+      (s) => s.symbol.toUpperCase() !== sym
     );
     write(PORTFOLIOS_KEY, portfolios);
     return portfolio;

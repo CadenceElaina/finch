@@ -113,14 +113,15 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
     portfolioId: string,
     symbol: string
   ) => {
-    portfolioStorage.removeSecurity(portfolioId, symbol);
+    const sym = symbol.toUpperCase();
+    portfolioStorage.removeSecurity(portfolioId, sym);
     setPortfolios((prev) =>
       prev.map((portfolio) =>
         portfolio.id === portfolioId
           ? {
               ...portfolio,
               securities: (portfolio.securities ?? []).filter(
-                (s) => s.symbol !== symbol
+                (s) => s.symbol.toUpperCase() !== sym
               ),
             }
           : portfolio
