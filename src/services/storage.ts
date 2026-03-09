@@ -58,6 +58,10 @@ export const portfolioStorage = {
     const portfolios = portfolioStorage.getAll();
     const portfolio = portfolios.find((p) => p.id === id);
     if (!portfolio) throw new Error(`Portfolio ${id} not found`);
+    const sym = security.symbol.toUpperCase();
+    if ((portfolio.securities ?? []).some((s) => s.symbol.toUpperCase() === sym)) {
+      return portfolio; // already exists — no-op
+    }
     portfolio.securities = [...(portfolio.securities ?? []), security];
     write(PORTFOLIOS_KEY, portfolios);
     return portfolio;
@@ -122,6 +126,10 @@ export const watchlistStorage = {
     const watchlists = watchlistStorage.getAll();
     const watchlist = watchlists.find((w) => w.id === id);
     if (!watchlist) throw new Error(`Watchlist ${id} not found`);
+    const sym = security.symbol.toUpperCase();
+    if ((watchlist.securities ?? []).some((s) => s.symbol.toUpperCase() === sym)) {
+      return watchlist; // already exists — no-op
+    }
     watchlist.securities = [...(watchlist.securities ?? []), security];
     write(WATCHLISTS_KEY, watchlists);
     return watchlist;

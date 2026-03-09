@@ -142,6 +142,7 @@ const Portfolio = () => {
         <AddToPortfolioModal
           isOpen={true}
           listName={activePortfolio.title}
+          existingSymbols={activePortfolio.securities?.map((s) => s.symbol) ?? []}
           onClose={() => setAddToPortfolioModalIsOpen(false)}
           onSave={(symbol, quantity, purchaseDate, purchasePrice) => {
             addSecurityToPortfolio(activePortfolio.id, { symbol, quantity, purchaseDate, purchasePrice });
@@ -154,6 +155,7 @@ const Portfolio = () => {
         <AddToWatchlistModal
           isOpen={true}
           listName={activeWatchlist.title}
+          existingSymbols={activeWatchlist.securities?.map((s) => s.symbol) ?? []}
           onClose={() => setAddToWatchlistModalIsOpen(false)}
           onSave={(symbol) => {
             addSecurityToWatchlist(activeWatchlist.id, { symbol } as WatchlistSecurity);

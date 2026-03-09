@@ -6,6 +6,7 @@ import "./AddToPortfolioModal.css";
 interface AddToWatchlistModalProps {
   isOpen: boolean;
   listName: string;
+  existingSymbols?: string[];
   onClose: () => void;
   onSave: (symbol: string) => void;
 }
@@ -13,6 +14,7 @@ interface AddToWatchlistModalProps {
 const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
   isOpen,
   listName,
+  existingSymbols = [],
   onClose,
   onSave,
 }) => {
@@ -26,6 +28,11 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
     const sym = raw.trim().toUpperCase();
     if (!sym || !/^[A-Z0-9^.=\-]{1,12}$/.test(sym)) {
       setError("Invalid symbol format");
+      return false;
+    }
+
+    if (existingSymbols.some((s) => s.toUpperCase() === sym)) {
+      setError(`${sym} is already in ${listName}`);
       return false;
     }
 
