@@ -26,9 +26,54 @@ export const config = { runtime: "nodejs" };
 
 const KV_SNAPSHOT_KEY = "market:snapshot";
 const KV_SNAPSHOT_TTL = 24 * 60 * 60; // 24 hours — one snapshot per trading day
-
-const YH_HOST = "yahoo-finance166.p.rapidapi.com";
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
+
+// ── Provider cascade (mirrors client-side api.ts) ────────
+// Try YH166 → ApiDojo → YF15 — same API key works for all.
+// ~1,500 req/month total across 3 providers (500 each).
+// During heavy dev months quotas burn fast; once they reset, normal
+// usage is well within budget.
+type EndpointConfig = { path: string; qs: string } | null;
+interface Provider {
+  name: string;
+  host: string;
+  endpoints: {
+    indices: EndpointConfig;
+    movers: EndpointConfig;
+    trending: EndpointConfig;
+  };
+}
+
+const PROVIDERS: Provider[] = [
+  {
+    name: "yh166",
+    host: "yahoo-finance166.p.rapidapi.com",
+    endpoints: {
+      indices:  { path: "/api/market/get-quote",       qs: `region=US&symbols=${INDEX_SYMBOLS}` },
+      movers:   { path: "/api/market/get-day-gainers",  qs: "region=US&count=25&start=0" },
+      trending: { path: "/api/market/get-trending",     qs: "region=US" },
+    },
+  },
+  {
+    name: "apidojo",
+    host: "apidojo-yahoo-finance-v1.p.rapidapi.com",
+    endpoints: {
+      indices:  { path: "/market/v2/get-quotes",          qs: `region=US&symbols=${INDEX_SYMBOLS}` },
+      movers:   { path: "/market/v2/get-movers",          qs: "region=US&count=25&start=0" },
+      trending: { path: "/market/get-trending-tickers",   qs: "region=US" },
+    },
+  },
+  {
+    name: "yf15",
+    host: "yahoo-finance15.p.rapidapi.com",
+    endpoints: {
+      // YF15 can't fetch index symbols (^DJI etc.) or movers
+      indices:  null,
+      movers:   null,
+      trending: { path: "/api/v2/markets/tickers", qs: "page=1&type=STOCKS" },
+    },
+  },
+];
 
 export interface MarketSnapshot {
   timestamp: string;
@@ -59,11 +104,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return json(res, 500, { error: "API key not configured" });
   }
 
-  const headers = {
-    "X-RapidAPI-Key": apiKey,
-    "X-RapidAPI-Host": YH_HOST,
-  };
-
   const snapshot: MarketSnapshot = {
     timestamp: new Date().toISOString(),
     indices: null,
@@ -74,43 +114,44 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     errors: [],
   };
 
-  // Fetch indices, movers, and trending in parallel (3 API calls)
-  const [indicesRes, moversRes, trendingRes] = await Promise.allSettled([
-    fetch(
-      `https://${YH_HOST}/api/market/get-quote?region=US&symbols=${INDEX_SYMBOLS}`,
-      { headers }
-    ),
-    fetch(
-      `https://${YH_HOST}/api/market/get-day-gainers?region=US&count=25&start=0`,
-      { headers }
-    ),
-    fetch(
-      `https://${YH_HOST}/api/market/get-trending?region=US`,
-      { headers }
-    ),
+  // ── Fetch market data with provider cascade ───────────────────
+  // Try each provider in order; stop at the first that responds with 2xx.
+  async function fetchWithCascade(
+    endpointKey: "indices" | "movers" | "trending"
+  ): Promise<unknown | null> {
+    for (const provider of PROVIDERS) {
+      const cfg = provider.endpoints[endpointKey];
+      if (!cfg) continue; // provider doesn't support this endpoint
+      const url = `https://${provider.host}${cfg.path}?${cfg.qs}`;
+      try {
+        const res = await fetch(url, {
+          headers: {
+            "X-RapidAPI-Key": apiKey!,
+            "X-RapidAPI-Host": provider.host,
+          },
+        });
+        if (res.ok) return await res.json();
+        snapshot.errors.push(`${endpointKey} ${provider.name}: HTTP ${res.status}`);
+      } catch (err) {
+        snapshot.errors.push(`${endpointKey} ${provider.name}: ${String(err)}`);
+      }
+    }
+    return null;
+  }
+
+  const [indices, movers, trending] = await Promise.all([
+    fetchWithCascade("indices"),
+    fetchWithCascade("movers"),
+    fetchWithCascade("trending"),
   ]);
-
-  if (indicesRes.status === "fulfilled" && indicesRes.value.ok) {
-    snapshot.indices = await indicesRes.value.json();
-  } else {
-    snapshot.errors.push("indices fetch failed");
-  }
-
-  if (moversRes.status === "fulfilled" && moversRes.value.ok) {
-    snapshot.movers = await moversRes.value.json();
-  } else {
-    snapshot.errors.push("movers fetch failed");
-  }
-
-  if (trendingRes.status === "fulfilled" && trendingRes.value.ok) {
-    snapshot.trending = await trendingRes.value.json();
-  } else {
-    snapshot.errors.push("trending fetch failed");
-  }
+  snapshot.indices = indices;
+  snapshot.movers = movers;
+  snapshot.trending = trending;
 
   // ── Generate AI Market Overview via Gemini ────────────────────
+  // AI uses Google Search grounding — not gated on market data fetch success.
   const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey && snapshot.indices) {
+  if (geminiKey) {
     try {
       const genai = new GoogleGenAI({ apiKey: geminiKey });
       const prompt = `Search the web for today's stock market data and provide a concise pre-market overview.
