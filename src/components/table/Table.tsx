@@ -75,7 +75,7 @@ const Table: React.FC<TableProps> = ({
                     backgroundColor: getRandomColor(),
                   }}
                 >
-                  {item.symbol}
+                  {item.symbol.split("-")[0]}
                 </div>
                 <div className="field-value">{item.name}</div>
                 <div className="field-value">{item.followers}</div>
@@ -96,7 +96,7 @@ const Table: React.FC<TableProps> = ({
                         backgroundColor: getRandomColor(),
                       }}
                     >
-                      {item.symbol}
+                      {item.symbol.split("-")[0]}
                     </div>
                   </div>
                   <div
@@ -191,7 +191,7 @@ const Table: React.FC<TableProps> = ({
                             }}
                             key={`please${item.symbol}${item.id}`}
                           >
-                            {item[field]}
+                            {String(item[field]).split("-")[0]}
                           </div>
                         )}
                         {field === "name" && !config.name && (

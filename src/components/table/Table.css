@@ -63,9 +63,15 @@
 }
 .field-value-symbol {
   text-align: center;
-  width: 47px;
+  min-width: 30px;
+  max-width: 55px;
   height: 20px;
   border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  font-size: 0.75rem;
 }
 .symbol .field-value {
   flex: 1;
