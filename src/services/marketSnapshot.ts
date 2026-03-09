@@ -54,6 +54,8 @@ export interface MarketSnapshot {
       }>;
     };
   } | null;
+  aiOverview?: string | null;
+  aiOverviewGeneratedAt?: string | null;
   errors: string[];
   age?: number;
   stale?: boolean;

@@ -1,29 +1,31 @@
 /**
  * Vercel Cron — Morning Market Snapshot
  * ──────────────────────────────────────
- * Runs at 9:00 AM ET (13:00 UTC) on weekdays via Vercel Cron.
+ * Runs at 5:00 AM ET (09:00 UTC) on weekdays via Vercel Cron.
  * Pre-fetches market indices, movers, and trending tickers,
- * so the first user of the day gets instant data.
+ * then generates an AI market overview via Gemini so the first
+ * user of the day gets instant data + AI summary with zero wait.
  *
  * Data flow:
  *   1. Fetches indices, movers, trending from YH Finance (3 API calls)
- *   2. Stores the combined snapshot in Redis Cloud (KV) with 15-min TTL
- *   3. Client reads from /api/snapshot → KV → instant response
+ *   2. Generates AI market overview via Gemini with Google Search grounding
+ *   3. Stores the combined snapshot in Redis Cloud (KV) with 24-hour TTL
+ *   4. Client reads from /api/snapshot → KV → instant response
  *
- * When KV is not configured, the cron still warms the Vercel Edge
- * Cache via Cache-Control headers on the proxy endpoints.
- *
- * Schedule: "0 13 * * 1-5" (Mon-Fri 9 AM ET = 1 PM UTC)
+ * Schedule: "0 9 * * 1-5" (Mon-Fri 5 AM ET = 9 AM UTC during EDT)
+ * Note: On Vercel free tier, cron execution may vary up to ~1 hour.
+ *       During EST (Nov-Mar) this runs at 4 AM ET — still before anyone wakes up.
  */
 
 import type { IncomingMessage, ServerResponse } from "http";
 import Redis from "ioredis";
+import { GoogleGenAI } from "@google/genai";
 
 // Node.js runtime (not Edge) — required for TCP Redis connection
 export const config = { runtime: "nodejs" };
 
 const KV_SNAPSHOT_KEY = "market:snapshot";
-const KV_SNAPSHOT_TTL = 15 * 60; // 15 minutes
+const KV_SNAPSHOT_TTL = 24 * 60 * 60; // 24 hours — one snapshot per trading day
 
 const YH_HOST = "yahoo-finance166.p.rapidapi.com";
 const INDEX_SYMBOLS = "^DJI,^GSPC,^IXIC,^RUT,^VIX";
@@ -33,6 +35,8 @@ export interface MarketSnapshot {
   indices: unknown;
   movers: unknown;
   trending: unknown;
+  aiOverview: string | null;
+  aiOverviewGeneratedAt: string | null;
   errors: string[];
 }
 
@@ -65,6 +69,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     indices: null,
     movers: null,
     trending: null,
+    aiOverview: null,
+    aiOverviewGeneratedAt: null,
     errors: [],
   };
 
@@ -100,6 +106,44 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     snapshot.trending = await trendingRes.value.json();
   } else {
     snapshot.errors.push("trending fetch failed");
+  }
+
+  // ── Generate AI Market Overview via Gemini ────────────────────
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey && snapshot.indices) {
+    try {
+      const genai = new GoogleGenAI({ apiKey: geminiKey });
+      const prompt = `Search the web for today's stock market data and provide a concise pre-market overview.
+
+Include:
+1. **Market Summary** — What happened at last close and any overnight/pre-market moves. List exact values and % changes for the Dow Jones, S&P 500, and Nasdaq.
+2. **Key Drivers** — 2-3 major themes moving the market (earnings, economic data, geopolitics, sector rotation, etc.)
+3. **What to Watch** — 1-2 upcoming catalysts for today's session
+
+Format: Use **bold** for section headers and key numbers. Use bullet points. Keep it under 200 words. Be specific with real numbers and percentages.`;
+
+      const response = await genai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: "You are a concise financial market analyst providing objective, data-driven pre-market briefings. Never give financial advice. Use phrases like 'The data suggests...' or 'Historically...'. Format numbers consistently: $XXX.XX for prices, X.XX% for percentages.",
+          temperature: 0.4,
+          topP: 0.8,
+          maxOutputTokens: 4096,
+          tools: [{ googleSearch: {} }],
+        },
+      });
+
+      const text = (response.text ?? "").trim();
+      if (text && text.length > 50) {
+        snapshot.aiOverview = text;
+        snapshot.aiOverviewGeneratedAt = new Date().toISOString();
+      } else {
+        snapshot.errors.push("AI overview: empty or too short");
+      }
+    } catch (err) {
+      snapshot.errors.push(`AI overview failed: ${String(err)}`);
+    }
   }
 
   // Write to Redis if configured

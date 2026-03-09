@@ -14,6 +14,8 @@
  *   indices: { quoteResponse: { result: [...] } },
  *   movers: { finance: { result: [...] } },
  *   trending: { finance: { result: [...] } },
+ *   aiOverview: string | null,
+ *   aiOverviewGeneratedAt: string | null,
  *   errors: string[],
  *   age: number   // seconds since snapshot was created
  * }

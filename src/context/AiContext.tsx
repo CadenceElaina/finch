@@ -1,7 +1,8 @@
 /**
  * AiContext — global state for AI features.
  * Tracks credits remaining, chat history, and cached summaries.
- * Chat history persists across route navigations within the same session.
+ * Chat history persists in sessionStorage so it survives route
+ * navigations and page refreshes within the same browser tab.
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -43,10 +44,33 @@ const AiContext = createContext<AiContextValue | undefined>(undefined);
 
 // ── Provider ───────────────────────────────────────
 
+const CHAT_STORAGE_KEY = "finch_chat_history";
+
+/** Load chat history from sessionStorage (survives page refresh within tab). */
+function loadChatHistory(): ChatMessage[] {
+  try {
+    const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Save chat history to sessionStorage. */
+function saveChatHistory(history: ChatMessage[]): void {
+  try {
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(history));
+  } catch {
+    // sessionStorage full or unavailable — silently ignore
+  }
+}
+
 export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [credits, setCredits] = useState(getCreditsRemaining);
-  // Unified chat history — single thread across all pages
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  // Unified chat history — single thread across all pages, persisted in sessionStorage
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>(loadChatHistory);
 
   const refreshCredits = useCallback(() => {
     setCredits(getCreditsRemaining());
@@ -64,6 +88,11 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       clearInterval(interval);
     };
   }, [refreshCredits]);
+
+  // Persist chat history to sessionStorage on every change
+  useEffect(() => {
+    saveChatHistory(chatHistory);
+  }, [chatHistory]);
 
   const generate = useCallback(async (prompt: string): Promise<string> => {
     if (!isGeminiConfigured()) throw new Error("Gemini API key not configured");
@@ -115,6 +144,7 @@ export const AiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   const clearChat = useCallback(() => {
     setChatHistory([]);
+    try { sessionStorage.removeItem(CHAT_STORAGE_KEY); } catch { /* ignore */ }
   }, []);
 
   const value = useMemo<AiContextValue>(() => ({

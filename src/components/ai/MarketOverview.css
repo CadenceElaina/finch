@@ -35,6 +35,21 @@
   align-items: center;
 }
 
+.market-overview-timestamp {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  cursor: help;
+}
+
+.market-overview-timestamp + .market-overview-toggle {
+  margin-left: 8px;
+}
+
 /* Animated gradient line — inspired by Google Finance Research */
 .market-overview-gradient-line {
   height: 3px;

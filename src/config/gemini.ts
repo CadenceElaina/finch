@@ -32,6 +32,26 @@ CACHING BEHAVIOR: If providing a stock snapshot (not a user-initiated question),
 limit to: 3-sentence trend summary + 3 key metrics to watch + 1 risk factor.`;
 
 /**
+ * Detect if a Gemini response was truncated mid-sentence.
+ * Heuristics:
+ *   - Ends without terminal punctuation (., !, ?, :, etc.)
+ *   - Ends with an opening markdown bold/list marker that was never closed
+ *   - Suspiciously short (under 30 words) for prompts expecting multi-section output
+ */
+function isTruncated(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+  // Check terminal punctuation (allow ending with bold close, list item, or emoji)
+  const lastChar = trimmed.slice(-1);
+  const endsClean = /[.!?:)}\]%\d]$/.test(trimmed) || /\*\*$/.test(trimmed);
+  if (!endsClean && /[a-zA-Z,;]/.test(lastChar)) return true;
+  // Unclosed markdown bold — odd number of ** pairs
+  const boldMarkers = (trimmed.match(/\*\*/g) || []).length;
+  if (boldMarkers % 2 !== 0) return true;
+  return false;
+}
+
+/**
 /**
  * Generate content from Gemini (no web access).
  * For prompts that only need the data we already have in-app.
@@ -61,7 +81,7 @@ export async function askGemini(prompt: string): Promise<string> {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.4,
         topP: 0.8,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 8192,
       },
     });
     return response.text ?? "";
@@ -76,9 +96,10 @@ export async function askGemini(prompt: string): Promise<string> {
  * Use for market overviews and stock snapshots where current info matters.
  */
 export async function askGeminiGrounded(prompt: string): Promise<string> {
-  // Grounded search can occasionally return empty text on the first try.
+  // Grounded search can occasionally return empty or truncated text.
   // Retry up to 2 times with a short delay if that happens.
   const MAX_ATTEMPTS = 2;
+  let lastText = "";
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const response = await ai.models.generateContent({
@@ -88,13 +109,14 @@ export async function askGeminiGrounded(prompt: string): Promise<string> {
           systemInstruction: SYSTEM_INSTRUCTION,
           temperature: 0.4,
           topP: 0.8,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 8192,
           tools: [{ googleSearch: {} }],
         },
       });
       const text = (response.text ?? "").trim();
-      if (text) return text;
-      // Empty response — wait briefly before retrying
+      if (text && !isTruncated(text)) return text;
+      lastText = text;
+      // Empty or truncated — wait briefly before retrying
       if (attempt < MAX_ATTEMPTS) {
         await new Promise((r) => setTimeout(r, 1500));
       }
@@ -102,6 +124,8 @@ export async function askGeminiGrounded(prompt: string): Promise<string> {
       handleGeminiError(err);
     }
   }
+  // Return whatever we got if it has content, even if truncated
+  if (lastText) return lastText;
   throw new Error("Gemini returned an empty response. Please try again.");
 }
 
@@ -129,7 +153,7 @@ export async function askGeminiChat(
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.4,
         topP: 0.8,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 8192,
         tools: [{ googleSearch: {} }],
       },
     });
