@@ -41,7 +41,7 @@
   padding: var(--space-4);
   height: 100%;
   font-size: var(--text-md);
-  background-color: var(--blue);
+  background-color: var(--accent);
   color: #fff;
   border: 1px solid transparent;
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -50,7 +50,7 @@
 }
 
 .search-button:hover {
-  background-color: var(--blue-hover);
+  background-color: var(--accent-hover);
 }
 
 .data {
@@ -192,12 +192,12 @@
 /* ── Focus / Accessibility ───────────────────────────── */
 
 .search-input:focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
 .quote-row:focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
   background: var(--bg-tertiary);
 }

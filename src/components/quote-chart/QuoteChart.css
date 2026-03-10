@@ -27,7 +27,7 @@
   justify-content: center;
   min-height: 280px;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .chart-loading-shimmer {

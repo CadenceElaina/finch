@@ -31,3 +31,13 @@
 .news-page-empty p {
   margin: var(--space-2) 0;
 }
+
+@media (max-width: 480px) {
+  .news-page-container {
+    padding: 0 var(--space-3);
+  }
+
+  .news-page-heading {
+    font-size: var(--text-lg);
+  }
+}

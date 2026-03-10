@@ -235,7 +235,7 @@ img {
   cursor: pointer;
   color: #fff;
   border-radius: var(--radius-sm);
-  background: var(--blue);
+  background: var(--accent);
   border: 1px solid transparent;
   text-decoration: none;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
@@ -243,7 +243,7 @@ img {
 }
 
 .button:hover {
-  background-color: var(--blue-hover);
+  background-color: var(--accent-hover);
   box-shadow: var(--shadow-sm);
 }
 .primary {
@@ -267,7 +267,7 @@ img {
   border-radius: var(--radius-md);
 }
 .tertiary.active {
-  background-color: var(--blue);
+  background-color: var(--accent);
 }
 .tertiary:hover {
   background-color: var(--bg-hover);
@@ -457,7 +457,7 @@ img {
   text-decoration: none !important;
   color: var(--accent);
   &:hover {
-    color: var(--blue);
+    color: var(--accent-hover);
   }
 }
 
@@ -504,7 +504,7 @@ img {
     margin: 0;
   }
   button {
-    background-color: var(--blue);
+    background-color: var(--accent);
     color: #fff;
     padding: 10px;
     border: none;
@@ -515,7 +515,7 @@ img {
     margin: 0 auto;
     width: 100%;
     &:hover {
-      background-color: var(--accent);
+      background-color: var(--accent-hover);
     }
   }
 }
@@ -534,7 +534,7 @@ img {
     transition: color 0.3s ease;
 
     &:hover {
-      color: var(--blue);
+      color: var(--accent-hover);
     }
   }
 

@@ -9,6 +9,16 @@
   width: 75%;
   margin: var(--space-4) auto 0 auto;
 }
+
+@media (max-width: 768px) {
+  .custom-list {
+    width: 100%;
+  }
+
+  .table-container {
+    padding: var(--space-2);
+  }
+}
 .custom-list-full {
   margin-top: var(--space-6);
   width: 100%;

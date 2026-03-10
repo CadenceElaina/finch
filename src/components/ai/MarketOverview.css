@@ -83,20 +83,20 @@
 
 .market-overview-empty {
   text-align: center;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   color: var(--text-tertiary);
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
 }
 
 .market-overview-generate,
 .market-overview-refresh {
-  margin-top: 10px;
-  padding: 8px 20px;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-5);
   border: none;
-  border-radius: 20px;
-  background: var(--blue);
-  color: var(--text-primary);
-  font-size: 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-active-text);
+  font-size: var(--text-xs);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -104,7 +104,7 @@
 
 .market-overview-generate:hover,
 .market-overview-refresh:hover {
-  background: var(--blue-hover);
+  background: var(--accent-hover);
 }
 
 .market-overview-generate:disabled,
@@ -116,8 +116,8 @@
 .market-overview-refresh {
   background: transparent;
   border: 1px solid var(--border-strong);
-  font-size: 0.7rem;
-  padding: 4px 12px;
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
 }
 
 .market-overview-refresh:hover {
@@ -127,19 +127,19 @@
 .market-overview-loading {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 .market-overview-limit {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   color: var(--negative);
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
 }
 
 .market-overview-error {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   color: var(--negative);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .market-overview-content.collapsed {
@@ -160,10 +160,10 @@
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 500;
   cursor: pointer;
-  padding: 4px 0 0;
+  padding: var(--space-1) 0 0;
 }
 .market-overview-expand:hover {
   text-decoration: underline;

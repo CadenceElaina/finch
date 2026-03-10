@@ -70,3 +70,16 @@
 .related-stock-change.negative {
   color: var(--negative);
 }
+
+@media (max-width: 768px) {
+  .related-stock-card {
+    flex: 0 0 calc((100% - 10px) / 2);
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .related-stock-card {
+    flex: 1 1 100%;
+  }
+}

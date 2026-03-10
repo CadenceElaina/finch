@@ -42,7 +42,7 @@
   background: var(--bg-hover);
 }
 .chip.active {
-  background-color: var(--blue);
+  background-color: var(--accent);
   color: #fff;
 }
 

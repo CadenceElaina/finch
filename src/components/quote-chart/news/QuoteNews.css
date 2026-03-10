@@ -1,12 +1,12 @@
 .quote-news-container {
-  margin-top: 12px;
+  margin-top: var(--space-3);
   min-height: 200px;
 }
 
 .quote-news-heading {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  font-size: 1rem;
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -16,21 +16,21 @@
 .quote-news-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 8px 0;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
   min-height: 240px;
 }
 
 .quote-news-skeleton-row {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
 }
 
 .quote-news-skeleton-thumb {
   width: 80px;
   height: 56px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
   background: linear-gradient(
     90deg,
@@ -52,7 +52,7 @@
 .quote-news-skeleton-line {
   height: 12px;
   width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: linear-gradient(
     90deg,
     var(--shimmer-from) 25%,
@@ -85,30 +85,30 @@
    ───────────────────────────────────────────── */
 
 .qnc-section {
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .qnc-heading {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-3);
 }
 
 .qnc-grid {
-  gap: 12px;
-  padding-bottom: 4px;
+  gap: var(--space-3);
+  padding-bottom: var(--space-1);
 }
 
 .qnc-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   flex: 0 0 calc((100% - 24px) / 3 - 1px);
   min-width: 160px;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -149,18 +149,18 @@
   gap: 2px;
   flex: 1;
   min-width: 0;
-  padding: 0 10px 10px;
+  padding: 0 var(--space-3) var(--space-3);
 }
 
 .qnc-source {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-secondary);
 }
 
 .qnc-title {
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
   color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -169,14 +169,14 @@
 }
 
 .qnc-time {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
 }
 
 /* Responsive */
 @media (max-width: 480px) {
   .qnc-card {
-    flex: 0 0 calc((100% - 12px) / 2);
+    flex: 0 0 calc((100% - var(--space-3)) / 2);
     min-width: 140px;
   }
   .qnc-img-wrap {
