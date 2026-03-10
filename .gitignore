@@ -1,32 +1,44 @@
-# Logs
-logs
+# ── Dependencies ──
+node_modules/
+
+# ── Build output ──
+dist/
+dist-ssr/
+
+# ── Environment & secrets ──
+.env
+.env.*
+*.local
+
+# ── Logs ──
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.env
-
-# Local planning/notes
-docs/
-
-# Backend (removed — see storage.ts for localStorage replacement)
-fin-server/
-
+# ── Editor / IDE ──
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+
+# ── Local planning & prep (not for public repo) ──
+docs/
+interview-prep/
+demo-images/
+
+# ── AI agent protocols (local-only) ──
+.github/copilot-instructions.md
+
+# ── Legacy ──
+fin-server/
