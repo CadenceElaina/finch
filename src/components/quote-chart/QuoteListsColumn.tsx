@@ -237,7 +237,7 @@ const QuoteListsColumn: React.FC = () => {
         <AddToWatchlistModal
           isOpen={true}
           listName={addWatchlistTarget.title}
-          existingSymbols={addWatchlistTarget.securities?.map((s) => s.symbol) ?? []}
+          existingSymbols={watchlists.find((w) => w.id === addWatchlistTarget.id)?.securities?.map((s: WatchlistSecurity) => s.symbol) ?? []}
           onClose={() => setAddWatchlistTarget(null)}
           onSave={(symbol: string) => {
             addSecurityToWatchlist(addWatchlistTarget.id, {
@@ -254,7 +254,7 @@ const QuoteListsColumn: React.FC = () => {
         <AddToPortfolioModal
           isOpen={true}
           listName={addPortfolioTarget.title}
-          existingSymbols={addPortfolioTarget.securities?.map((s) => s.symbol) ?? []}
+          existingSymbols={portfolios.find((p) => p.id === addPortfolioTarget.id)?.securities?.map((s: Security) => s.symbol) ?? []}
           onClose={() => setAddPortfolioTarget(null)}
           onSave={(symbol: string, quantity: number, purchaseDate: string, purchasePrice: number) => {
             addSecurityToPortfolio(addPortfolioTarget.id, {
