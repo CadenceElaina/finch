@@ -8,9 +8,9 @@
   color: var(--text-primary);
   background-color: var(--bg-elevated);
   border: 1px solid var(--border);
-  padding: 8px;
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .chart-quote .recharts-cartesian-grid-horizontal line {
@@ -33,7 +33,7 @@
 .chart-loading-shimmer {
   width: 80%;
   height: 200px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: linear-gradient(
     90deg,
     var(--shimmer-from) 25%,

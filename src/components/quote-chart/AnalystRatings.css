@@ -1,27 +1,27 @@
 /* ── Analyst Ratings (Quote Page) ── */
 
 .ar-section {
-  margin-top: 20px;
+  margin-top: var(--space-5);
 }
 
 .ar-heading {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 500;
   color: var(--text-primary);
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
 }
 
 .ar-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 .ar-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -67,7 +67,7 @@
 }
 
 .ar-firm {
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -76,7 +76,7 @@
 }
 
 .ar-grade {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -88,7 +88,7 @@
 }
 
 .ar-action {
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -100,12 +100,12 @@
 .ar-action.ar-init { color: var(--text-tertiary); }
 
 .ar-date {
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
 }
 
 @media (max-width: 768px) {
   .ar-row {
-    padding: 6px 8px;
+    padding: var(--space-1) var(--space-2);
   }
 }

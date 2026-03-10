@@ -19,16 +19,16 @@
 .addToPortfolio-content {
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: var(--space-5);
   width: 400px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
   color: var(--text-primary);
 }
 
 .addToPortfolio-input {
   display: flex;
   align-items: center;
-  margin: 15px 0 15px 0;
+  margin: var(--space-4) 0 var(--space-4) 0;
 }
 
 .addToPortfolio-input input {
@@ -45,8 +45,8 @@
   height: 1.69rem;
 } */
 .addToPortfolio-button {
-  background: var(--blue);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--accent-active-text);
   border: none;
   padding: 8px;
   border-radius: var(--radius-sm);
@@ -57,15 +57,15 @@
 }
 
 .addToPortfolio-button:hover {
-  background: var(--blue-hover);
+  background: var(--accent-hover);
 }
 
 .addToPortfolio-row {
-  margin: 10px 0;
+  margin: var(--space-3) 0;
 }
 
 .addToPortfolio-row span {
-  margin-right: 10px;
+  margin-right: var(--space-3);
 }
 
 .addToPortfolio-buttons {
@@ -74,17 +74,17 @@
 }
 
 .addToPortfolio-buttons button {
-  background: var(--blue);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--accent-active-text);
   border: none;
-  padding: 8px 20px;
+  padding: var(--space-2) var(--space-5);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .addToPortfolio-buttons button:first-child {
-  margin-right: 10px;
+  margin-right: var(--space-3);
 }
 
 .addToPortfolio-buttons button:hover {
-  background: var(--blue-hover);
+  background: var(--accent-hover);
 }

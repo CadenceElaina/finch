@@ -1,7 +1,7 @@
 .scroll-row-wrapper {
   position: relative;
   overflow: hidden;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
 }
 
 .scroll-row-track {

@@ -1,26 +1,26 @@
 .related-stocks {
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 
 .related-stocks-heading {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-3);
 }
 
 .related-stocks-grid {
-  gap: 10px;
-  padding-bottom: 4px;
+  gap: var(--space-3);
+  padding-bottom: var(--space-1);
 }
 
 .related-stock-card {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px 14px;
+  padding: var(--space-3) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -36,13 +36,13 @@
 }
 
 .related-stock-symbol {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .related-stock-name {
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -50,7 +50,7 @@
 }
 
 .related-stock-price {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   margin-top: 2px;
 }
@@ -59,7 +59,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 500;
 }
 
