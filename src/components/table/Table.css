@@ -1,16 +1,16 @@
 .table-container {
-  margin-bottom: 25px;
-  padding: 10px;
+  margin-bottom: var(--space-6);
+  padding: var(--space-3);
   max-width: 640px;
 }
 .custom-list {
   list-style-type: none;
   padding: 0;
   width: 75%;
-  margin: 15px auto 0 auto;
+  margin: var(--space-4) auto 0 auto;
 }
 .custom-list-full {
-  margin-top: 25px;
+  margin-top: var(--space-6);
   width: 100%;
   padding: 0;
 }
@@ -18,17 +18,22 @@
 .list-item {
   border-top: 1px solid var(--border);
   margin-bottom: 0;
-  padding: 10px 8px;
+  padding: var(--space-3) var(--space-2);
   display: flex;
   justify-content: stretch;
   cursor: pointer;
+  transition: background 0.15s;
+}
+
+.list-item:hover {
+  background: var(--bg-hover);
 }
 
 .item-content {
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .item-field {
@@ -40,13 +45,13 @@
   flex: 1;
 }
 .symbol-name-followers {
-  margin-top: 5px;
+  margin-top: var(--space-1);
 }
 .symbol-name-followers .field-value {
-  margin-top: 5px;
+  margin-top: var(--space-1);
 }
 .symbol-name-followers .field-value:last-child {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 .symbol {
@@ -66,17 +71,17 @@
   min-width: 30px;
   max-width: 55px;
   height: 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 0 4px;
-  font-size: 0.75rem;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
 }
 .symbol .field-value {
   flex: 1;
   display: flex;
-  margin-left: 10px;
+  margin-left: var(--space-3);
 }
 .field-value-icon {
   display: flex;
@@ -128,19 +133,19 @@
   color: var(--negative);
 }
 .percent-change {
-  border-radius: 4px;
-  padding: 6px;
+  border-radius: var(--radius-xs);
+  padding: var(--space-1);
   display: flex;
 }
 
 .positive-percent {
-  background-color: rgba(129, 201, 149, 0.15);
+  background-color: var(--positive-bg);
   color: var(--positive);
   border-radius: var(--radius-sm);
 }
 
 .negative-percent {
-  background-color: rgba(242, 139, 130, 0.15);
+  background-color: var(--negative-bg);
   color: var(--negative);
   border-radius: var(--radius-sm);
 }
@@ -156,8 +161,8 @@
   justify-self: flex-end;
 }
 .price-pc .field-value {
-  margin-right: 10px;
+  margin-right: var(--space-3);
 }
 .price-pc .item-field {
-  margin-right: 10px;
+  margin-right: var(--space-3);
 }

@@ -1,25 +1,19 @@
 /* AiPanel — Collapsible AI research panel */
 
 .ai-panel {
-  border-radius: 12px;
-  margin-top: 16px;
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-4);
   overflow: hidden;
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.06) 0%, var(--bg-secondary) 50%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom-color: rgba(0, 0, 0, 0.25);
-  border-right-color: rgba(0, 0, 0, 0.18);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.35),
-    0 1px 3px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 1px 0 0 rgba(255, 255, 255, 0.04);
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.04) 0%, var(--bg-secondary) 60%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 .ai-panel-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
@@ -32,8 +26,8 @@
 .ai-panel-toggle-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -41,16 +35,16 @@
 .ai-panel-toggle-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .ai-panel-credits {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-secondary);
   background: var(--bg-tertiary);
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
 }
 
 .ai-panel-toggle-right svg {
@@ -59,8 +53,8 @@
 
 /* Animated gradient line — inspired by Google Finance Research */
 .ai-panel-gradient-line {
-  height: 3px;
-  margin: 0 16px;
+  height: 2px;
+  margin: 0 var(--space-4);
   border-radius: 2px;
   background: linear-gradient(
     90deg,
@@ -81,15 +75,15 @@
 }
 
 .ai-panel-body {
-  padding: 0 16px 16px;
+  padding: 0 var(--space-4) var(--space-4);
 }
 
 /* Override nested component border/margin when inside AiPanel */
 .ai-panel-body .stock-snapshot,
 .ai-panel-body .research-chat {
   border: none;
-  margin-top: 8px;
-  padding: 8px 0;
+  margin-top: var(--space-2);
+  padding: var(--space-2) 0;
   background: transparent;
   box-shadow: none;
 }
