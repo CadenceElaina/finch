@@ -1,0 +1,95 @@
+/* ── Market Clock (header widget) ── */
+
+.market-clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.market-clock__time {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 11.5px;
+}
+
+.market-clock__sep {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.market-clock__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px 2px 6px;
+  border-radius: 4px;
+}
+
+.market-clock__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── open ── */
+.market-clock__status--open {
+  color: var(--positive);
+  background: var(--positive-bg);
+}
+.market-clock__status--open .market-clock__dot {
+  background: var(--positive);
+  box-shadow: 0 0 4px var(--positive);
+  animation: market-pulse 2s ease-in-out infinite;
+}
+
+/* ── pre-market / after-hours trading ── */
+.market-clock__status--extended {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+.market-clock__status--extended .market-clock__dot {
+  background: var(--accent);
+}
+
+/* ── closed ── */
+.market-clock__status--closed {
+  color: var(--text-tertiary);
+  background: transparent;
+}
+.market-clock__status--closed .market-clock__dot {
+  background: var(--text-tertiary);
+}
+
+@keyframes market-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .market-clock__status span:not(.market-clock__dot) {
+    /* keep dot, hide label text — status color still visible */
+  }
+  .market-clock {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-clock {
+    display: none;
+  }
+}

@@ -6,6 +6,7 @@ import { IoMdSettings } from "react-icons/io";
 import { FaListUl } from "react-icons/fa";
 import FuelGauge from "../FuelGauge";
 import Search from "../search/Search";
+import MarketClock from "./MarketClock";
 import { useDemoMode } from "../../context/DemoModeContext";
 import { useTheme } from "../../context/ThemeContext";
 import { BsSun, BsMoon } from "react-icons/bs";
@@ -52,6 +53,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {!hideHeaderSearch && <Search compact onNavigate={() => {}} />}
         </div>
         <div className="top-banner-right">
+          <MarketClock />
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
