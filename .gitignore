@@ -39,6 +39,7 @@ demo-images/
 
 # ── AI agent protocols (local-only) ──
 .github/copilot-instructions.md
+AI_CONTEXT.md
 
 # ── Legacy ──
 fin-server/
