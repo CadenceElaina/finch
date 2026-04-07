@@ -4,6 +4,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+import { lazy, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -11,21 +12,22 @@ import {
   Link,
 } from "react-router-dom";
 import Home from "./pages/Home";
-import News from "./pages/News";
-import Portfolio from "./components/portfolio/Portfolio";
-import Help from "./pages/footer/Help";
-import Feedback from "./pages/footer/Feedback";
-import Privacy from "./pages/footer/Privacy";
-import Terms from "./pages/footer/Terms";
-import Disclaimer from "./pages/footer/Disclaimer";
-import Settings from "./pages/Settings";
-import Quote from "./pages/quote/Quote";
-import MarketIndexes from "./components/market-trends/MarketIndexes";
-import MostActive from "./components/market-trends/MostActive";
-import Gainers from "./components/market-trends/Gainers";
-import Losers from "./components/market-trends/Losers";
-import Trending from "./components/market-trends/Trending";
 import Layout from "./components/layout/Layout";
+
+const News = lazy(() => import("./pages/News"));
+const Portfolio = lazy(() => import("./components/portfolio/Portfolio"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Quote = lazy(() => import("./pages/quote/Quote"));
+const MarketIndexes = lazy(() => import("./components/market-trends/MarketIndexes"));
+const MostActive = lazy(() => import("./components/market-trends/MostActive"));
+const Gainers = lazy(() => import("./components/market-trends/Gainers"));
+const Losers = lazy(() => import("./components/market-trends/Losers"));
+const Trending = lazy(() => import("./components/market-trends/Trending"));
+const Help = lazy(() => import("./pages/footer/Help"));
+const Feedback = lazy(() => import("./pages/footer/Feedback"));
+const Privacy = lazy(() => import("./pages/footer/Privacy"));
+const Terms = lazy(() => import("./pages/footer/Terms"));
+const Disclaimer = lazy(() => import("./pages/footer/Disclaimer"));
 
 const NotFound = () => (
   <Layout>
@@ -40,7 +42,8 @@ const NotFound = () => (
 function App() {
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={null}>
+        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/news" element={<News />} />
         <Route path="/portfolio" element={<Portfolio />} />
@@ -60,7 +63,8 @@ function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/disclaimer" element={<Disclaimer />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
