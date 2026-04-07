@@ -13,6 +13,7 @@ import {
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Layout from "./components/layout/Layout";
+import { Analytics } from "@vercel/analytics/react";
 
 const News = lazy(() => import("./pages/News"));
 const Portfolio = lazy(() => import("./components/portfolio/Portfolio"));
@@ -42,6 +43,7 @@ const NotFound = () => (
 function App() {
   return (
     <Router>
+      <Analytics />
       <Suspense fallback={null}>
         <Routes>
         <Route path="/" element={<Home />} />
