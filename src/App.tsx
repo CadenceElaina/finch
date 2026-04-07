@@ -14,6 +14,7 @@ import {
 import Home from "./pages/Home";
 import Layout from "./components/layout/Layout";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const News = lazy(() => import("./pages/News"));
 const Portfolio = lazy(() => import("./components/portfolio/Portfolio"));
@@ -44,6 +45,7 @@ function App() {
   return (
     <Router>
       <Analytics />
+      <SpeedInsights />
       <Suspense fallback={null}>
         <Routes>
         <Route path="/" element={<Home />} />
