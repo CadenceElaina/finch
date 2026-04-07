@@ -12,7 +12,7 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 - **AI research** powered by Gemini 2.5 Flash — market overview, stock snapshots, multi-turn chat, portfolio commentary
 - **TradingView charts** (lightweight-charts) with area, candlestick, and volume modes across 8 time intervals
 - **Portfolio analytics** — sector look-through for ETFs, return attribution, risk metrics, concentration warnings
-- **Morning cron job** — Vercel Cron fetches market snapshot at 9 AM ET → Redis → instant page loads
+- **Morning cron job** — Vercel Cron pre-warms Redis with market snapshot at 5 AM ET (before premarket) → instant page loads
 - **Zero backend for user data** — portfolios, watchlists, preferences, AI credits all in localStorage
 - **Seamless demo mode** — auto-detects rate limits, switches to static data with full UI functionality
 
@@ -74,13 +74,13 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 | Routing       | React Router v6                                         |
 | Data Fetching | TanStack Query 5 (React Query)                          |
 | State         | 9 React Context providers                               |
-| Charts        | lightweight-charts 4 (TradingView) + Recharts 2         |
+| Charts        | lightweight-charts 4 (TradingView) + Recharts 2 + MUI X Charts |
 | AI            | Google Gemini 2.5 Flash (`@google/genai`)               |
 | UI            | Material UI 5 + react-icons                             |
-| Market Data   | 3 Yahoo Finance providers via RapidAPI (4-tier cascade) |
+| Market Data   | 4 Yahoo Finance providers via RapidAPI (4-tier cascade) |
 | News          | Seeking Alpha via RapidAPI                              |
-| Serverless    | Vercel Edge Functions (API key proxy)                   |
-| Cron          | Vercel Cron (weekday 9 AM ET market snapshot)           |
+| Serverless    | Vercel Serverless Functions (Edge + Node.js runtimes)  |
+| Cron          | Vercel Cron (weekday 5 AM ET pre-market snapshot)      |
 | Cache         | Redis Cloud (server) + localStorage with TTLs (client)  |
 | Deployment    | Vercel                                                  |
 
@@ -90,18 +90,19 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 
 ```
                           ┌──────────────────────────────────────────┐
-                          │           Vercel Cron (9 AM ET)          │
+                          │           Vercel Cron (5 AM ET)          │
                           │   api/cron/morning-snapshot.ts           │
                           │   Fetches indices + movers → Redis      │
                           └──────────────────┬───────────────────────┘
                                              │
 ┌─────────────┐    ┌─────────────────────────▼───────────────────────────────┐
-│             │    │              Vercel Edge Functions                       │
-│   React     │◄──►│  /api/yh-finance    (YH Finance 166 proxy)             │
-│   SPA       │    │  /api/apidojo       (ApiDojo YF v1 proxy)              │
-│             │    │  /api/yf15          (Yahoo Finance 15 proxy)           │
-│  localhost  │    │  /api/seeking-alpha (Seeking Alpha proxy)              │
-│  :5173      │    │  /api/snapshot      (Redis → client)                   │
+│             │    │              Vercel Serverless Functions                 │
+│   React     │◄──►│  /api/yh-finance    (YH Finance 166 proxy)    [Edge]   │
+│   SPA       │    │  /api/apidojo       (ApiDojo YF v1 proxy)     [Edge]   │
+│             │    │  /api/yf-realtime   (YF Real Time proxy)      [Edge]   │
+│  localhost  │    │  /api/yf15          (Yahoo Finance 15 proxy)   [Edge]   │
+│  :5173      │    │  /api/seeking-alpha (Seeking Alpha proxy)     [Edge]   │
+│             │    │  /api/snapshot      (Redis → client)          [Node]   │
 └──────┬──────┘    └─────────────────────────────────────────────────────────┘
        │
        ├── TanStack Query (stale/gc TTLs per endpoint)
@@ -114,19 +115,19 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 ### API Cascade (yhFetch)
 
 ```
-Request → YH Finance 166 ──(429/403)──→ ApiDojo YF v1 ──(429/403)──→ Yahoo Finance 15 → throw
-              │                              │                              │
-         Circuit Breaker              Circuit Breaker               Circuit Breaker
-         (10min cooldown)             (10min cooldown)              (10min cooldown)
+Request → YH Finance 166 ──(429/403)──→ ApiDojo YF v1 ──(429/403)──→ YF Real Time ──(429/403)──→ Yahoo Finance 15 → throw
+              │                              │                            │                              │
+         Circuit Breaker              Circuit Breaker             Circuit Breaker              Circuit Breaker
+         (10min cooldown)             (10min cooldown)            (10min cooldown)             (10min cooldown)
 ```
 
 Each provider has independent circuit breaker state. In-flight request deduplication prevents duplicate API calls when multiple components mount simultaneously. The YF15 fallback uses sequential single-ticker requests (no batch support) and stops on first failure.
 
 ### Key Design Decisions
 
-- **4-tier API cascade** — Three Yahoo Finance providers with automatic failover. When all exhaust, graceful fallback to demo mode. Total budget: ~1,500 req/month.
+- **4-tier API cascade** — Four Yahoo Finance providers with automatic failover. When all exhaust, graceful fallback to demo mode. Total budget: ~2,000 req/month.
 - **Request deduplication** — Identical in-flight requests share a single Promise via a Map keyed on `endpoint?sortedParams`. Prevents 6+ components from making duplicate API calls on page load.
-- **Morning cron snapshot** — Weekday 9 AM ET cron fetches indices, movers, and trending tickers into Redis Cloud. Client reads from `/api/snapshot` for instant page loads, falling back to live API if stale.
+- **Morning cron snapshot** — Weekday 5 AM ET cron pre-warms Redis Cloud with indices, movers, and trending tickers before premarket opens. Client reads from `/api/snapshot` for instant page loads, falling back to live API if stale.
 - **ETF sector look-through** — Portfolio sector analysis distributes each ETF's value across its underlying sector weights (from Seeking Alpha), rather than lumping all ETFs into one category.
 - **AI credit system** — 10 credits/day per user, tracked in localStorage with local-midnight reset. Fuel gauge in header. Three Gemini modes: basic (no web), grounded (Google Search), and multi-turn chat.
 - **Demo mode** — Not a separate code path. Same components, same hooks, same charts — just with static data injected at the fetch layer. Demo portfolios seeded on first visit with `isDemo` flag so they don't count against user limits.
@@ -196,7 +197,7 @@ src/
 ├── types/               # Shared TypeScript interfaces
 └── utils/               # Formatting utilities (currency, percent, XIRR calculator)
 
-api/                     # Vercel Edge Functions (API key proxies + cron)
+api/                     # Vercel Serverless Functions (API key proxies + cron)
 ```
 
 ---
@@ -205,8 +206,8 @@ api/                     # Vercel Edge Functions (API key proxies + cron)
 
 Deployed on [Vercel](https://vercel.com) with:
 
-- **Edge Functions** for API key proxying (keys never reach the client)
-- **Cron job** (`vercel.json`) runs `api/cron/morning-snapshot.ts` at Mon–Fri 9:00 AM ET
+- **Serverless Functions** for API key proxying — Edge runtime for proxies, Node.js for Redis snapshot
+- **Cron job** (`vercel.json`) runs `api/cron/morning-snapshot.ts` at Mon–Fri 5:00 AM ET (pre-market)
 - **Redis Cloud** stores the morning market snapshot for fast initial page loads
 - **SPA fallback** — all routes serve `index.html`
 
