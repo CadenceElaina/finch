@@ -159,11 +159,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   // ── Generate AI Market Overview via Gemini ────────────────────
   // AI uses Google Search grounding — not gated on market data fetch success.
+  // Retries up to 3 times with exponential backoff if Gemini is temporarily unavailable.
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
-    try {
-      const genai = new GoogleGenAI({ apiKey: geminiKey });
-      const prompt = `Search the web for today's stock market data and provide a concise pre-market overview.
+    const MAX_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const genai = new GoogleGenAI({ apiKey: geminiKey });
+        const prompt = `Search the web for today's stock market data and provide a concise pre-market overview.
 
 Include:
 1. **Market Summary** — What happened at last close and any overnight/pre-market moves. List exact values and % changes for the Dow Jones, S&P 500, and Nasdaq.
@@ -172,27 +175,36 @@ Include:
 
 Format: Use **bold** for section headers and key numbers. Use bullet points. Keep it under 200 words. Be specific with real numbers and percentages.`;
 
-      const response = await genai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: "You are a concise financial market analyst providing objective, data-driven pre-market briefings. Never give financial advice. Use phrases like 'The data suggests...' or 'Historically...'. Format numbers consistently: $XXX.XX for prices, X.XX% for percentages.",
-          temperature: 0.4,
-          topP: 0.8,
-          maxOutputTokens: 4096,
-          tools: [{ googleSearch: {} }],
-        },
-      });
+        const response = await genai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+          config: {
+            systemInstruction: "You are a concise financial market analyst providing objective, data-driven pre-market briefings. Never give financial advice. Use phrases like 'The data suggests...' or 'Historically...'. Format numbers consistently: $XXX.XX for prices, X.XX% for percentages.",
+            temperature: 0.4,
+            topP: 0.8,
+            maxOutputTokens: 4096,
+            tools: [{ googleSearch: {} }],
+          },
+        });
 
-      const text = (response.text ?? "").trim();
-      if (text && text.length > 50) {
-        snapshot.aiOverview = text;
-        snapshot.aiOverviewGeneratedAt = new Date().toISOString();
-      } else {
-        snapshot.errors.push("AI overview: empty or too short");
+        const text = (response.text ?? "").trim();
+        if (text && text.length > 50) {
+          snapshot.aiOverview = text;
+          snapshot.aiOverviewGeneratedAt = new Date().toISOString();
+        } else {
+          snapshot.errors.push("AI overview: empty or too short");
+        }
+        break; // Success — exit retry loop
+      } catch (err) {
+        const isRetriable = String(err).includes("503") || String(err).includes("UNAVAILABLE") || String(err).includes("overloaded");
+        if (isRetriable && attempt < MAX_RETRIES) {
+          const delay = attempt * 5000; // 5s, 10s
+          console.warn(`[AI Overview] Attempt ${attempt} failed (${String(err).slice(0, 80)}), retrying in ${delay / 1000}s...`);
+          await new Promise((r) => setTimeout(r, delay));
+        } else {
+          snapshot.errors.push(`AI overview failed after ${attempt} attempt(s): ${String(err)}`);
+        }
       }
-    } catch (err) {
-      snapshot.errors.push(`AI overview failed: ${String(err)}`);
     }
   }
 
