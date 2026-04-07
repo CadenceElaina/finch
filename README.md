@@ -15,6 +15,8 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 - **Morning cron job** — Vercel Cron pre-warms Redis with market snapshot at 5 AM ET (before premarket) → instant page loads
 - **Zero backend for user data** — portfolios, watchlists, preferences, AI credits all in localStorage
 - **Seamless demo mode** — auto-detects rate limits, switches to static data with full UI functionality
+- **Tested** — 56 unit tests (Vitest) covering XIRR calculations, formatting, credit system, and API config; runs in CI on every deploy
+- **Code-split** — route-level lazy loading + manual vendor chunks; no bundle chunk exceeds 500 KB
 
 ---
 
@@ -67,22 +69,23 @@ A Google Finance-inspired market intelligence dashboard with AI-powered research
 
 ## Tech Stack
 
-| Layer         | Choice                                                  |
-| ------------- | ------------------------------------------------------- |
-| Frontend      | React 18 + TypeScript 5.2                               |
-| Build         | Vite 5                                                  |
-| Routing       | React Router v6                                         |
-| Data Fetching | TanStack Query 5 (React Query)                          |
-| State         | 9 React Context providers                               |
+| Layer         | Choice                                                         |
+| ------------- | -------------------------------------------------------------- |
+| Frontend      | React 18 + TypeScript 5.2                                      |
+| Build         | Vite 5                                                         |
+| Routing       | React Router v6                                                |
+| Data Fetching | TanStack Query 5 (React Query)                                 |
+| State         | 9 React Context providers                                      |
 | Charts        | lightweight-charts 4 (TradingView) + Recharts 2 + MUI X Charts |
-| AI            | Google Gemini 2.5 Flash (`@google/genai`)               |
-| UI            | Material UI 5 + react-icons                             |
-| Market Data   | 4 Yahoo Finance providers via RapidAPI (4-tier cascade) |
-| News          | Seeking Alpha via RapidAPI                              |
-| Serverless    | Vercel Serverless Functions (Edge + Node.js runtimes)  |
-| Cron          | Vercel Cron (weekday 5 AM ET pre-market snapshot)      |
-| Cache         | Redis Cloud (server) + localStorage with TTLs (client)  |
-| Deployment    | Vercel                                                  |
+| AI            | Google Gemini 2.5 Flash (`@google/genai`)                      |
+| UI            | Material UI 5 + react-icons                                    |
+| Market Data   | 4 Yahoo Finance providers via RapidAPI (4-tier cascade)        |
+| News          | Seeking Alpha via RapidAPI                                     |
+| Serverless    | Vercel Serverless Functions (Edge + Node.js runtimes)          |
+| Cron          | Vercel Cron (weekday 5 AM ET pre-market snapshot)              |
+| Cache         | Redis Cloud (server) + localStorage with TTLs (client)         |
+| Testing       | Vitest + jsdom (56 unit tests across 4 test suites)            |
+| Deployment    | Vercel                                                         |
 
 ---
 
@@ -163,12 +166,14 @@ Both market data APIs use a single RapidAPI key. The Gemini key is from [Google 
 
 ### Scripts
 
-| Command           | Description                   |
-| ----------------- | ----------------------------- |
-| `npm run dev`     | Start Vite dev server         |
-| `npm run build`   | Type-check + production build |
-| `npm run lint`    | ESLint check                  |
-| `npm run preview` | Preview production build      |
+| Command              | Description                          |
+| -------------------- | ------------------------------------ |
+| `npm run dev`        | Start Vite dev server                |
+| `npm run build`      | Type-check + test + production build |
+| `npm run test`       | Run test suite once (Vitest)         |
+| `npm run test:watch` | Run tests in watch mode              |
+| `npm run lint`       | ESLint check                         |
+| `npm run preview`    | Preview production build             |
 
 ---
 
