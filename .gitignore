@@ -36,6 +36,8 @@ Thumbs.db
 docs/
 interview-prep/
 demo-images/
+AUDIT.md
+image.png
 
 # ── AI agent protocols (local-only) ──
 .github/copilot-instructions.md
