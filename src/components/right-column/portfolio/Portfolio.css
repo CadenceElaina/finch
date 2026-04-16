@@ -102,6 +102,13 @@
   color: var(--positive);
 }
 
+/* Stale data indicator */
+.yp-row-stale {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
 /* New portfolio button wrapper */
 .add-portfolio-button {
   position: relative;

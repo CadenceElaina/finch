@@ -5,6 +5,12 @@
   font-size: var(--text-lg);
   font-weight: 500;
   color: var(--text-primary);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.news-heading:hover {
+  color: var(--accent);
 }
 
 .home-news-see-all {

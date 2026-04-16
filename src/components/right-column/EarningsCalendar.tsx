@@ -156,7 +156,9 @@ const EarningsCalendar: React.FC = () => {
 
       {!loading && earnings.length === 0 && (
         <div className="earnings-calendar-empty">
-          No upcoming earnings in the next 90 days
+          {isDemoActive()
+            ? "Earnings data unavailable in demo mode"
+            : "No upcoming earnings in the next 90 days"}
         </div>
       )}
 

@@ -39,7 +39,6 @@ const HomeNews = () => {
       <div
         role="heading"
         className="news-heading"
-        style={{ cursor: "pointer" }}
         onClick={() => navigate("/news")}
       >
         Today's financial news

@@ -12,8 +12,9 @@ const ArticleImage: React.FC<{ src?: string; alt: string; onClick?: () => void }
   const [failed, setFailed] = useState(false);
   const handleError = useCallback(() => setFailed(true), []);
 
+  // Don't render anything if there's no image source or it failed to load
   if (!src || failed) {
-    return <div className="story-image-placeholder" />;
+    return null;
   }
   return (
     <img

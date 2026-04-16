@@ -115,11 +115,15 @@ const YourPortfolios = () => {
 
   const totalPortfolioValue = portfolios.reduce((acc, portfolio) => {
     const securities = portfolioQuotes[portfolio.title] || [];
-    const portfolioValue = securities.reduce((valueAcc, security) => {
+    const liveValue = securities.reduce((valueAcc, security) => {
       return valueAcc + security.price * security.quantity;
     }, 0);
-
-    return acc + portfolioValue;
+    // Fall back to last stored value when live data is unavailable
+    const storedValue =
+      liveValue <= 0 && portfolio.portfolioValue?.length
+        ? portfolio.portfolioValue[portfolio.portfolioValue.length - 1].value
+        : 0;
+    return acc + (liveValue > 0 ? liveValue : storedValue);
   }, 0);
   return (
     <div className="add-portfolio-container">
@@ -156,9 +160,17 @@ const YourPortfolios = () => {
             portfolios.map((portfolio) => {
               const securities = portfolioQuotes[portfolio.title] || [];
 
-              const portfolioValue = securities.reduce((acc, security) => {
+              const liveValue = securities.reduce((acc, security) => {
                 return acc + security.price * security.quantity;
               }, 0);
+
+              // Fall back to last stored portfolio value if live data unavailable
+              const lastStoredValue =
+                liveValue <= 0 && portfolio.portfolioValue?.length
+                  ? portfolio.portfolioValue[portfolio.portfolioValue.length - 1].value
+                  : 0;
+              const portfolioValue = liveValue > 0 ? liveValue : lastStoredValue;
+              const isStale = liveValue <= 0 && lastStoredValue > 0;
 
               const dailyGainLoss = securities.reduce((acc, security) => {
                 return acc + security.priceChange * security.quantity;
@@ -187,17 +199,21 @@ const YourPortfolios = () => {
                     <span className="yp-row-value">
                       {portfolioValue
                         ? `$${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                        : "$0.00"}
+                        : "—"}
                     </span>
                   </div>
-                  {/* Bottom line: daily change */}
+                  {/* Bottom line: daily change or stale indicator */}
                   <div className="yp-row-bottom">
-                    <span className={`yp-row-change ${changeDir}`}>
-                      {dailyGainLoss >= 0 ? "+" : "-"}${Math.abs(dailyGainLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      <span className="yp-row-pct">
-                        &nbsp;{totalPercentChange >= 0 ? "+" : ""}{totalPercentChange.toFixed(2)}%
+                    {isStale ? (
+                      <span className="yp-row-stale">Last close</span>
+                    ) : (
+                      <span className={`yp-row-change ${changeDir}`}>
+                        {dailyGainLoss >= 0 ? "+" : "-"}${Math.abs(dailyGainLoss).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <span className="yp-row-pct">
+                          &nbsp;{totalPercentChange >= 0 ? "+" : ""}{totalPercentChange.toFixed(2)}%
+                        </span>
                       </span>
-                    </span>
+                    )}
                   </div>
                 </Link>
               );

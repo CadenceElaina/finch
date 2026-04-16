@@ -38,11 +38,11 @@ const Markets = () => {
   const { snapshot, isStale } = useSnapshot();
   const snapshotApplied = useRef(false);
 
-  // Pick a stable random article (only changes when newsData array changes)
+  // Pick the most recent article as the spotlight (stable across re-renders)
   const spotlightArticle = useMemo(() => {
     if (!newsData.length) return null;
-    return newsData[Math.floor(Math.random() * newsData.length)];
-  }, [newsData.length]);
+    return newsData[0];
+  }, [newsData]);
 
   queryClient.setQueryDefaults(["quote"], { gcTime: 1000 * 60 * 15 });
 

@@ -128,7 +128,10 @@ const MostFollowed = () => {
     id: security.symbol,
     symbol: security.symbol,
     name: security.name,
-    followers: security.followers.toString() + "M following",
+    followers:
+      security.followers === 1
+        ? "In 1 list"
+        : `In ${security.followers} lists`,
     price: security.price || 0,
     priceChange: Number(security.priceChange) || 0,
     percentChange: Number(security.percentChange) || 0,
