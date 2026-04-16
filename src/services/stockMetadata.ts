@@ -29,7 +29,7 @@ export interface StockMetadata {
 
 const METADATA_TTL = 7 * 24 * 60 * 60_000; // 7 days
 // Bump version to invalidate all stale cache entries from prior API failures
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const cacheKey = (sym: string) => `metadata_v${CACHE_VERSION}_${sym}`;
 
 // ── Demo metadata (approximate Feb 2026 values) ─────────
@@ -576,21 +576,39 @@ export async function getStockMetadata(
     const rawVal = (v: any): number =>
       v?.raw !== undefined ? v.raw : typeof v === "number" ? v : 0;
 
-    const meta = buildMeta(sym, {
-      sector: profile.sector,
-      industry: profile.industry,
+    const apiData: Partial<StockMetadata> = {
+      sector: profile.sector || undefined,
+      industry: profile.industry || undefined,
       marketCapRaw:
-        rawVal(price.marketCap) || rawVal(sumDetail.marketCap),
-      beta: rawVal(keyStats.beta),
-      dividendYield: rawVal(sumDetail.dividendYield),
+        rawVal(price.marketCap) || rawVal(sumDetail.marketCap) || undefined,
+      beta: rawVal(keyStats.beta) || undefined,
+      dividendYield: rawVal(sumDetail.dividendYield) || undefined,
       trailingPE:
-        rawVal(sumDetail.trailingPE) || rawVal(price.trailingPE),
-      quoteType: price.quoteType ?? sumDetail.quoteType ?? "",
-      exchange: price.exchange ?? "",
-      country: profile.country ?? "",
-    });
+        rawVal(sumDetail.trailingPE) || rawVal(price.trailingPE) || undefined,
+      quoteType: price.quoteType ?? sumDetail.quoteType ?? undefined,
+      exchange: price.exchange ?? undefined,
+      country: profile.country ?? undefined,
+    };
 
-    cacheStorage.set(cacheKey(sym), meta);
+    // Merge: API values take priority, but fall back to DEMO_METADATA
+    // for any field the API didn't return (undefined/empty/zero).
+    const demo = DEMO_METADATA[sym] ?? {};
+    const merged: Partial<StockMetadata> = { ...demo };
+    for (const [k, v] of Object.entries(apiData)) {
+      if (v !== undefined) {
+        (merged as Record<string, unknown>)[k] = v;
+      }
+    }
+
+    const meta = buildMeta(sym, merged);
+
+    // Only cache if we got meaningful data (sector resolved).
+    // Avoids persisting "Unknown" for 7 days when the API
+    // returned an empty profile.
+    const hasGoodData = meta.sector !== "Unknown" || meta.beta > 0;
+    if (hasGoodData) {
+      cacheStorage.set(cacheKey(sym), meta);
+    }
     return meta;
   } catch {
     // Fallback to demo data if available, else generic defaults
