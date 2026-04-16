@@ -17,6 +17,7 @@ interface PortfoliosContextProps {
   renamePortfolio: (portfolioId: string, newTitle: string) => void;
   addSecurityToPortfolio: (portfolioId: string, security: Security) => void;
   removeSecurityFromPortfolio: (portfolioId: string, symbol: string) => void;
+  restoreDefaultPortfolios: () => void;
 }
 
 const PortfoliosContext = createContext<PortfoliosContextProps | undefined>(
@@ -129,6 +130,13 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
+  const restoreDefaultPortfolios = () => {
+    // Generate fresh copies of the demo defaults (new ids + fresh synthHistory)
+    const fresh = DEFAULT_PORTFOLIOS.map((p) => ({ ...p, id: crypto.randomUUID() }));
+    const merged = portfolioStorage.restoreDefaults(fresh);
+    setPortfolios(merged);
+  };
+
   const contextValue = useMemo(
     () => ({
       portfolios,
@@ -137,6 +145,7 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
       renamePortfolio,
       addSecurityToPortfolio,
       removeSecurityFromPortfolio,
+      restoreDefaultPortfolios,
     }),
     [portfolios]
   );

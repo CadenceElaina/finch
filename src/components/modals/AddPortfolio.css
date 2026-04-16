@@ -89,3 +89,39 @@
   opacity: 1;
   pointer-events: auto; /* Enable interaction when modal is visible */
 }
+
+/* ConfirmModal buttons */
+.confirm-modal-cancel-btn {
+  background: none;
+  color: var(--accent);
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-base);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+}
+.confirm-modal-cancel-btn:hover {
+  background: var(--bg-hover);
+}
+
+.confirm-modal-ok-btn {
+  background: var(--accent);
+  color: var(--accent-active-text);
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-base);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+.confirm-modal-ok-btn:hover {
+  background: var(--accent-hover);
+}
+.confirm-modal-ok-btn.confirm-modal-danger {
+  background: var(--negative, #ea4335);
+  color: #fff;
+}
+.confirm-modal-ok-btn.confirm-modal-danger:hover {
+  background: #c5352a;
+}

@@ -26,6 +26,7 @@ interface WatchlistContextProps {
     watchlistId: string,
     security: WatchlistSecurity
   ) => void;
+  restoreDefaultWatchlists: () => void;
 }
 
 const WatchlistContext = createContext<WatchlistContextProps | undefined>(
@@ -123,6 +124,12 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
+  const restoreDefaultWatchlists = () => {
+    const fresh = DEFAULT_WATCHLISTS.map((w) => ({ ...w, id: crypto.randomUUID() }));
+    const merged = watchlistStorage.restoreDefaults(fresh);
+    setWatchlists(merged);
+  };
+
   const contextValue = useMemo(
     () => ({
       watchlists,
@@ -132,6 +139,7 @@ export const WatchlistsProvider: React.FC<{ children: ReactNode }> = ({
       renameWatchlist,
       addSecurityToWatchlist,
       removeSecurityFromWatchlist,
+      restoreDefaultWatchlists,
     }),
     [watchlists]
   );

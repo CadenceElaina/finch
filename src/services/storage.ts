@@ -87,6 +87,20 @@ export const portfolioStorage = {
     write(PORTFOLIOS_KEY, portfolios);
     return portfolio;
   },
+
+  /**
+   * Replace all demo portfolios with fresh defaults, preserving non-demo entries.
+   * Returns the merged list.
+   */
+  restoreDefaults(freshDefaults: Portfolio[]): Portfolio[] {
+    const all = portfolioStorage.getAll();
+    const userOwned = all.filter((p) => !p.isDemo);
+    const merged = [...userOwned, ...freshDefaults];
+    write(PORTFOLIOS_KEY, merged);
+    // Bump seed version so context migration re-runs
+    localStorage.setItem("finch_demo_portfolios_seeded", "2");
+    return merged;
+  },
 };
 
 // Watchlists
@@ -145,6 +159,19 @@ export const watchlistStorage = {
     );
     write(WATCHLISTS_KEY, watchlists);
     return watchlist;
+  },
+
+  /**
+   * Replace all demo watchlists with fresh defaults, preserving non-demo entries.
+   * Returns the merged list.
+   */
+  restoreDefaults(freshDefaults: Watchlist[]): Watchlist[] {
+    const all = watchlistStorage.getAll();
+    const userOwned = all.filter((w) => !w.isDemo);
+    const merged = [...userOwned, ...freshDefaults];
+    write(WATCHLISTS_KEY, merged);
+    localStorage.setItem("finch_demo_watchlists_seeded", "1");
+    return merged;
   },
 };
 

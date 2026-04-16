@@ -21,6 +21,7 @@ import Notification from "../Notification";
 import PortfolioSummary from "../ai/PortfolioSummary";
 import ResearchChat from "../ai/ResearchChat";
 import RenameModal from "../modals/RenameModal";
+import ConfirmModal from "../modals/ConfirmModal";
 import Footer from "../Footer";
 
 /**
@@ -42,6 +43,7 @@ const Portfolio = () => {
   const [addToWatchlistModalIsOpen, setAddToWatchlistModalIsOpen] = useState(false);
   const [newListModalOpen, setNewListModalOpen] = useState<"watchlist" | "portfolio" | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { portfolios, removePortfolio, renamePortfolio, addSecurityToPortfolio, removeSecurityFromPortfolio, appendPortfolio } = usePortfolios();
   const { watchlists, addSecurityToWatchlist, appendWatchlist, removeWatchlist, renameWatchlist, removeSecurityFromWatchlist } = useWatchlists();
@@ -89,30 +91,38 @@ const Portfolio = () => {
   const handleDropdownOptionClick = (option: string) => {
     if (!activeTab) return;
     if (option === "remove") {
-      if (activeTab.type === "portfolio") {
-        const p = portfolios.find((p) => p.id === activeTab.id);
-        if (p) {
-          removePortfolio(p);
-          addNotification(`${p.title} removed`, "success");
-          const remaining = portfolios.filter((x) => x.id !== p.id);
-          if (remaining.length > 0) navigate(`/portfolio/${remaining[0].id}`);
-          else if (watchlists.length > 0) navigate(`/watchlist/${watchlists[0].id}`);
-          else navigate("/");
-        }
-      } else {
-        const w = watchlists.find((w) => w.id === activeTab.id);
-        if (w) {
-          removeWatchlist(w);
-          addNotification(`${w.title} removed`, "success");
-          const remaining = watchlists.filter((x) => x.id !== w.id);
-          if (remaining.length > 0) navigate(`/watchlist/${remaining[0].id}`);
-          else if (portfolios.length > 0) navigate(`/portfolio/${portfolios[0].id}`);
-          else navigate("/");
-        }
-      }
+      setDeleteConfirmOpen(true);
+      setShowDropdown(false);
+      return;
     }
     if (option === "rename") setRenameModalOpen(true);
     setShowDropdown(false);
+  };
+
+  const handleConfirmDelete = () => {
+    setDeleteConfirmOpen(false);
+    if (!activeTab) return;
+    if (activeTab.type === "portfolio") {
+      const p = portfolios.find((p) => p.id === activeTab.id);
+      if (p) {
+        removePortfolio(p);
+        addNotification(`${p.title} removed`, "success");
+        const remaining = portfolios.filter((x) => x.id !== p.id);
+        if (remaining.length > 0) navigate(`/portfolio/${remaining[0].id}`);
+        else if (watchlists.length > 0) navigate(`/watchlist/${watchlists[0].id}`);
+        else navigate("/");
+      }
+    } else {
+      const w = watchlists.find((w) => w.id === activeTab.id);
+      if (w) {
+        removeWatchlist(w);
+        addNotification(`${w.title} removed`, "success");
+        const remaining = watchlists.filter((x) => x.id !== w.id);
+        if (remaining.length > 0) navigate(`/watchlist/${remaining[0].id}`);
+        else if (portfolios.length > 0) navigate(`/portfolio/${portfolios[0].id}`);
+        else navigate("/");
+      }
+    }
   };
 
   const handleSaveNewList = (name: string, type: "watchlist" | "portfolio") => {
@@ -190,6 +200,34 @@ const Portfolio = () => {
             addNotification(`Renamed to ${newName}`, "success");
             setRenameModalOpen(false);
           }}
+        />
+      )}
+      {deleteConfirmOpen && activeTab && (
+        <ConfirmModal
+          title={`Delete "${activeTab.title}"?`}
+          message={
+            <>
+              This will permanently remove the {activeTab.type} and all its{" "}
+              {activeTab.type === "portfolio" ? "holdings" : "securities"}.
+              {(activeTab.type === "portfolio"
+                ? portfolios.find((p) => p.id === activeTab.id)?.isDemo
+                : watchlists.find((w) => w.id === activeTab.id)?.isDemo) && (
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 8,
+                    color: "var(--accent)",
+                  }}
+                >
+                  This is a demo {activeTab.type}. You can restore it later from Settings.
+                </span>
+              )}
+            </>
+          }
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteConfirmOpen(false)}
         />
       )}
 

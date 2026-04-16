@@ -284,3 +284,36 @@ export const DEFAULT_PORTFOLIOS: Portfolio[] = [
 ];
 
 export const DEFAULT_WATCHLISTS: Watchlist[] = [defaultWatchlist];
+
+// ── Seed version ─────────────────────────────────────────
+// Bump this number whenever DEFAULT_PORTFOLIOS / DEFAULT_WATCHLISTS change
+// so the context migration code (v2 check) runs for existing users.
+export const DEMO_SEED_VERSION = 2;
+
+// ── Change-detection helpers ──────────────────────────────
+// Returns true if the stored demo item differs from its original defaults
+// (securities added/removed, or title changed).
+
+export function isDemoPortfolioModified(stored: Portfolio): boolean {
+  if (!stored.isDemo) return false;
+  const original = DEFAULT_PORTFOLIOS.find((d) => d.id === stored.id || d.title === stored.title);
+  if (!original) return false;
+  const origSet = new Set(original.securities?.map((s) => s.symbol.toLowerCase()) ?? []);
+  const currSet = new Set((stored.securities ?? []).map((s) => s.symbol.toLowerCase()));
+  if (stored.title !== original.title) return true;
+  if (origSet.size !== currSet.size) return true;
+  for (const s of origSet) if (!currSet.has(s)) return true;
+  return false;
+}
+
+export function isDemoWatchlistModified(stored: Watchlist): boolean {
+  if (!stored.isDemo) return false;
+  const original = DEFAULT_WATCHLISTS.find((d) => d.id === stored.id || d.title === stored.title);
+  if (!original) return false;
+  const origSet = new Set(original.securities?.map((s) => s.symbol.toLowerCase()) ?? []);
+  const currSet = new Set((stored.securities ?? []).map((s) => s.symbol.toLowerCase()));
+  if (stored.title !== original.title) return true;
+  if (origSet.size !== currSet.size) return true;
+  for (const s of origSet) if (!currSet.has(s)) return true;
+  return false;
+}

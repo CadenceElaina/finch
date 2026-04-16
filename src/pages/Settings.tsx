@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Layout from "../components/layout/Layout";
 import Footer from "../components/Footer";
 import { useDemoMode } from "../context/DemoModeContext";
@@ -6,6 +6,13 @@ import { useAi } from "../context/AiContext";
 import { usePortfolios } from "../context/PortfoliosContext";
 import { useWatchlists } from "../context/WatchlistContext";
 import { useTheme } from "../context/ThemeContext";
+import ConfirmModal from "../components/modals/ConfirmModal";
+import {
+  isDemoPortfolioModified,
+  isDemoWatchlistModified,
+  DEFAULT_PORTFOLIOS,
+  DEFAULT_WATCHLISTS,
+} from "../data/demo/defaultLists";
 import "./Settings.css";
 
 const APP_VERSION = "0.16.0";
@@ -14,10 +21,49 @@ const CACHE_PREFIX = "finch_cache_";
 const Settings = () => {
   const { isDemoMode, exitDemoMode, enterDemoMode } = useDemoMode();
   const { creditsRemaining, maxCredits, configured } = useAi();
-  const { portfolios } = usePortfolios();
-  const { watchlists } = useWatchlists();
+  const { portfolios, restoreDefaultPortfolios } = usePortfolios();
+  const { watchlists, restoreDefaultWatchlists } = useWatchlists();
   const { theme, toggleTheme } = useTheme();
   const [cacheCleared, setCacheCleared] = useState(false);
+  const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
+  const [restoreDone, setRestoreDone] = useState(false);
+
+  // Detect which demo lists have been changed by the user
+  const modifiedDemoPortfolios = useMemo(
+    () => portfolios.filter((p) => p.isDemo && isDemoPortfolioModified(p)),
+    [portfolios]
+  );
+  const modifiedDemoWatchlists = useMemo(
+    () => watchlists.filter((w) => w.isDemo && isDemoWatchlistModified(w)),
+    [watchlists]
+  );
+  const deletedDemoPortfolioCount = useMemo(
+    () => {
+      const storedTitles = new Set(portfolios.filter((p) => p.isDemo).map((p) => p.title));
+      return DEFAULT_PORTFOLIOS.filter((p) => !storedTitles.has(p.title)).length;
+    },
+    [portfolios]
+  );
+  const deletedDemoWatchlistCount = useMemo(
+    () => {
+      const storedTitles = new Set(watchlists.filter((w) => w.isDemo).map((w) => w.title));
+      return DEFAULT_WATCHLISTS.filter((w) => !storedTitles.has(w.title)).length;
+    },
+    [watchlists]
+  );
+  const hasChanges =
+    modifiedDemoPortfolios.length > 0 ||
+    modifiedDemoWatchlists.length > 0 ||
+    deletedDemoPortfolioCount > 0 ||
+    deletedDemoWatchlistCount > 0;
+
+  const handleRestoreDefaults = () => {
+    restoreDefaultPortfolios();
+    restoreDefaultWatchlists();
+    setRestoreConfirmOpen(false);
+    setRestoreDone(true);
+    setTimeout(() => setRestoreDone(false), 3000);
+  };
 
   const handleDemoToggle = () => {
     if (isDemoMode) {
@@ -56,6 +102,37 @@ const Settings = () => {
 
   return (
     <Layout>
+      {restoreConfirmOpen && (
+        <ConfirmModal
+          title="Restore demo data?"
+          message={
+            <>
+              This will reset all demo portfolios and watchlists back to their
+              original state. Your own (non-demo) portfolios and watchlists are
+              not affected.
+              {hasChanges && (
+                <ul style={{ marginTop: 8, paddingLeft: 16, lineHeight: 1.8 }}>
+                  {modifiedDemoPortfolios.map((p) => (
+                    <li key={p.id}>Portfolio "{p.title}" — modified</li>
+                  ))}
+                  {deletedDemoPortfolioCount > 0 && (
+                    <li>{deletedDemoPortfolioCount} demo portfolio{deletedDemoPortfolioCount > 1 ? "s" : ""} deleted</li>
+                  )}
+                  {modifiedDemoWatchlists.map((w) => (
+                    <li key={w.id}>Watchlist "{w.title}" — modified</li>
+                  ))}
+                  {deletedDemoWatchlistCount > 0 && (
+                    <li>{deletedDemoWatchlistCount} demo watchlist{deletedDemoWatchlistCount > 1 ? "s" : ""} deleted</li>
+                  )}
+                </ul>
+              )}
+            </>
+          }
+          confirmLabel="Restore"
+          onConfirm={handleRestoreDefaults}
+          onCancel={() => setRestoreConfirmOpen(false)}
+        />
+      )}
       <div className="settings-container">
         <div className="settings-heading">Settings</div>
 
@@ -149,6 +226,28 @@ const Settings = () => {
               disabled={cacheCleared}
             >
               {cacheCleared ? "Cleared ✓" : "Clear"}
+            </button>
+          </div>
+          <div className="settings-row">
+            <div className="settings-row-info">
+              <div className="settings-row-label">Restore Demo Data</div>
+              <div className="settings-row-desc">
+                {hasChanges
+                  ? `Demo data has been changed (${
+                      modifiedDemoPortfolios.length + modifiedDemoWatchlists.length
+                    } modified, ${
+                      deletedDemoPortfolioCount + deletedDemoWatchlistCount
+                    } deleted). Restore to original sample portfolios and watchlists.`
+                  : "Reset demo portfolios and watchlists to their original sample data."}
+              </div>
+            </div>
+            <button
+              className="settings-action-btn"
+              onClick={() => setRestoreConfirmOpen(true)}
+              disabled={restoreDone}
+              style={hasChanges ? { borderColor: "var(--accent)", color: "var(--accent)" } : undefined}
+            >
+              {restoreDone ? "Restored ✓" : "Restore"}
             </button>
           </div>
         </section>
