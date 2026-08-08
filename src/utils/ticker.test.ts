@@ -1,5 +1,34 @@
 import { describe, it, expect } from "vitest";
-import { displaySymbol, normalizeSymbol, tickerHue } from "./ticker";
+import {
+  displaySymbol,
+  normalizeSymbol,
+  preferredName,
+  tickerHue,
+} from "./ticker";
+
+describe("preferredName", () => {
+  it("prefers longName over Yahoo's 31-char shortName", () => {
+    // Regression: holdings showed "Vanguard Total International St",
+    // which reads as a real name rather than as truncation.
+    expect(
+      preferredName(
+        "Vanguard Total International Stock Index Fund ETF Shares",
+        "Vanguard Total International St"
+      )
+    ).toBe("Vanguard Total International Stock Index Fund ETF Shares");
+  });
+
+  it("falls back to shortName when longName is absent or blank", () => {
+    expect(preferredName(undefined, "Apple Inc.")).toBe("Apple Inc.");
+    expect(preferredName(null, "Apple Inc.")).toBe("Apple Inc.");
+    expect(preferredName("   ", "Apple Inc.")).toBe("Apple Inc.");
+  });
+
+  it("falls back to the supplied fallback when both are missing", () => {
+    expect(preferredName(undefined, undefined, "AAPL")).toBe("AAPL");
+    expect(preferredName(undefined, undefined)).toBe("");
+  });
+});
 
 describe("displaySymbol", () => {
   it("uppercases mixed-case symbols", () => {

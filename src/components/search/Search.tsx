@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { quoteType, suggestionType, utils } from "./types";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS, yhFetch } from "../../config/api";
+import { preferredName } from "../../utils/ticker";
 
 const POPULAR_SEARCHES = [
   { symbol: "AAPL", name: "Apple Inc." },
@@ -134,7 +135,7 @@ const Search: React.FC<SearchProps> = ({ compact = false, onNavigate }) => {
         return {
           symbol: (p.symbol ?? q.symbol ?? "").toLowerCase(),
           price: p.regularMarketPrice?.raw ?? p.regularMarketPrice ?? 0,
-          name: p.shortName ?? p.longName ?? "",
+          name: preferredName(p.longName, p.shortName),
           priceChange: Number((p.regularMarketChange?.raw ?? p.regularMarketChange ?? 0).toFixed(2)),
           percentChange: p.regularMarketChangePercent?.raw != null
             ? p.regularMarketChangePercent.raw * 100

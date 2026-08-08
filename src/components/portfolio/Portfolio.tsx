@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
@@ -90,12 +90,15 @@ const Portfolio = () => {
   // The kebab menu had no dismissal path other than picking an option, so it
   // stayed open on outside clicks and persisted across tab switches — where it
   // would then act on the newly selected list.
-  const listsContentRef = useRef<HTMLDivElement>(null);
-
+  //
+  // The menu markup lives inside PortfolioContent/WatchlistContent, so the
+  // hit test keys off its wrapper class rather than a ref this component
+  // would have to drill down.
   useEffect(() => {
     if (!showDropdown) return;
     const onPointerDown = (e: MouseEvent | TouchEvent) => {
-      if (!listsContentRef.current?.contains(e.target as Node)) {
+      const target = e.target as Element | null;
+      if (!target?.closest?.(".settings-dropdown")) {
         setShowDropdown(false);
       }
     };
@@ -317,7 +320,7 @@ const Portfolio = () => {
 
         {/* ── Active list content ── */}
         {activeTab && (
-          <div className="lists-content" ref={listsContentRef}>
+          <div className="lists-content">
             {/* ── Watchlist view ── */}
             {activeTab.type === "watchlist" && activeWatchlist && (
               <>

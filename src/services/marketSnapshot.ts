@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { quoteType } from "../components/search/types";
 import { cacheStorage } from "./storage";
+import { preferredName } from "../utils/ticker";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ function parseRawQuote(q: RawYHQuote): quoteType {
   return {
     symbol: (q.symbol ?? "").toLowerCase(),
     price: q.regularMarketPrice ?? 0,
-    name: q.shortName ?? q.longName ?? "",
+    name: preferredName(q.longName, q.shortName),
     priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
     percentChange: q.regularMarketChangePercent ?? 0,
   };

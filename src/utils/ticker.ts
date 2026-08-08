@@ -32,6 +32,25 @@ export function normalizeSymbol(symbol: string | null | undefined): string {
 }
 
 /**
+ * Pick the better of the two names a quote carries.
+ *
+ * Yahoo truncates `shortName` to 31 characters, which cuts mid-word and reads
+ * as a real (if odd) name rather than as elision — "Vanguard Total
+ * International Stock Index Fund ETF Shares" arrives as "Vanguard Total
+ * International St". Preferring `longName` keeps the name complete and lets
+ * the UI ellipsize it honestly when space runs out.
+ */
+export function preferredName(
+  longName?: string | null,
+  shortName?: string | null,
+  fallback = ""
+): string {
+  const long = longName?.trim();
+  const short = shortName?.trim();
+  return long || short || fallback;
+}
+
+/**
  * Deterministic hue (0-359) for a ticker badge.
  *
  * Returns only a hue — the badge's background and text lightness are resolved

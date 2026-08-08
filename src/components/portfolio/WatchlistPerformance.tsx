@@ -4,7 +4,7 @@ import { getBatchQuotes } from "../search/quoteUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { AreaChart, Area } from "recharts";
+import { AreaChart, Area, YAxis } from "recharts";
 import { formatCurrency, formatPercent, formatPriceChange } from "../../utils/format";
 import { displaySymbol, tickerHue } from "../../utils/ticker";
 import "./Portfolio.css";
@@ -190,7 +190,7 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                         width={100}
                         height={32}
                         data={genSparkline(row.price, row.percentChange)}
-                        margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                        margin={{ top: 4, right: 2, bottom: 4, left: 2 }}
                       >
                         <defs>
                           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -198,6 +198,10 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                             <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
                           </linearGradient>
                         </defs>
+                        {/* Recharts defaults the Y domain to start at zero, which
+                            flattens a intraday move against a $300 price into a
+                            straight line. Fit the axis to the series instead. */}
+                        <YAxis hide domain={["dataMin", "dataMax"]} />
                         <Area
                           type="monotone"
                           dataKey="v"

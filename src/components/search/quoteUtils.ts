@@ -16,6 +16,7 @@ import { isDemoActive } from "../../data/demo/demoState";
 import { DEMO_QUOTES, DEMO_GAINERS, DEMO_LOSERS, DEMO_MOST_ACTIVE, DEMO_TRENDING } from "../../data/demo";
 import type { DemoTrendingData } from "../../data/demo/trending";
 import { DEMO_QUOTE_PAGE_DATA } from "../../data/demo";
+import { preferredName } from "../../utils/ticker";
 
 // Cache TTLs for localStorage persistence (survive page refreshes)
 const LS_TTL = {
@@ -33,7 +34,7 @@ function parseQuote(q: any, fallbackSymbol?: string): quoteType {
     return {
       symbol: (p.symbol ?? fallbackSymbol ?? "").toLowerCase(),
       price: p.regularMarketPrice?.raw ?? 0,
-      name: p.shortName ?? p.longName ?? "",
+      name: preferredName(p.longName, p.shortName),
       priceChange: Number((p.regularMarketChange?.raw ?? 0).toFixed(2)),
       percentChange: p.regularMarketChangePercent?.raw
         ? p.regularMarketChangePercent.raw * 100
@@ -45,7 +46,7 @@ function parseQuote(q: any, fallbackSymbol?: string): quoteType {
   return {
     symbol: (q.symbol ?? fallbackSymbol ?? "").toLowerCase(),
     price: q.regularMarketPrice ?? 0,
-    name: q.shortName ?? q.longName ?? "",
+    name: preferredName(q.longName, q.shortName),
     priceChange: Number((q.regularMarketChange ?? 0).toFixed(2)),
     percentChange: q.regularMarketChangePercent ?? 0,
   };

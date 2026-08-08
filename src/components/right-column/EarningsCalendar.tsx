@@ -14,6 +14,7 @@ import { ENDPOINTS } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
 import { isDemoActive } from "../../data/demo";
 import { FaCalendarAlt } from "react-icons/fa";
+import { preferredName } from "../../utils/ticker";
 import "./right.css";
 
 /** Major tickers to always check for upcoming earnings */
@@ -105,7 +106,7 @@ const EarningsCalendar: React.FC = () => {
 
           entries.push({
             symbol: price.symbol ?? q.symbol,
-            name: price.shortName ?? price.longName ?? q.shortName ?? q.longName ?? q.symbol,
+            name: preferredName(price.longName ?? q.longName, price.shortName ?? q.shortName, q.symbol),
             date,
             dateEnd: tsEnd ? new Date(tsEnd * 1000) : undefined,
           });
