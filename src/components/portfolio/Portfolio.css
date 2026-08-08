@@ -535,16 +535,34 @@
   font-weight: 700;
   font-size: var(--text-sm);
   padding: 3px var(--space-2);
-  background: var(--bg-hover);
-  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   letter-spacing: 0.02em;
+  /* Hue derived from the symbol (utils/ticker.ts) so a ticker looks the same
+     here as on the homepage; lightness is fixed per theme for contrast. */
+  --ticker-hue: 210;
+  background: hsl(var(--ticker-hue) 42% 26%);
+  color: hsl(var(--ticker-hue) 75% 85%);
+  border: 1px solid hsl(var(--ticker-hue) 40% 38%);
 }
 
+[data-theme="light"] .perf-symbol-badge {
+  background: hsl(var(--ticker-hue) 68% 93%);
+  color: hsl(var(--ticker-hue) 60% 27%);
+  border-color: hsl(var(--ticker-hue) 50% 80%);
+}
+
+/* max-width on a table cell is only a hint under auto table layout, so the
+   clamp lives on an inner block that the ellipsis can actually apply to. */
 .perf-name-cell {
-  max-width: 180px;
+  max-width: 220px;
+}
+
+.perf-name-text {
+  display: block;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .perf-sub-pct {

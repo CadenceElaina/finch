@@ -19,6 +19,7 @@ import {
   formatPercent,
   formatSignedCurrency,
 } from "../../utils/format";
+import { displaySymbol, tickerHue } from "../../utils/ticker";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -411,9 +412,16 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
               {sortedDetails.map((d) => (
                 <tr key={d.symbol} className="perf-table-row">
                   <td>
-                    <span className="perf-symbol-badge">{d.symbol}</span>
+                    <span
+                      className="perf-symbol-badge"
+                      style={{ "--ticker-hue": tickerHue(d.symbol) } as React.CSSProperties}
+                    >
+                      {displaySymbol(d.symbol)}
+                    </span>
                   </td>
-                  <td className="perf-name-cell">{d.name}</td>
+                  <td className="perf-name-cell">
+                    <span className="perf-name-text" title={d.name}>{d.name}</span>
+                  </td>
                   <td className="num">{d.quantity}</td>
                   <td className="num">{formatCurrency(d.purchasePrice)}</td>
                   <td className="num">{formatCurrency(d.currentPrice)}</td>

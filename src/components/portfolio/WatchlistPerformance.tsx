@@ -6,6 +6,7 @@ import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { AreaChart, Area } from "recharts";
 import { formatCurrency, formatPercent, formatPriceChange } from "../../utils/format";
+import { displaySymbol, tickerHue } from "../../utils/ticker";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -97,26 +98,25 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
   const gainClass = (val: number) =>
     val > 0 ? "gain" : val < 0 ? "loss" : "";
 
-  /** Generate a deterministic mini sparkline from price + percentChange */
+  /**
+   * Trend curve between the two points we actually know: yesterday's close
+   * (back-derived from price and % change) and the current price.
+   *
+   * This previously layered sine waves and scripted dips on top, which read as
+   * real intraday price action — it was invented. The intermediate path is
+   * eased interpolation only, so nothing is asserted that the data doesn't
+   * support. Wiring up true intraday series would need a per-symbol history
+   * request, which the batch quote endpoint doesn't provide.
+   */
   const genSparkline = (price: number, pctChange: number): { v: number }[] => {
     const points = 16;
-    const data: { v: number }[] = [];
     const prevClose = price / (1 + pctChange / 100);
-    const range = Math.abs(price - prevClose) || price * 0.005;
-    // Seed from price for deterministic but varied look
-    const seed = (price * 137.03) % 100;
-    for (let i = 0; i < points; i++) {
+    return Array.from({ length: points }, (_, i) => {
       const t = i / (points - 1);
-      const base = prevClose + (price - prevClose) * t;
-      // Two sine waves at different frequencies for organic feel
-      const w1 = Math.sin(i * 1.9 + seed * 0.37) * range * 0.55;
-      const w2 = Math.sin(i * 3.4 + seed * 0.13) * range * 0.3;
-      // Small dip/spike at 1/3 and 2/3 through
-      const w3 = (i === Math.floor(points * 0.33) ? -range * 0.4 : 0)
-               + (i === Math.floor(points * 0.66) ? range * 0.35 : 0);
-      data.push({ v: base + w1 + w2 + w3 });
-    }
-    return data;
+      // smoothstep so the line reads as a curve rather than a bare diagonal
+      const eased = t * t * (3 - 2 * t);
+      return { v: prevClose + (price - prevClose) * eased };
+    });
   };
 
   const handleClick = (symbol: string) => {
@@ -153,7 +153,9 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
               <th className="sortable-th num" onClick={() => handleSort("percentChange")}>
                 % Change <SortIcon field="percentChange" />
               </th>
-              <th>Chart</th>
+              <th title="Direction from yesterday's close to the current price">
+                Trend
+              </th>
               {onRemoveSecurity && <th></th>}
             </tr>
           </thead>
@@ -161,9 +163,16 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
             {sortedRows.map((row) => (
               <tr key={row.symbol} className="perf-table-row" onClick={() => handleClick(row.symbol)} style={{ cursor: "pointer" }}>
                 <td>
-                  <span className="perf-symbol-badge">{row.symbol}</span>
+                  <span
+                    className="perf-symbol-badge"
+                    style={{ "--ticker-hue": tickerHue(row.symbol) } as React.CSSProperties}
+                  >
+                    {displaySymbol(row.symbol)}
+                  </span>
                 </td>
-                <td className="perf-name-cell">{row.name}</td>
+                <td className="perf-name-cell">
+                  <span className="perf-name-text" title={row.name}>{row.name}</span>
+                </td>
                 <td className="num">{formatCurrency(row.price)}</td>
                 <td className={`num ${gainClass(row.priceChange)}`}>
                   {formatPriceChange(row.priceChange)}

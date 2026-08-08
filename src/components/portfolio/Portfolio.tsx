@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
@@ -86,6 +86,36 @@ const Portfolio = () => {
     const prefix = tab.type === "watchlist" ? "/watchlist" : "/portfolio";
     navigate(`${prefix}/${tab.id}`);
   };
+
+  // The kebab menu had no dismissal path other than picking an option, so it
+  // stayed open on outside clicks and persisted across tab switches — where it
+  // would then act on the newly selected list.
+  const listsContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (!listsContentRef.current?.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowDropdown(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [showDropdown]);
+
+  // Close the menu whenever the active list changes.
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [id]);
 
   // ── CRUD handlers ──
   const handleDropdownOptionClick = (option: string) => {
@@ -287,7 +317,7 @@ const Portfolio = () => {
 
         {/* ── Active list content ── */}
         {activeTab && (
-          <div className="lists-content">
+          <div className="lists-content" ref={listsContentRef}>
             {/* ── Watchlist view ── */}
             {activeTab.type === "watchlist" && activeWatchlist && (
               <>
