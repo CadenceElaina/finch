@@ -18,6 +18,7 @@ import {
 } from "../../services/stockMetadata";
 import { FaExclamationTriangle, FaShieldAlt, FaChartPie, FaInfoCircle, FaChartBar } from "react-icons/fa";
 import type { EtfSectorBreakdown } from "../../services/etfHoldings";
+import { formatSignedCurrency } from "../../utils/format";
 import "./PortfolioAnalysis.css";
 
 // ── Types ────────────────────────────────────────────────────
@@ -411,7 +412,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
           </h3>
           <p className="pa-return-subtitle">
             Total gain: <span className={totalGain >= 0 ? "pa-gain" : "pa-loss"}>
-              {totalGain >= 0 ? "+" : ""}${fmt(Math.abs(totalGain))}
+              {formatSignedCurrency(totalGain)}
             </span>
           </p>
           <div className="pa-return-chart">
@@ -448,7 +449,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
                 />
                 <Tooltip
                   formatter={(value: number) => [
-                    `${value >= 0 ? "+" : ""}$${fmt(Math.abs(value))}`,
+                    formatSignedCurrency(value),
                     "Gain/Loss",
                   ]}
                   labelFormatter={(label: string) => label}

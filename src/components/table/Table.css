@@ -87,6 +87,34 @@
   white-space: nowrap;
   padding: 0 var(--space-1);
   font-size: var(--text-xs);
+  /* Hue comes from the symbol (see utils/ticker.ts); lightness is fixed per
+     theme so every badge clears contrast regardless of which hue it lands on. */
+  --ticker-hue: 210;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: hsl(var(--ticker-hue) 42% 26%);
+  color: hsl(var(--ticker-hue) 75% 85%);
+}
+
+[data-theme="light"] .field-value-symbol {
+  background: hsl(var(--ticker-hue) 68% 93%);
+  color: hsl(var(--ticker-hue) 60% 27%);
+}
+
+.change-arrow {
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+.positive-percent .change-arrow {
+  color: var(--positive);
+}
+
+.negative-percent .change-arrow {
+  color: var(--negative);
 }
 .symbol .field-value {
   flex: 1;

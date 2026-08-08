@@ -7,16 +7,8 @@ import Sparkline from "../quote-chart/Sparkline";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlists } from "../../context/WatchlistContext";
 import { usePortfolios } from "../../context/PortfoliosContext";
-import { formatCurrency } from "../../utils/format";
-
-const getRandomColor = (): string => {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
+import { formatCurrency, formatPriceChange } from "../../utils/format";
+import { displaySymbol, tickerHue } from "../../utils/ticker";
 
 const getChangeStyle = (change: number): string => {
   if (change > 0) {
@@ -28,13 +20,12 @@ const getChangeStyle = (change: number): string => {
   }
 };
 
-const getPriceChangePrefix = (change: number): string => {
-  return change !== 0 ? (change > 0 ? "+$" : "-$") : "";
-};
-
-const getPriceChangeColor = (change: number): string => {
-  return change > 0 ? "#00ff00" : "rgb(217, 48, 37)";
-};
+/**
+ * Badge style for a ticker. Only the hue is set here; CSS resolves the
+ * background/text lightness per theme so contrast holds in light and dark.
+ */
+const tickerBadgeStyle = (symbol: string): React.CSSProperties =>
+  ({ "--ticker-hue": tickerHue(symbol) } as React.CSSProperties);
 
 const Table: React.FC<TableProps> = ({
   data,
@@ -71,11 +62,9 @@ const Table: React.FC<TableProps> = ({
               >
                 <div
                   className="field-value-symbol"
-                  style={{
-                    backgroundColor: getRandomColor(),
-                  }}
+                  style={tickerBadgeStyle(item.symbol)}
                 >
-                  {item.symbol.split("-")[0]}
+                  {displaySymbol(item.symbol)}
                 </div>
                 <div className="field-value">{item.name}</div>
                 <div className="field-value">{item.followers}</div>
@@ -92,11 +81,9 @@ const Table: React.FC<TableProps> = ({
                   <div className={`item-field`}>
                     <div
                       className="field-value-symbol"
-                      style={{
-                        backgroundColor: getRandomColor(),
-                      }}
+                      style={tickerBadgeStyle(item.symbol)}
                     >
-                      {item.symbol.split("-")[0]}
+                      {displaySymbol(item.symbol)}
                     </div>
                   </div>
                   <div
@@ -136,32 +123,14 @@ const Table: React.FC<TableProps> = ({
                             key={`percentChange-${item.id}-${item.percentChange}--${item.symbol}`}
                           >
                             {item.percentChange > 0 ? (
-                              <FaArrowUp
-                                style={{
-                                  color: getPriceChangeColor(
-                                    item.percentChange
-                                  ),
-                                  marginRight: "5px",
-                                }}
-                              />
+                              <FaArrowUp className="change-arrow" />
                             ) : (
-                              <FaArrowDown
-                                style={{
-                                  color: getPriceChangeColor(
-                                    item.percentChange
-                                  ),
-                                  marginRight: "5px",
-                                }}
-                              />
+                              <FaArrowDown className="change-arrow" />
                             )}
                             <span
                               className={getChangeStyle(item.percentChange)}
                             >
-                              {" "}
-                              {item.percentChange < 0
-                                ? item.percentChange.toString().split("-")
-                                : item.percentChange}
-                              %
+                              {Math.abs(item.percentChange).toFixed(2)}%
                             </span>
                           </React.Fragment>
                         )}
@@ -186,12 +155,10 @@ const Table: React.FC<TableProps> = ({
                         {field === "symbol" && !config.name && (
                           <div
                             className="field-value-symbol"
-                            style={{
-                              backgroundColor: getRandomColor(),
-                            }}
+                            style={tickerBadgeStyle(String(item[field]))}
                             key={`please${item.symbol}${item.id}`}
                           >
-                            {String(item[field]).split("-")[0]}
+                            {displaySymbol(String(item[field]))}
                           </div>
                         )}
                         {field === "name" && !config.name && (
@@ -229,44 +196,16 @@ const Table: React.FC<TableProps> = ({
                                     key={`percentChange-${item.percentChange}`}
                                   >
                                     {item.percentChange > 0 ? (
-                                      <React.Fragment
-                                        key={`${item.priceChange}-${item.name}-lol`}
-                                      >
-                                        <FaArrowUp
-                                          style={{
-                                            color: getPriceChangeColor(
-                                              item.percentChange
-                                            ),
-                                            marginRight: "5px",
-                                          }}
-                                        />
-                                      </React.Fragment>
+                                      <FaArrowUp className="change-arrow" />
                                     ) : (
-                                      <React.Fragment
-                                        key={`${item.priceChange}-${item.name}-lol-please`}
-                                      >
-                                        <FaArrowDown
-                                          style={{
-                                            color: getPriceChangeColor(
-                                              item.percentChange
-                                            ),
-                                            marginRight: "5px",
-                                          }}
-                                        />
-                                      </React.Fragment>
+                                      <FaArrowDown className="change-arrow" />
                                     )}
                                     <span
                                       className={getChangeStyle(
                                         item.percentChange
                                       )}
                                     >
-                                      {" "}
-                                      {item.percentChange < 0
-                                        ? item.percentChange
-                                            .toString()
-                                            .split("-")
-                                        : item.percentChange}
-                                      %
+                                      {Math.abs(item.percentChange).toFixed(2)}%
                                     </span>
                                   </React.Fragment>
                                 )}
@@ -294,16 +233,7 @@ const Table: React.FC<TableProps> = ({
                                 item.priceChange
                               )}`}
                             >
-                              {getPriceChangePrefix(item.priceChange)}
-                              {item.priceChange !== 0 && (
-                                <React.Fragment
-                                  key={`priceChange-${item.id}-${item.priceChange}-${item.name}`}
-                                >
-                                  {item.priceChange < 0
-                                    ? item.priceChange.toString().split("-")
-                                    : item.priceChange}
-                                </React.Fragment>
-                              )}
+                              {formatPriceChange(item.priceChange)}
                             </div>
                           </div>
                         )}

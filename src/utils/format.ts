@@ -68,6 +68,20 @@ export function formatPriceChange(
 }
 
 /**
+ * Format a signed dollar amount for gain/loss display: +$1,245.60 or -$3,327.75.
+ *
+ * Identical output to `formatPriceChange`, named for the portfolio/holdings
+ * context where the value is a cumulative gain rather than a price delta.
+ * Callers must not pre-apply Math.abs — the sign is produced here.
+ */
+export function formatSignedCurrency(
+  value: number | null | undefined,
+  decimals = 2
+): string {
+  return formatPriceChange(value, decimals);
+}
+
+/**
  * Format large numbers into human-readable strings: 2.92T, 41.58M, etc.
  */
 export function formatLargeNumber(

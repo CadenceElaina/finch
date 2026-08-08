@@ -14,6 +14,11 @@ import { getEtfSectorBreakdowns } from "../../services/etfHoldings";
 import type { EtfSectorBreakdown } from "../../services/etfHoldings";
 import { xirr } from "../../utils/xirr";
 import PortfolioAnalysis from "./PortfolioAnalysis";
+import {
+  formatCurrency,
+  formatPercent,
+  formatSignedCurrency,
+} from "../../utils/format";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -245,8 +250,6 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   }, [portfolio?.portfolioValue, portfolioPerformance.totalCurrentValue, portfolioPerformance.totalCostBasis]);
 
   const gainClass = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
-  const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmtPct = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatDuration = (days: number): string => {
     if (days < 31) return `${days}d`;
     if (days < 365) { const m = Math.floor(days / 30.44); return `${m}mo`; }
@@ -316,34 +319,34 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       <div className="perf-highlights">
         <div className="perf-value-card">
           <span className="perf-value-label">Current Value</span>
-          <span className="perf-value-amount">${fmt(portfolioPerformance.totalCurrentValue)}</span>
+          <span className="perf-value-amount">{formatCurrency(portfolioPerformance.totalCurrentValue)}</span>
           {portfolioPerformance.totalCostBasis > 0 && (
-            <span className="perf-value-cost">Cost basis: ${fmt(portfolioPerformance.totalCostBasis)}</span>
+            <span className="perf-value-cost">Cost basis: {formatCurrency(portfolioPerformance.totalCostBasis)}</span>
           )}
         </div>
         <div className={`perf-change-card ${gainClass(portfolioPerformance.totalGain)}`}>
           <span className="perf-change-label">Total Return</span>
           <span className="perf-change-num">
-            {portfolioPerformance.totalGain >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalGain))}
+            {formatSignedCurrency(portfolioPerformance.totalGain)}
           </span>
           <span className="perf-change-pct">
-            {portfolioPerformance.totalGainPct >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalGainPct)}%
+            {formatPercent(portfolioPerformance.totalGainPct)}
           </span>
         </div>
         <div className={`perf-change-card ${gainClass(portfolioPerformance.totalPriceChange)}`}>
           <span className="perf-change-label">Today</span>
           <span className="perf-change-num">
-            {portfolioPerformance.totalPriceChange >= 0 ? "+" : ""}${fmt(Math.abs(portfolioPerformance.totalPriceChange))}
+            {formatSignedCurrency(portfolioPerformance.totalPriceChange)}
           </span>
           <span className="perf-change-pct">
-            {portfolioPerformance.totalPercentChange >= 0 ? "+" : ""}{fmtPct(portfolioPerformance.totalPercentChange)}%
+            {formatPercent(portfolioPerformance.totalPercentChange)}
           </span>
         </div>
         {spyDayChange && (
           <div className="perf-benchmark-card">
             <span className="perf-change-label">S&amp;P 500 Today</span>
             <span className={`perf-change-num ${spyDayChange.pct >= 0 ? "gain" : "loss"}`}>
-              {spyDayChange.pct >= 0 ? "+" : ""}{fmtPct(spyDayChange.pct)}%
+              {formatPercent(spyDayChange.pct)}
             </span>
           </div>
         )}
@@ -351,7 +354,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
           <div className={`perf-change-card ${gainClass(xirrReturn)}`}>
             <span className="perf-change-label">Annualized</span>
             <span className="perf-change-num">
-              {xirrReturn >= 0 ? "+" : ""}{fmtPct(xirrReturn * 100)}%
+              {formatPercent(xirrReturn * 100)}
             </span>
             <span className="perf-change-pct perf-xirr-label">
               XIRR
@@ -412,18 +415,18 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                   </td>
                   <td className="perf-name-cell">{d.name}</td>
                   <td className="num">{d.quantity}</td>
-                  <td className="num">${fmt(d.purchasePrice)}</td>
-                  <td className="num">${fmt(d.currentPrice)}</td>
+                  <td className="num">{formatCurrency(d.purchasePrice)}</td>
+                  <td className="num">{formatCurrency(d.currentPrice)}</td>
                   <td className={`num ${gainClass(d.dayChange)}`}>
-                    {d.dayChange >= 0 ? "+" : ""}${fmt(Math.abs(d.dayChange))}
-                    <span className="perf-sub-pct">{d.dayChangePct >= 0 ? "+" : ""}{fmtPct(d.dayChangePct)}%</span>
+                    {formatSignedCurrency(d.dayChange)}
+                    <span className="perf-sub-pct">{formatPercent(d.dayChangePct)}</span>
                   </td>
                   <td className={`num ${gainClass(d.totalGain)}`}>
-                    {d.totalGain >= 0 ? "+" : ""}${fmt(Math.abs(d.totalGain))}
+                    {formatSignedCurrency(d.totalGain)}
                   </td>
                   <td className={`num ${gainClass(d.totalGainPct)}`}>
-                    {d.totalGainPct >= 0 ? "+" : ""}{fmtPct(d.totalGainPct)}%
-                    <span className="perf-sub-pct" title={`${d.holdingPeriodDays} days held`}>{formatDuration(d.holdingPeriodDays)}</span>
+                    {formatPercent(d.totalGainPct)}
+                    <span className="perf-sub-pct" title={`Held ${d.holdingPeriodDays} days`}>{formatDuration(d.holdingPeriodDays)} held</span>
                   </td>
                   {onRemoveSecurity && (
                     <td>

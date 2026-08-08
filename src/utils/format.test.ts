@@ -4,8 +4,32 @@ import {
   formatNumber,
   formatPercent,
   formatPriceChange,
+  formatSignedCurrency,
   formatLargeNumber,
 } from "./format";
+
+describe("formatSignedCurrency", () => {
+  it("keeps the minus sign on losses", () => {
+    // Regression: holdings tables rendered `-$3,327.75` as `$3,327.75`,
+    // leaving red text as the only loss indicator.
+    expect(formatSignedCurrency(-3327.75)).toBe("-$3,327.75");
+    expect(formatSignedCurrency(-5.92)).toBe("-$5.92");
+  });
+
+  it("prefixes gains with +", () => {
+    expect(formatSignedCurrency(1245.6)).toBe("+$1,245.60");
+  });
+
+  it("renders zero without a sign", () => {
+    expect(formatSignedCurrency(0)).toBe("$0.00");
+  });
+
+  it("returns — for missing values", () => {
+    expect(formatSignedCurrency(null)).toBe("—");
+    expect(formatSignedCurrency(undefined)).toBe("—");
+    expect(formatSignedCurrency(NaN)).toBe("—");
+  });
+});
 
 describe("formatCurrency", () => {
   it("formats positive values as USD", () => {

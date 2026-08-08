@@ -250,8 +250,11 @@ const Quote: React.FC<QuoteProps> = () => {
         <span className={`quote-change ${priceUp ? "positive" : "negative"}`}>
           {formatPriceChange(quoteData?.priceChange)}
         </span>
+        {/* The quote API only returns a daily delta, so this figure is always
+            today's change — labelling it with the chart's selected interval
+            (e.g. "5Y") wrongly implied a 5-year return. */}
         <span className={`quote-interval-label ${priceUp ? "positive" : "negative"}`}>
-          {selectedInterval === "1D" ? "Today" : selectedInterval}
+          Today
         </span>
       </div>
       <div className="quote-meta">

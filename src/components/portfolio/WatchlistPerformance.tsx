@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { AreaChart, Area } from "recharts";
+import { formatCurrency, formatPercent, formatPriceChange } from "../../utils/format";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -95,11 +96,6 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   const gainClass = (val: number) =>
     val > 0 ? "gain" : val < 0 ? "loss" : "";
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
 
   /** Generate a deterministic mini sparkline from price + percentChange */
   const genSparkline = (price: number, pctChange: number): { v: number }[] => {
@@ -168,12 +164,12 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                   <span className="perf-symbol-badge">{row.symbol}</span>
                 </td>
                 <td className="perf-name-cell">{row.name}</td>
-                <td className="num">${fmt(row.price)}</td>
+                <td className="num">{formatCurrency(row.price)}</td>
                 <td className={`num ${gainClass(row.priceChange)}`}>
-                  {row.priceChange >= 0 ? "+" : ""}${fmt(Math.abs(row.priceChange))}
+                  {formatPriceChange(row.priceChange)}
                 </td>
                 <td className={`num ${gainClass(row.percentChange)}`}>
-                  {row.percentChange >= 0 ? "+" : ""}{row.percentChange}%
+                  {formatPercent(row.percentChange)}
                 </td>
                 <td className="sparkline-cell">
                   {(() => {
