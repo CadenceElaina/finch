@@ -19,9 +19,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <DemoModeProvider>
       <AiProvider>
         <NotificationProvider>
-        <PortfoliosProvider>
-            <WatchlistsProvider>
-              <QueryClientProvider client={queryClient}>
+          {/* QueryClientProvider wraps PortfoliosProvider so demo-portfolio
+              calibration can reuse the shared quote cache instead of issuing
+              its own request — the upstream quota is small. */}
+          <QueryClientProvider client={queryClient}>
+            <PortfoliosProvider>
+              <WatchlistsProvider>
                 <SnapshotProvider>
                 <IndexQuotesProvider>
                   <NewsProvider>
@@ -30,9 +33,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 </IndexQuotesProvider>
                 </SnapshotProvider>
                 {/*      <ReactQueryDevtools /> */}
-              </QueryClientProvider>
-            </WatchlistsProvider>
-          </PortfoliosProvider>
+              </WatchlistsProvider>
+            </PortfoliosProvider>
+          </QueryClientProvider>
       </NotificationProvider>
       </AiProvider>
     </DemoModeProvider>

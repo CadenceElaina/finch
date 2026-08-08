@@ -10,6 +10,16 @@
  */
 
 import { Portfolio, Watchlist, WatchlistSecurity } from "../../types/types";
+import type { DemoSecurity } from "./calibrate";
+
+/**
+ * Seeded demo holdings carry a `costRatio` that is resolved against the live
+ * price at seed time (see calibrate.ts). The extra field is confined to this
+ * module so the app-wide Security type stays free of demo concerns.
+ */
+type DemoPortfolio = Omit<Portfolio, "securities"> & {
+  securities: DemoSecurity[];
+};
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -64,7 +74,7 @@ function synthHistory(
 
 const ETF_PORTFOLIO_ID = id();
 
-const etfPortfolio: Portfolio = {
+const etfPortfolio: DemoPortfolio = {
   id: ETF_PORTFOLIO_ID,
   title: "Core ETFs",
   author: undefined,
@@ -74,30 +84,35 @@ const etfPortfolio: Portfolio = {
       symbol: "schg",
       quantity: 120,
       purchasePrice: 25.4,
+      costRatio: 0.72,
       purchaseDate: "2024-03-15",
     },
     {
       symbol: "vo",
       quantity: 25,
       purchasePrice: 215.8,
+      costRatio: 0.88,
       purchaseDate: "2024-03-15",
     },
     {
       symbol: "vb",
       quantity: 20,
       purchasePrice: 198.5,
+      costRatio: 0.85,
       purchaseDate: "2024-06-10",
     },
     {
       symbol: "vxus",
       quantity: 80,
       purchasePrice: 54.2,
+      costRatio: 0.91,
       purchaseDate: "2024-03-15",
     },
     {
       symbol: "bnd",
       quantity: 30,
       purchasePrice: 72.1,
+      costRatio: 1.02,
       purchaseDate: "2024-03-15",
     },
   ],
@@ -108,7 +123,7 @@ const etfPortfolio: Portfolio = {
 
 const GROWTH_PORTFOLIO_ID = id();
 
-const growthPortfolio: Portfolio = {
+const growthPortfolio: DemoPortfolio = {
   id: GROWTH_PORTFOLIO_ID,
   title: "Growth & Crypto",
   author: undefined,
@@ -118,48 +133,56 @@ const growthPortfolio: Portfolio = {
       symbol: "nvda",
       quantity: 30,
       purchasePrice: 48.5,
+      costRatio: 0.35,
       purchaseDate: "2023-01-20",
     },
     {
       symbol: "tsla",
       quantity: 15,
       purchasePrice: 180.0,
+      costRatio: 1.12,
       purchaseDate: "2023-06-12",
     },
     {
       symbol: "amzn",
       quantity: 20,
       purchasePrice: 128.0,
+      costRatio: 0.62,
       purchaseDate: "2023-03-01",
     },
     {
       symbol: "meta",
       quantity: 12,
       purchasePrice: 210.0,
+      costRatio: 0.48,
       purchaseDate: "2023-04-15",
     },
     {
       symbol: "amd",
       quantity: 40,
       purchasePrice: 95.0,
+      costRatio: 0.95,
       purchaseDate: "2023-07-01",
     },
     {
       symbol: "crm",
       quantity: 18,
       purchasePrice: 165.0,
+      costRatio: 1.05,
       purchaseDate: "2023-09-15",
     },
     {
       symbol: "shop",
       quantity: 25,
       purchasePrice: 52.0,
+      costRatio: 0.55,
       purchaseDate: "2023-05-20",
     },
     {
       symbol: "btc-usd",
       quantity: 0.5,
       purchasePrice: 29000.0,
+      costRatio: 0.45,
       purchaseDate: "2023-08-01",
     },
   ],
@@ -170,7 +193,7 @@ const growthPortfolio: Portfolio = {
 
 const DIVIDEND_PORTFOLIO_ID = id();
 
-const dividendPortfolio: Portfolio = {
+const dividendPortfolio: DemoPortfolio = {
   id: DIVIDEND_PORTFOLIO_ID,
   title: "Dividends & Value",
   author: undefined,
@@ -180,48 +203,56 @@ const dividendPortfolio: Portfolio = {
       symbol: "jnj",
       quantity: 30,
       purchasePrice: 155.0,
+      costRatio: 0.88,
       purchaseDate: "2024-01-10",
     },
     {
       symbol: "ko",
       quantity: 60,
       purchasePrice: 58.5,
+      costRatio: 0.92,
       purchaseDate: "2024-01-10",
     },
     {
       symbol: "pep",
       quantity: 20,
       purchasePrice: 168.0,
+      costRatio: 1.04,
       purchaseDate: "2024-02-15",
     },
     {
       symbol: "jpm",
       quantity: 15,
       purchasePrice: 172.0,
+      costRatio: 0.74,
       purchaseDate: "2024-01-10",
     },
     {
       symbol: "wmt",
       quantity: 25,
       purchasePrice: 162.0,
+      costRatio: 0.68,
       purchaseDate: "2024-03-01",
     },
     {
       symbol: "hd",
       quantity: 10,
       purchasePrice: 345.0,
+      costRatio: 0.97,
       purchaseDate: "2024-04-20",
     },
     {
       symbol: "abbv",
       quantity: 20,
       purchasePrice: 162.0,
+      costRatio: 0.79,
       purchaseDate: "2024-02-15",
     },
     {
       symbol: "mrk",
       quantity: 25,
       purchasePrice: 120.0,
+      costRatio: 1.08,
       purchaseDate: "2024-05-01",
     },
   ],
@@ -288,7 +319,9 @@ export const DEFAULT_WATCHLISTS: Watchlist[] = [defaultWatchlist];
 // ── Seed version ─────────────────────────────────────────
 // Bump this number whenever DEFAULT_PORTFOLIOS / DEFAULT_WATCHLISTS change
 // so the context migration code (v2 check) runs for existing users.
-export const DEMO_SEED_VERSION = 2;
+// v3 replaced fixture-era absolute purchase prices with costRatio, which is
+// resolved against live quotes at seed time.
+export const DEMO_SEED_VERSION = 3;
 
 // ── Change-detection helpers ──────────────────────────────
 // Returns true if the stored demo item differs from its original defaults
