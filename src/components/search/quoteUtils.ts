@@ -74,15 +74,35 @@ export const getBatchQuotes = async (
   }
 
   const result: Record<string, quoteType | null> = {};
+
+  // Symbols reach us in mixed case — demo lists store "vo", the default
+  // market-watch list stores "VO". Cache keys and the upstream request are
+  // keyed on a canonical uppercase form so one instrument means one cache
+  // entry and one fetch; results are handed back under each caller's own
+  // spelling so existing lookups keep working.
+  const canonical = (s: string) => s.toUpperCase();
+  const requested = [...new Set(symbols)];
+  const aliasesFor = new Map<string, string[]>();
+  for (const sym of requested) {
+    const key = canonical(sym);
+    const list = aliasesFor.get(key);
+    if (list) list.push(sym);
+    else aliasesFor.set(key, [sym]);
+  }
+
+  const assign = (key: string, value: quoteType | null) => {
+    for (const alias of aliasesFor.get(key) ?? [key]) result[alias] = value;
+  };
+
   const uncached: string[] = [];
 
   // 1. Drain React Query in-memory cache first
-  for (const sym of symbols) {
-    const cached = queryClient.getQueryData(["quote", sym]);
+  for (const key of aliasesFor.keys()) {
+    const cached = queryClient.getQueryData(["quote", key]);
     if (cached) {
-      result[sym] = utils.checkCachedQuoteType(cached);
+      assign(key, utils.checkCachedQuoteType(cached));
     } else {
-      uncached.push(sym);
+      uncached.push(key);
     }
   }
 
@@ -90,13 +110,13 @@ export const getBatchQuotes = async (
 
   // 2. Check localStorage for symbols not in memory (survives refresh)
   const stillUncached: string[] = [];
-  for (const sym of uncached) {
-    const lsCached = cacheStorage.get<quoteType>(`quote_${sym}`, LS_TTL.quote);
+  for (const key of uncached) {
+    const lsCached = cacheStorage.get<quoteType>(`quote_${key}`, LS_TTL.quote);
     if (lsCached) {
-      result[sym] = lsCached;
-      queryClient.setQueryData(["quote", sym], lsCached);
+      assign(key, lsCached);
+      queryClient.setQueryData(["quote", key], lsCached);
     } else {
-      stillUncached.push(sym);
+      stillUncached.push(key);
     }
   }
 
@@ -127,21 +147,21 @@ export const getBatchQuotes = async (
       }
     }
 
-    for (const sym of stillUncached) {
-      const raw = bySymbol[sym] ?? bySymbol[sym.toUpperCase()];
+    for (const key of stillUncached) {
+      const raw = bySymbol[key] ?? bySymbol[key.toLowerCase()];
       if (raw) {
-        const parsed = parseQuote(raw, sym);
-        result[sym] = parsed;
-        queryClient.setQueryData(["quote", sym], parsed);
-        cacheStorage.set(`quote_${sym}`, parsed);
+        const parsed = parseQuote(raw, key);
+        assign(key, parsed);
+        queryClient.setQueryData(["quote", key], parsed);
+        cacheStorage.set(`quote_${key}`, parsed);
       } else {
-        result[sym] = null;
+        assign(key, null);
       }
     }
   } catch (error) {
     console.error("getBatchQuotes YH error:", error);
-    for (const sym of stillUncached) {
-      result[sym] = null;
+    for (const key of stillUncached) {
+      assign(key, null);
     }
   }
 
