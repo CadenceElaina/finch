@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { quoteType } from "../components/search/types";
 import { cacheStorage } from "./storage";
 import { preferredName } from "../utils/ticker";
+import { isDemoActive } from "../data/demo/demoState";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -136,6 +137,17 @@ export function useMarketSnapshot(): SnapshotResult {
     let cancelled = false;
 
     async function fetchSnapshot() {
+      // Demo mode serves every surface from static fixtures, so the snapshot
+      // is unused — fetching it would be exactly the network call the mode
+      // exists to avoid. The dev-only guard below hid this locally; in
+      // production demo mode was still hitting /api/snapshot on every load.
+      if (isDemoActive()) {
+        if (!cancelled) {
+          setState({ snapshot: null, isLoading: false, isStale: false, error: null });
+        }
+        return;
+      }
+
       // 1. Check localStorage first (covers dev mode / no KV)
       const cached = cacheStorage.get<MarketSnapshot>(
         SNAPSHOT_LS_KEY,
