@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { ENDPOINTS, yhFetch, areProvidersImpaired } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
+import { DEMO_QUOTES } from "../../data/demo";
+import { isDemoActive } from "../../data/demo/demoState";
 import "./AddToPortfolioModal.css";
 
 interface AddToPortfolioModalProps {
@@ -48,6 +50,21 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
     if (existingSymbols.some((s) => s.toUpperCase() === sym)) {
       setError(`${sym} is already in ${listName}`);
       return false;
+    }
+
+    // Demo mode exists so the app can be browsed without spending upstream
+    // quota, but yhFetch has no demo awareness — validation used to call the
+    // live API even with demo mode on. Resolve against the fixtures instead.
+    if (isDemoActive()) {
+      const demo = DEMO_QUOTES[sym];
+      if (!demo) {
+        setError(`Symbol "${sym}" is not available in demo mode`);
+        return false;
+      }
+      setSymbol(sym);
+      setResolvedName(demo.name || sym);
+      setValidated(true);
+      return true;
     }
 
     // Check localStorage cache first — if we've seen this symbol before, accept it
@@ -119,17 +136,17 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
     }
   };
 
+  /** Quantity and cost only appear once the ticker validates, so they can't be
+   *  required up front — but a holding of 0 shares at $0.00 is meaningless and
+   *  used to be saveable in a single click. */
+  const detailsComplete = quantity > 0 && purchasePrice > 0 && !!purchaseDate;
+
   /**
    * Blurring the field starts validation, and clicking Save blurs it — so the
    * button used to disable itself (`validating`) in the same tick as the
    * click, swallowing it. The first Save press did nothing and the user had to
    * click again. Save now joins any in-flight validation instead.
    */
-  /** Quantity and cost only appear once the ticker validates, so they can't be
-   *  required up front — but a holding of 0 shares at $0.00 is meaningless and
-   *  used to be saveable in a single click. */
-  const detailsComplete = quantity > 0 && purchasePrice > 0 && !!purchaseDate;
-
   const onSaveClick = async () => {
     const ok = validated
       ? true

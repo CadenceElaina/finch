@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { ENDPOINTS, yhFetch, areProvidersImpaired } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
+import { DEMO_QUOTES } from "../../data/demo";
+import { isDemoActive } from "../../data/demo/demoState";
 import "./AddToPortfolioModal.css";
 
 interface AddToWatchlistModalProps {
@@ -35,6 +37,21 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
     if (existingSymbols.some((s) => s.toUpperCase() === sym)) {
       setError(`${sym} is already in ${listName}`);
       return false;
+    }
+
+    // Demo mode exists so the app can be browsed without spending upstream
+    // quota, but yhFetch has no demo awareness — validation used to call the
+    // live API even with demo mode on. Resolve against the fixtures instead.
+    if (isDemoActive()) {
+      const demo = DEMO_QUOTES[sym];
+      if (!demo) {
+        setError(`Symbol "${sym}" is not available in demo mode`);
+        return false;
+      }
+      setSymbol(sym);
+      setResolvedName(demo.name || sym);
+      setValidated(true);
+      return true;
     }
 
     // Check localStorage cache first — if we've seen this symbol before, accept it

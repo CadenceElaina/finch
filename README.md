@@ -166,14 +166,45 @@ Both market data APIs use a single RapidAPI key. The Gemini key is from [Google 
 
 ### Scripts
 
-| Command              | Description                          |
-| -------------------- | ------------------------------------ |
-| `npm run dev`        | Start Vite dev server                |
-| `npm run build`      | Type-check + test + production build |
-| `npm run test`       | Run test suite once (Vitest)         |
-| `npm run test:watch` | Run tests in watch mode              |
-| `npm run lint`       | ESLint check                         |
-| `npm run preview`    | Preview production build             |
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `npm run dev`        | Start Vite dev server                    |
+| `npm run build`      | Type-check + test + production build     |
+| `npm run test`       | Run unit tests once (Vitest)             |
+| `npm run test:watch` | Run unit tests in watch mode             |
+| `npm run test:e2e`   | Run browser end-to-end suites            |
+| `npm run lint`       | ESLint check                             |
+| `npm run preview`    | Preview production build                 |
+
+### Testing
+
+**Unit** (`npm run test`) — Vitest over the pure logic: formatting, XIRR,
+portfolio totals, demo calibration, and quote-cache keying.
+
+**End-to-end** (`npm run test:e2e`) — drives real Chrome against the dev
+server and exercises the Lists/Portfolio flows: seeding, sorting, add,
+remove, rename, delete, persistence across reloads, demo restore, and a
+check that every holding's displayed total equals `qty × (price − cost)`.
+
+The runner starts and stops the dev server itself, so the one command is
+all you need:
+
+```bash
+npm run test:e2e                                  # boots its own dev server
+E2E_BASE_URL=http://localhost:5173 npm run test:e2e   # reuse a running one
+```
+
+Two deliberate properties:
+
+- **Hermetic.** Suites run with demo mode enabled, so quotes come from
+  fixtures. Assertions are deterministic, and a test run spends none of the
+  500-calls/month upstream budget — the suites assert that zero network
+  calls were made.
+- **No browser download.** They use `playwright-core` against a Chrome
+  already on the machine (`channel: "chrome"`, or set `CHROME_PATH`), so
+  `npm install` stays light and the Vercel build is unaffected. E2E is
+  intentionally excluded from `npm run build` — the build runs in CI where
+  there is no browser and no dev server.
 
 ---
 
@@ -200,9 +231,10 @@ src/
 ├── pages/               # Route pages (Home, Quote, News, Markets, Settings, Portfolio)
 ├── services/            # AI credits, ETF holdings, financials, stock metadata, storage
 ├── types/               # Shared TypeScript interfaces
-└── utils/               # Formatting utilities (currency, percent, XIRR calculator)
+└── utils/               # Formatting, ticker display, holdings totals, XIRR
 
 api/                     # Vercel Serverless Functions (API key proxies + cron)
+e2e/                     # Browser end-to-end suites (see Testing)
 ```
 
 ---
