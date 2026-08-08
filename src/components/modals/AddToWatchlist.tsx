@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ENDPOINTS, yhFetch, areProvidersImpaired } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
 import "./AddToPortfolioModal.css";
@@ -23,6 +23,7 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
   const [error, setError] = useState("");
   const [validated, setValidated] = useState(false);
   const [resolvedName, setResolvedName] = useState("");
+  const pendingValidation = useRef<Promise<boolean> | null>(null);
 
   const validateSymbol = async (raw: string): Promise<boolean> => {
     const sym = raw.trim().toUpperCase();
@@ -82,6 +83,16 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
     }
   };
 
+  /** Tracks the in-flight validation so Save can await it rather than race it. */
+  const runValidation = (raw: string): Promise<boolean> => {
+    const p = validateSymbol(raw);
+    pendingValidation.current = p;
+    void p.finally(() => {
+      if (pendingValidation.current === p) pendingValidation.current = null;
+    });
+    return p;
+  };
+
   const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSymbol(e.target.value);
     setError("");
@@ -91,15 +102,21 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      await validateSymbol(symbol);
+      await runValidation(symbol);
     }
   };
 
+  /**
+   * Blurring the field starts validation, and clicking Save blurs it — so the
+   * button used to disable itself (`validating`) in the same tick as the
+   * click, swallowing it. The first Save press did nothing and the user had to
+   * click again. Save now joins any in-flight validation instead.
+   */
   const onSaveClick = async () => {
-    if (!validated) {
-      const ok = await validateSymbol(symbol);
-      if (!ok) return;
-    }
+    const ok = validated
+      ? true
+      : await (pendingValidation.current ?? runValidation(symbol));
+    if (!ok) return;
     onSave(symbol.trim().toUpperCase());
     onClose();
   };
@@ -114,7 +131,7 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
             value={symbol}
             onChange={handleSymbolChange}
             onKeyDown={handleKeyDown}
-            onBlur={() => { if (symbol.trim() && !validated) validateSymbol(symbol); }}
+            onBlur={() => { if (symbol.trim() && !validated) runValidation(symbol); }}
           />
         </div>
         {validating && (
@@ -132,7 +149,7 @@ const AddToWatchlistModal: React.FC<AddToWatchlistModalProps> = ({
         )}
         <div className="addToPortfolio-buttons">
           <button onClick={onClose}>Cancel</button>
-          <button onClick={onSaveClick} disabled={validating || (!validated && !symbol.trim())}>
+          <button onClick={onSaveClick} disabled={!symbol.trim()}>
             Save
           </button>
         </div>

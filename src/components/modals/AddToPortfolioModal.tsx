@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ENDPOINTS, yhFetch, areProvidersImpaired } from "../../config/api";
 import { cacheStorage } from "../../services/storage";
 import "./AddToPortfolioModal.css";
@@ -26,12 +26,17 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
 }) => {
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState(0);
-  const [purchaseDate, setPurchaseDate] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState(
+    // Empty dates reached XIRR as `new Date("")` — Invalid Date — so default
+    // to today and let the user adjust.
+    () => new Date().toISOString().slice(0, 10)
+  );
   const [purchasePrice, setPurchasePrice] = useState(0);
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState("");
   const [validated, setValidated] = useState(false);
   const [resolvedName, setResolvedName] = useState("");
+  const pendingValidation = useRef<Promise<boolean> | null>(null);
 
   const validateSymbol = async (raw: string): Promise<boolean> => {
     const sym = raw.trim().toUpperCase();
@@ -98,17 +103,41 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
     setResolvedName("");
   };
 
+  /** Tracks the in-flight validation so Save can await it rather than race it. */
+  const runValidation = (raw: string): Promise<boolean> => {
+    const pending = validateSymbol(raw);
+    pendingValidation.current = pending;
+    void pending.finally(() => {
+      if (pendingValidation.current === pending) pendingValidation.current = null;
+    });
+    return pending;
+  };
+
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      await validateSymbol(symbol);
+      await runValidation(symbol);
     }
   };
 
+  /**
+   * Blurring the field starts validation, and clicking Save blurs it — so the
+   * button used to disable itself (`validating`) in the same tick as the
+   * click, swallowing it. The first Save press did nothing and the user had to
+   * click again. Save now joins any in-flight validation instead.
+   */
+  /** Quantity and cost only appear once the ticker validates, so they can't be
+   *  required up front — but a holding of 0 shares at $0.00 is meaningless and
+   *  used to be saveable in a single click. */
+  const detailsComplete = quantity > 0 && purchasePrice > 0 && !!purchaseDate;
+
   const onSaveClick = async () => {
-    if (!validated) {
-      const ok = await validateSymbol(symbol);
-      if (!ok) return;
-    }
+    const ok = validated
+      ? true
+      : await (pendingValidation.current ?? runValidation(symbol));
+    if (!ok) return;
+    // First click validates and reveals the quantity/cost fields; saving waits
+    // until they hold real values.
+    if (!detailsComplete) return;
     onSave(symbol.trim().toUpperCase(), quantity, purchaseDate, purchasePrice);
     onClose();
   };
@@ -123,7 +152,7 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
             value={symbol}
             onChange={handleSymbolChange}
             onKeyDown={handleKeyDown}
-            onBlur={() => { if (symbol.trim() && !validated) validateSymbol(symbol); }}
+            onBlur={() => { if (symbol.trim() && !validated) runValidation(symbol); }}
           />
         </div>
         {validating && (
@@ -148,6 +177,7 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
                 value={quantity || ""}
                 onChange={(e) => setQuantity(Number(e.target.value) || 0)}
                 min={0}
+                step="any"
               />
             </div>
             <div className="addToPortfolio-row">
@@ -170,9 +200,14 @@ const AddToPortfolioModal: React.FC<AddToPortfolioModalProps> = ({
             </div>
           </div>
         )}
+        {validated && !detailsComplete && (
+          <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: 6 }}>
+            Enter a quantity and purchase price to add this holding.
+          </div>
+        )}
         <div className="addToPortfolio-buttons">
           <button onClick={onClose}>Cancel</button>
-          <button onClick={onSaveClick} disabled={validating || (!validated && !symbol.trim())}>
+          <button onClick={onSaveClick} disabled={!symbol.trim() || (validated && !detailsComplete)}>
             Save
           </button>
         </div>

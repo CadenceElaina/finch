@@ -185,8 +185,8 @@ export const DEMO_QUOTES: Record<string, quoteType> = {
     priceChange: -0.15,
     percentChange: -0.56,
   },
-  SQ: {
-    symbol: "sq",
+  XYZ: {
+    symbol: "xyz",
     name: "Block, Inc.",
     price: 78.42,
     priceChange: 1.68,

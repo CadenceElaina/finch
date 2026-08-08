@@ -284,7 +284,8 @@ const watchlistSymbols: WatchlistSecurity[] = [
   { symbol: "AMD" },
   { symbol: "UBER" },
   { symbol: "SHOP" },
-  { symbol: "SQ" },
+  // Block Inc. moved from SQ to XYZ; SQ no longer resolves upstream.
+  { symbol: "XYZ" },
   // US value / defensive
   { symbol: "KO" },
   { symbol: "JNJ" },
@@ -322,6 +323,10 @@ export const DEFAULT_WATCHLISTS: Watchlist[] = [defaultWatchlist];
 // v3 replaced fixture-era absolute purchase prices with costRatio, which is
 // resolved against live quotes at seed time.
 export const DEMO_SEED_VERSION = 3;
+
+/** Watchlist defaults have no migrations yet; kept explicit so the restore
+ *  path can't drift from the seeding path the way the portfolio one did. */
+export const DEMO_WATCHLIST_SEED_VERSION = 1;
 
 // ── Change-detection helpers ──────────────────────────────
 // Returns true if the stored demo item differs from its original defaults

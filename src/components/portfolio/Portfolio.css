@@ -565,6 +565,20 @@
   white-space: nowrap;
 }
 
+/* Rows the feed couldn't price — shown, but visibly not a real $0.00 */
+.perf-unpriced {
+  color: var(--text-tertiary);
+  font-style: italic;
+  text-align: right;
+}
+
+.perf-unpriced-note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
 .perf-sub-pct {
   display: block;
   font-size: var(--text-xs);

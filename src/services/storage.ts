@@ -1,4 +1,8 @@
 import { Portfolio, Security, Watchlist, WatchlistSecurity } from "../types/types";
+import {
+  DEMO_SEED_VERSION,
+  DEMO_WATCHLIST_SEED_VERSION,
+} from "../data/demo/defaultLists";
 
 // Keys
 const PORTFOLIOS_KEY = "finch_portfolios";
@@ -97,8 +101,13 @@ export const portfolioStorage = {
     const userOwned = all.filter((p) => !p.isDemo);
     const merged = [...userOwned, ...freshDefaults];
     write(PORTFOLIOS_KEY, merged);
-    // Bump seed version so context migration re-runs
-    localStorage.setItem("finch_demo_portfolios_seeded", "2");
+    // Stamp the current version. This used to hardcode "2"; once
+    // DEMO_SEED_VERSION moved past it, restoring demo data left the store
+    // marked stale and the migration re-ran on the next load.
+    localStorage.setItem(
+      "finch_demo_portfolios_seeded",
+      String(DEMO_SEED_VERSION)
+    );
     return merged;
   },
 };
@@ -170,7 +179,10 @@ export const watchlistStorage = {
     const userOwned = all.filter((w) => !w.isDemo);
     const merged = [...userOwned, ...freshDefaults];
     write(WATCHLISTS_KEY, merged);
-    localStorage.setItem("finch_demo_watchlists_seeded", "1");
+    localStorage.setItem(
+      "finch_demo_watchlists_seeded",
+      String(DEMO_WATCHLIST_SEED_VERSION)
+    );
     return merged;
   },
 };

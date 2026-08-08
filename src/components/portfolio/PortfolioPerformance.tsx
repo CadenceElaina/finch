@@ -20,6 +20,7 @@ import {
   formatSignedCurrency,
 } from "../../utils/format";
 import { displaySymbol, tickerHue } from "../../utils/ticker";
+import { isQuoteResolved, summarizeHoldings } from "../../utils/holdings";
 import "./Portfolio.css";
 
 interface PortfolioPerformanceProps {
@@ -42,6 +43,13 @@ interface SecurityDetail {
   dayChangePct: number;
   holdingPeriodDays: number;
   holdingPeriodReturn: number;
+  /**
+   * False when the feed returned no usable quote (delisted or renamed ticker,
+   * e.g. SQ -> XYZ). Such a holding is shown but excluded from totals — the
+   * previous code defaulted its price to 0, which reported it as -100% and
+   * silently dragged the whole portfolio down with it.
+   */
+  resolved: boolean;
 }
 
 type PortfolioSortField = "symbol" | "name" | "quantity" | "purchasePrice" | "purchaseDate" | "currentPrice" | "dayChange" | "totalGain" | "totalGainPct" | "holdingPeriodReturn";
@@ -79,7 +87,11 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
 
   const sortedDetails = useMemo(() => {
     const copy = [...securityDetails];
+    const numericSort = sortField !== "symbol" && sortField !== "name" && sortField !== "purchaseDate";
     copy.sort((a, b) => {
+      // Unpriced holdings carry placeholder zeros; keep them last rather than
+      // letting those zeros sort to the top of a numeric column.
+      if (numericSort && a.resolved !== b.resolved) return a.resolved ? -1 : 1;
       const aVal = a[sortField];
       const bVal = b[sortField];
       if (typeof aVal === "string" && typeof bVal === "string") {
@@ -122,11 +134,12 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     );
     const details: SecurityDetail[] = (portfolio.securities ?? []).map((sec) => {
       const q = symbolQuoteMap[sec.symbol];
-      const currentPrice = q?.price ?? 0;
+      const resolved = isQuoteResolved(q);
+      const currentPrice = resolved ? q!.price : 0;
       const costBasis = sec.purchasePrice * sec.quantity;
-      const currentValue = currentPrice * sec.quantity;
-      const totalGain = currentValue - costBasis;
-      const totalGainPct = costBasis > 0 ? (totalGain / costBasis) * 100 : 0;
+      const currentValue = resolved ? currentPrice * sec.quantity : 0;
+      const totalGain = resolved ? currentValue - costBasis : 0;
+      const totalGainPct = resolved && costBasis > 0 ? (totalGain / costBasis) * 100 : 0;
       // Holding period return
       const purchaseMs = sec.purchaseDate ? new Date(sec.purchaseDate).getTime() : Date.now();
       const holdingPeriodDays = Math.max(1, Math.round((Date.now() - purchaseMs) / 86_400_000));
@@ -143,10 +156,11 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         currentValue,
         totalGain,
         totalGainPct,
-        dayChange: (q?.priceChange ?? 0) * sec.quantity,
-        dayChangePct: q?.percentChange ?? 0,
+        dayChange: resolved ? (q?.priceChange ?? 0) * sec.quantity : 0,
+        dayChangePct: resolved ? (q?.percentChange ?? 0) : 0,
         holdingPeriodDays,
         holdingPeriodReturn,
+        resolved,
       };
     });
     setSecurityDetails(details);
@@ -173,10 +187,10 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       overallPercentChange.toFixed(2)
     );
 
-    const totalCostBasis = details.reduce((s, d) => s + d.costBasis, 0);
-    const totalCurrentValue = details.reduce((s, d) => s + d.currentValue, 0);
-    const totalGain = totalCurrentValue - totalCostBasis;
-    const totalGainPct = totalCostBasis > 0 ? (totalGain / totalCostBasis) * 100 : 0;
+    // Only priced holdings contribute. Including an unresolved one would count
+    // its cost basis against a zero value and report a spurious total loss.
+    const { totalCostBasis, totalCurrentValue, totalGain, totalGainPct } =
+      summarizeHoldings(details);
 
     setPortfolioPerformance({
       totalPriceChange: formattedTotalPriceChange,
@@ -424,18 +438,26 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
                   </td>
                   <td className="num">{d.quantity}</td>
                   <td className="num">{formatCurrency(d.purchasePrice)}</td>
-                  <td className="num">{formatCurrency(d.currentPrice)}</td>
-                  <td className={`num ${gainClass(d.dayChange)}`}>
-                    {formatSignedCurrency(d.dayChange)}
-                    <span className="perf-sub-pct">{formatPercent(d.dayChangePct)}</span>
-                  </td>
-                  <td className={`num ${gainClass(d.totalGain)}`}>
-                    {formatSignedCurrency(d.totalGain)}
-                  </td>
-                  <td className={`num ${gainClass(d.totalGainPct)}`}>
-                    {formatPercent(d.totalGainPct)}
-                    <span className="perf-sub-pct" title={`Held ${d.holdingPeriodDays} days`}>{formatDuration(d.holdingPeriodDays)} held</span>
-                  </td>
+                  {d.resolved ? (
+                    <>
+                      <td className="num">{formatCurrency(d.currentPrice)}</td>
+                      <td className={`num ${gainClass(d.dayChange)}`}>
+                        {formatSignedCurrency(d.dayChange)}
+                        <span className="perf-sub-pct">{formatPercent(d.dayChangePct)}</span>
+                      </td>
+                      <td className={`num ${gainClass(d.totalGain)}`}>
+                        {formatSignedCurrency(d.totalGain)}
+                      </td>
+                      <td className={`num ${gainClass(d.totalGainPct)}`}>
+                        {formatPercent(d.totalGainPct)}
+                        <span className="perf-sub-pct" title={`Held ${d.holdingPeriodDays} days`}>{formatDuration(d.holdingPeriodDays)} held</span>
+                      </td>
+                    </>
+                  ) : (
+                    <td className="num perf-unpriced" colSpan={4} title={`No quote available for ${d.symbol}. It is excluded from portfolio totals.`}>
+                      Price unavailable
+                    </td>
+                  )}
                   {onRemoveSecurity && (
                     <td>
                       <button className="perf-remove-btn" title={`Remove ${d.symbol}`} onClick={() => onRemoveSecurity(d.symbol.toLowerCase())}>
@@ -447,6 +469,14 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
               ))}
             </tbody>
           </table>
+          {sortedDetails.some((d) => !d.resolved) && (
+            <p className="perf-unpriced-note">
+              {sortedDetails.filter((d) => !d.resolved).length} holding
+              {sortedDetails.filter((d) => !d.resolved).length === 1 ? " has" : "s have"} no
+              available quote and {sortedDetails.filter((d) => !d.resolved).length === 1 ? "is" : "are"}{" "}
+              excluded from the totals above. This usually means the ticker was renamed or delisted.
+            </p>
+          )}
         </div>
       )}
     </div>

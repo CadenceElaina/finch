@@ -211,6 +211,11 @@ export const PortfoliosProvider: React.FC<{ children: ReactNode }> = ({
     const fresh = DEFAULT_PORTFOLIOS.map((p) => ({ ...p, id: crypto.randomUUID() }));
     const merged = portfolioStorage.restoreDefaults(fresh);
     setPortfolios(merged);
+    // Restored holdings carry the fixture-era fallback prices, so calibration
+    // has to run again — otherwise "Restore demo data" reintroduces the
+    // implausible cost bases it was meant to clear.
+    calibrationStarted.current = false;
+    setNeedsCalibration(true);
   };
 
   const contextValue = useMemo(

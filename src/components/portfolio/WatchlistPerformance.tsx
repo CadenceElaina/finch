@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, YAxis } from "recharts";
 import { formatCurrency, formatPercent, formatPriceChange } from "../../utils/format";
 import { displaySymbol, tickerHue } from "../../utils/ticker";
+import { isQuoteResolved } from "../../utils/holdings";
 import "./Portfolio.css";
 
 interface WatchlistPerformanceProps {
@@ -20,6 +21,12 @@ interface WatchlistRow {
   price: number;
   priceChange: number;
   percentChange: number;
+  /**
+   * False when the feed returned no usable quote (renamed or delisted ticker,
+   * e.g. SQ -> XYZ). Previously these rendered as a real $0.00 security with a
+   * blank name, indistinguishable from a worthless one.
+   */
+  resolved: boolean;
 }
 
 type SortField = "symbol" | "name" | "price" | "priceChange" | "percentChange";
@@ -45,12 +52,16 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
     const symbolQuoteMap = await getBatchQuotes(queryClient, symbols);
     const data: WatchlistRow[] = symbols.map((symbol) => {
       const q = symbolQuoteMap[symbol];
+      const resolved = isQuoteResolved(q);
       return {
         symbol: symbol.toUpperCase(),
         name: q?.name ?? "",
-        price: q?.price ?? 0,
-        priceChange: q?.priceChange ?? 0,
-        percentChange: parseFloat((q?.percentChange ?? 0).toFixed(2)),
+        price: resolved ? q!.price : 0,
+        priceChange: resolved ? (q?.priceChange ?? 0) : 0,
+        percentChange: resolved
+          ? parseFloat((q?.percentChange ?? 0).toFixed(2))
+          : 0,
+        resolved,
       };
     });
     setRows(data);
@@ -71,7 +82,11 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   const sortedRows = useMemo(() => {
     const copy = [...rows];
+    const numericSort = sortField !== "symbol" && sortField !== "name";
     copy.sort((a, b) => {
+      // Unpriced rows have no meaningful number to compare, so keep them at
+      // the bottom instead of letting a placeholder 0 sort them to the top.
+      if (numericSort && a.resolved !== b.resolved) return a.resolved ? -1 : 1;
       const aVal = a[sortField];
       const bVal = b[sortField];
       if (typeof aVal === "string" && typeof bVal === "string") {
@@ -173,6 +188,16 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                 <td className="perf-name-cell">
                   <span className="perf-name-text" title={row.name}>{row.name}</span>
                 </td>
+                {!row.resolved ? (
+                  <td
+                    className="num perf-unpriced"
+                    colSpan={4}
+                    title={`No quote available for ${row.symbol}. The ticker may have been renamed or delisted.`}
+                  >
+                    Price unavailable
+                  </td>
+                ) : (
+                  <>
                 <td className="num">{formatCurrency(row.price)}</td>
                 <td className={`num ${gainClass(row.priceChange)}`}>
                   {formatPriceChange(row.priceChange)}
@@ -215,6 +240,8 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
                     );
                   })()}
                 </td>
+                  </>
+                )}
                 {onRemoveSecurity && (
                   <td>
                     <button
