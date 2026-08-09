@@ -8,6 +8,37 @@
   gap: var(--space-5);
 }
 
+/* On wide viewports, pair the allocation donut with the risk/fundamentals
+   cards side by side — both are roughly the same height, and stacking them
+   full-width wastes the extra horizontal room a wider page now has. Return
+   Attribution stays full width since its bar chart benefits from the space. */
+@media (min-width: 1020px) {
+  .pa {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  /* Rows are pinned explicitly, not left to auto-placement: DOM order is
+     alloc → returns → risk (Return Attribution only renders when there's
+     more than one holding), so an auto row for "risk" would have the
+     placement cursor already past row 1 and get pushed to a lonely row 3. */
+  .pa-section-alloc {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .pa-section-risk {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pa-section-returns {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
 .pa-section {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

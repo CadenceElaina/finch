@@ -277,7 +277,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
   return (
     <div className="pa">
       {/* ── Allocation Breakdown ── */}
-      <div className="pa-section">
+      <div className="pa-section pa-section-alloc">
         <div className="pa-tabs-header">
           <h3 className="perf-section-title">
             <FaChartPie
@@ -402,7 +402,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
 
       {/* ── Return Attribution ── */}
       {returnData.length > 1 && (
-        <div className="pa-section">
+        <div className="pa-section pa-section-returns">
           <h3 className="perf-section-title">
             <FaChartBar
               size={14}
@@ -482,7 +482,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
 
       {/* ── Risk & Fundamentals ── */}
       {riskMetrics && (
-        <div className="pa-section">
+        <div className="pa-section pa-section-risk">
           <h3 className="perf-section-title">
             <FaShieldAlt
               size={14}

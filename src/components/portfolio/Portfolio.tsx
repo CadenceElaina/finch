@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
@@ -274,16 +274,23 @@ const Portfolio = () => {
 
         {/* ── Unified tab bar ── */}
         <div className="lists-tab-bar">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`lists-tab ${activeTab?.id === tab.id ? "active" : ""}`}
-              onClick={() => handleTabClick(tab)}
-            >
-              {tab.type === "watchlist" ? <FaList size={14} /> : <FaChartLine size={14} />}
-              <span className="lists-tab-name">{tab.title}</span>
-              <span className="lists-tab-count">{tab.count}</span>
-            </button>
+          {tabs.map((tab, index) => (
+            <Fragment key={tab.id}>
+              {/* A thin rule where the watchlist group hands off to the portfolio
+                  group, so the two kinds of list stay visually scannable even
+                  though they share one row. */}
+              {index > 0 && tab.type !== tabs[index - 1].type && (
+                <div className="lists-tab-divider" />
+              )}
+              <button
+                className={`lists-tab ${activeTab?.id === tab.id ? "active" : ""}`}
+                onClick={() => handleTabClick(tab)}
+              >
+                {tab.type === "watchlist" ? <FaList size={14} /> : <FaChartLine size={14} />}
+                <span className="lists-tab-name">{tab.title}</span>
+                <span className="lists-tab-count">{tab.count}</span>
+              </button>
+            </Fragment>
           ))}
           <div className="lists-new-btns">
             {!exceedsLimit("watchlist") && (

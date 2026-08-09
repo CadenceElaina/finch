@@ -138,6 +138,17 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
     navigate(`/quote/${symbol}`, { state: [false, symbol] });
   };
 
+  // Today's up/down/flat split — a portfolio gets rich summary cards above
+  // its table; a watchlist previously had nothing there at all.
+  const movers = useMemo(() => {
+    const priced = rows.filter((r) => r.resolved);
+    return {
+      up: priced.filter((r) => r.percentChange > 0).length,
+      down: priced.filter((r) => r.percentChange < 0).length,
+      flat: priced.filter((r) => r.percentChange === 0).length,
+    };
+  }, [rows]);
+
   if (rows.length === 0) {
     return (
       <div className="lists-empty-holdings" style={{ marginTop: "1rem" }}>
@@ -149,6 +160,19 @@ const WatchlistPerformance: React.FC<WatchlistPerformanceProps> = ({
 
   return (
     <div className="perf">
+      <div className="watchlist-movers">
+        <span>{rows.length} {rows.length === 1 ? "security" : "securities"}</span>
+        <span className="watchlist-movers-dot" />
+        <span className="gain">{movers.up} up</span>
+        <span className="watchlist-movers-dot" />
+        <span className="loss">{movers.down} down</span>
+        {movers.flat > 0 && (
+          <>
+            <span className="watchlist-movers-dot" />
+            <span>{movers.flat} unchanged</span>
+          </>
+        )}
+      </div>
       <div className="perf-table-wrap">
         <table className="perf-table">
           <thead>

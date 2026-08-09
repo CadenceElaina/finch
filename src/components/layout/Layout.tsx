@@ -32,15 +32,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </span>
           <nav className="header-nav">
             <NavLink to="/news" className={({ isActive }) => `header-nav-link${isActive ? " active" : ""}`}>
-              <BsNewspaper size={14} />
+              <BsNewspaper size={15} />
               <span>News</span>
             </NavLink>
             <NavLink to="/portfolio" className={() => `header-nav-link${pathname.startsWith("/portfolio") || pathname.startsWith("/watchlist") ? " active" : ""}`}>
-              <FaListUl size={14} />
+              <FaListUl size={15} />
               <span>Lists</span>
             </NavLink>
             <NavLink to="/market-trends/indexes" className={() => `header-nav-link${pathname.startsWith("/market-trends") ? " active" : ""}`}>
-              <MdManageSearch size={16} />
+              <MdManageSearch size={15} />
               <span>Markets</span>
             </NavLink>
             <NavLink to="/settings" className={({ isActive }) => `header-nav-link${isActive ? " active" : ""}`}>
