@@ -196,24 +196,48 @@ function generateDemoOHLCV(symbol: string, period: string): OHLCVPoint[] {
     }
   }
 
-  let price = base * (1 + priceOffset);
+  const startPrice = base * (1 + priceOffset);
   const target = base;
-  const priceDrift = (target - price) / (tsList.length || 1);
+  const n = tsList.length || 1;
+  // Sum of two uniforms approximates a bell curve, so most bars move a
+  // little and only occasionally swing hard — a single rand() gives a flat
+  // distribution that reverses direction just as often as it continues.
+  const gaussianish = () => (rand() + rand()) / 2 - 0.5;
 
+  // Draw the random-walk steps first, then solve for the per-step correction
+  // that makes them land exactly on `target` — the quoted "current price"
+  // shown in the header and everywhere else. Applying only a fixed
+  // (target - start) / n drift per step (the old approach) only cancels out
+  // the walk's *expected* drift; the walk's actual accumulated randomness
+  // still lands wherever it lands, which for a symmetric walk (start ===
+  // target, as on the 1D chart) routinely closed several dollars off the
+  // quoted price.
+  const rawSteps: number[] = [];
+  let rawTotal = 0;
+  for (let i = 0; i < n; i++) {
+    const step = gaussianish() * volatility * base * 2;
+    rawSteps.push(step);
+    rawTotal += step;
+  }
+  const correction = (target - startPrice - rawTotal) / n;
+
+  let price = startPrice;
   for (let i = 0; i < tsList.length; i++) {
     const d = tsList[i];
 
-    const noise = (Math.sin(i * 0.8 + rand() * 3) + Math.cos(i * 0.3 + rand() * 2));
-    const drift = (rand() - 0.48) * volatility * base * 0.02;
-    price += priceDrift + noise * volatility * base * 0.05 * 0.3 + drift;
-    price = Math.max(price, base * 0.1); // floor
+    // Each bar's open is the prior bar's close, and close is a random-walk
+    // step off of it — chained like real OHLC bars. The old formula instead
+    // recomputed open/close by splitting a fresh random range around a
+    // slow-moving pivot every bar, so the close flipped from one side of the
+    // pivot to the other on an unrelated per-bar coin flip — a jagged
+    // sawtooth uncorrelated with the "trend" it was supposed to ride on.
+    const open = price;
+    price = Math.max(open + rawSteps[i] + correction, base * 0.1);
+    const close = price;
 
-    const bodyRange = price * volatility * (0.3 + rand() * 0.7);
-    const isGreen = rand() > 0.45;
-    const open = isGreen ? price - bodyRange * 0.5 : price + bodyRange * 0.5;
-    const close = isGreen ? price + bodyRange * 0.5 : price - bodyRange * 0.5;
-    const high = Math.max(open, close) + price * volatility * rand() * 0.5;
-    const low = Math.min(open, close) - price * volatility * rand() * 0.5;
+    const wick = price * volatility * 0.5;
+    const high = Math.max(open, close) + wick * rand();
+    const low = Math.min(open, close) - wick * rand();
     const volume = Math.round(avgVol * (0.5 + rand()));
 
     const ts = Math.floor(d.getTime() / 1000) as UTCTimestamp;

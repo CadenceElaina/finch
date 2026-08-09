@@ -271,6 +271,81 @@ export const getQuote = async (
   }
 };
 
+/**
+ * In demo mode, About/CEO copy is fetched live even for otherwise-static
+ * symbols — a synthetic company bio would read as obviously fake. Failures
+ * degrade to blank fields rather than surfacing an error, since this is
+ * enrichment on top of quote data that's already usable without it.
+ */
+async function fetchDemoAboutData(
+  symbol: string,
+  isIndex: boolean | undefined
+): Promise<{ quoteSidebarAboutData: QuotePageSidebarAboutData; quoteFinancialData: QuotePageFinancialData }> {
+  let quoteSidebarAboutData: QuotePageSidebarAboutData = {
+    summary: "", website: "", headquarters: "", employees: "", ceo: "",
+  };
+  const quoteFinancialData: QuotePageFinancialData = {
+    annualRevenue: "", netIncome: "", netProfitMargin: "", ebitda: "",
+  };
+
+  if (isIndex) return { quoteSidebarAboutData, quoteFinancialData };
+
+  try {
+    const profileRes = await yhFetch(ENDPOINTS.profile.path, {
+      symbol,
+      region: "US",
+    });
+    const d = profileRes.data ?? {};
+    const result0 = d.quoteSummary?.result?.[0] ?? {};
+    const profile = result0.assetProfile ?? d.summaryProfile ?? d.assetProfile;
+    if (profile) {
+      const officers = profile.companyOfficers ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ceoEntry = officers.find((o: any) =>
+        (o.title ?? "").toLowerCase().includes("ceo") ||
+        (o.title ?? "").toLowerCase().includes("chief executive")
+      );
+      quoteSidebarAboutData = {
+        summary: profile.longBusinessSummary ?? "",
+        website: profile.website ?? "",
+        headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
+        employees: profile.fullTimeEmployees
+          ? `${typeof profile.fullTimeEmployees === "object" ? profile.fullTimeEmployees.longFmt ?? profile.fullTimeEmployees.fmt ?? profile.fullTimeEmployees.raw : profile.fullTimeEmployees.toLocaleString()}`
+          : "",
+        ceo: ceoEntry?.name ?? "",
+      };
+    }
+    // Skip financial data in demo — can be generated to save API calls
+  } catch (err) {
+    console.warn(`[Finch] Demo profile fetch failed for ${symbol}:`, err);
+  }
+
+  return { quoteSidebarAboutData, quoteFinancialData };
+}
+
+/**
+ * Sidebar stats (day range, 52-week range, previous close…) derived from a
+ * demo quote's price rather than fetched live. Keeps the quote page
+ * internally consistent with the same fixture price shown in watchlists,
+ * movers, and the chart — a live-fetched price for these fields previously
+ * disagreed with the fixture price shown everywhere else for the ticker.
+ */
+function buildSyntheticSidebarData(quote: quoteType): QuotePageSidebarData {
+  const price = quote.price ?? 0;
+  const previousClose = price - (quote.priceChange ?? 0);
+  return {
+    previousClose: previousClose ? `$${previousClose.toFixed(2)}` : "",
+    dayRange: `$${(price * 0.98).toFixed(2)} - $${(price * 1.02).toFixed(2)}`,
+    fiftyTwoWeekRange: `$${(price * 0.7).toFixed(2)} - $${(price * 1.25).toFixed(2)}`,
+    marketCap: "",
+    volume: "",
+    average3MonthVolume: "",
+    trailingPE: "",
+    dividendYield: "",
+    primaryExchange: "NasdaqGS",
+  };
+}
+
 export const getQuotePageData = async (
   queryClient: QueryClient,
   symbol: string,
@@ -286,6 +361,23 @@ export const getQuotePageData = async (
     if (knownDemo) {
       // Known demo symbol — use cached data, no API calls needed
       return knownDemo;
+    }
+
+    // Symbol has a demo quote fixture (the same one watchlists, movers, and
+    // the chart already show) but no hand-authored quote-page entry — build
+    // the sidebar from that fixture instead of live-fetching a price that
+    // would disagree with it everywhere else on the page.
+    const demoQuote = DEMO_QUOTES[sym];
+    if (demoQuote) {
+      const { quoteSidebarAboutData, quoteFinancialData } = await fetchDemoAboutData(symbol, isIndex);
+      const quotePageData: QuotePageData = {
+        quoteData: demoQuote,
+        quoteSidebarData: buildSyntheticSidebarData(demoQuote),
+        quoteSidebarAboutData,
+        quoteFinancialData,
+      };
+      queryClient.setQueryData(["quotePageData", symbol], quotePageData);
+      return quotePageData;
     }
 
     // Unknown symbol in demo mode — try fetching quote + about from API
@@ -351,44 +443,7 @@ export const getQuotePageData = async (
         };
 
         // In demo mode, also fetch profile/about (can't fake CEO/description)
-        let quoteSidebarAboutData: QuotePageSidebarAboutData = {
-          summary: "", website: "", headquarters: "", employees: "", ceo: "",
-        };
-        let quoteFinancialData: QuotePageFinancialData = {
-          annualRevenue: "", netIncome: "", netProfitMargin: "", ebitda: "",
-        };
-
-        if (!isIndex) {
-          try {
-            const profileRes = await yhFetch(ENDPOINTS.profile.path, {
-              symbol,
-              region: "US",
-            });
-            const d = profileRes.data ?? {};
-            const result0 = d.quoteSummary?.result?.[0] ?? {};
-            const profile = result0.assetProfile ?? d.summaryProfile ?? d.assetProfile;
-            if (profile) {
-              const officers = profile.companyOfficers ?? [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const ceoEntry = officers.find((o: any) =>
-                (o.title ?? "").toLowerCase().includes("ceo") ||
-                (o.title ?? "").toLowerCase().includes("chief executive")
-              );
-              quoteSidebarAboutData = {
-                summary: profile.longBusinessSummary ?? "",
-                website: profile.website ?? "",
-                headquarters: `${profile.city || ""}, ${getStateFullName(profile.state ?? "") || ""} ${profile.country || ""}`.trim(),
-                employees: profile.fullTimeEmployees
-                  ? `${typeof profile.fullTimeEmployees === "object" ? profile.fullTimeEmployees.longFmt ?? profile.fullTimeEmployees.fmt ?? profile.fullTimeEmployees.raw : profile.fullTimeEmployees.toLocaleString()}`
-                  : "",
-                ceo: ceoEntry?.name ?? "",
-              };
-            }
-            // Skip financial data in demo — can be generated to save API calls
-          } catch (err) {
-            console.warn(`[Finch] Demo profile fetch failed for ${symbol}:`, err);
-          }
-        }
+        const { quoteSidebarAboutData, quoteFinancialData } = await fetchDemoAboutData(symbol, isIndex);
 
         const quotePageData: QuotePageData = {
           quoteData,
