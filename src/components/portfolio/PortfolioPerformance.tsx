@@ -55,6 +55,19 @@ interface SecurityDetail {
 type PortfolioSortField = "symbol" | "name" | "quantity" | "purchasePrice" | "purchaseDate" | "currentPrice" | "dayChange" | "totalGain" | "totalGainPct" | "holdingPeriodReturn";
 type SortDir = "asc" | "desc";
 
+// Full history flattens day-to-day movement into a near-straight line once a
+// portfolio has a couple years of data — a real change on a $20k position is
+// invisible next to a multi-year climb. Defaulting to a shorter window (with
+// the option to zoom out) keeps recent movement legible.
+const CHART_PERIODS = ["1M", "3M", "6M", "1Y", "ALL"] as const;
+type ChartPeriod = (typeof CHART_PERIODS)[number];
+const CHART_PERIOD_DAYS: Record<Exclude<ChartPeriod, "ALL">, number> = {
+  "1M": 30,
+  "3M": 90,
+  "6M": 182,
+  "1Y": 365,
+};
+
 const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
   portfolio,
   onRemoveSecurity,
@@ -72,6 +85,7 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     totalGainPct: 0,
   });
   const [spyDayChange, setSpyDayChange] = useState<{ pct: number; price: number } | null>(null);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>("1M");
   const [metadataMap, setMetadataMap] = useState<Record<string, StockMetadata>>({});
   const [etfSectors, setEtfSectors] = useState<Record<string, EtfSectorBreakdown>>({});
   const queryClient = useQueryClient();
@@ -264,6 +278,24 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
     return withoutToday;
   }, [portfolio?.portfolioValue, portfolioPerformance.totalCurrentValue, portfolioPerformance.totalCostBasis]);
 
+  // Slice to the selected window. Always keep at least two points so the
+  // chart has something to draw even for a portfolio younger than the window.
+  const chartData = useMemo(() => {
+    if (chartPeriod === "ALL" || updatedPortfolioValue.length < 2) return updatedPortfolioValue;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - CHART_PERIOD_DAYS[chartPeriod]);
+    const filtered = updatedPortfolioValue.filter((e) => new Date(e.date) >= cutoff);
+    return filtered.length >= 2 ? filtered : updatedPortfolioValue.slice(-2);
+  }, [updatedPortfolioValue, chartPeriod]);
+
+  const periodChangePct = useMemo(() => {
+    if (chartData.length < 2) return null;
+    const first = Number(chartData[0].value);
+    const last = Number(chartData[chartData.length - 1].value);
+    if (!isFinite(first) || first === 0) return null;
+    return ((last - first) / first) * 100;
+  }, [chartData]);
+
   const gainClass = (val: number) => (val > 0 ? "gain" : val < 0 ? "loss" : "");
   const formatDuration = (days: number): string => {
     if (days < 31) return `${days}d`;
@@ -390,8 +422,28 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
       {/* ── Performance chart ── */}
       {updatedPortfolioValue.length >= 1 && (
         <div className="perf-chart-section">
-          <h3 className="perf-section-title">Performance</h3>
-          <PortfolioChart chartName={portfolio.title ?? ""} data={updatedPortfolioValue} />
+          <div className="perf-chart-header">
+            <h3 className="perf-section-title">Performance</h3>
+            <div className="perf-chart-header-right">
+              {periodChangePct !== null && (
+                <span className={`perf-period-return ${gainClass(periodChangePct)}`}>
+                  {formatPercent(periodChangePct)}
+                </span>
+              )}
+              <div className="perf-period-tabs">
+                {CHART_PERIODS.map((p) => (
+                  <button
+                    key={p}
+                    className={`perf-period-tab ${chartPeriod === p ? "active" : ""}`}
+                    onClick={() => setChartPeriod(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <PortfolioChart chartName={portfolio.title ?? ""} data={chartData} />
         </div>
       )}
 

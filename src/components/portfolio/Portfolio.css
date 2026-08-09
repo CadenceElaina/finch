@@ -4,7 +4,7 @@
 
 /* ── Page layout ── */
 .lists-page {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 var(--space-4) var(--space-7);
 }
@@ -130,12 +130,53 @@
   background: var(--accent-bg);
 }
 
-/* ── Content area ── */
+/* ── Content area ──
+   Main content + a sticky AI sidebar, so the "Ask about X" chat and (for
+   portfolios) AI Commentary stay in view instead of sitting below a table
+   users have to scroll all the way down — and back up — to reach. */
 .lists-content {
   padding-top: var(--space-4);
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.lists-main {
+  min-width: 0;
+  /* Lets PortfolioAnalysis's internal breakdown/risk pairing respond to the
+     space actually available in this column — which shrinks once the
+     sidebar claims 340px — rather than to the full viewport width. */
+  container-type: inline-size;
+  container-name: lists-main;
+}
+
+.lists-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  position: sticky;
+  top: 88px;
+}
+
+@media (max-width: 1280px) {
+  .lists-content {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .lists-content {
+    grid-template-columns: 1fr;
+  }
+
+  .lists-sidebar {
+    position: static;
+  }
 }
 
 /* ── Section header (title + actions) ── */
@@ -467,6 +508,60 @@
 
 .portfolio-chart {
   width: 100%;
+}
+
+.perf-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.perf-chart-header .perf-section-title {
+  margin: 0;
+}
+
+.perf-chart-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.perf-period-return {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.perf-period-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.perf-period-tab {
+  padding: 3px var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.perf-period-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.perf-period-tab.active {
+  background: var(--accent);
+  color: var(--accent-active-text);
 }
 
 /* ── Allocation section ── */

@@ -8,11 +8,15 @@
   gap: var(--space-5);
 }
 
-/* On wide viewports, pair the allocation donut with the risk/fundamentals
-   cards side by side — both are roughly the same height, and stacking them
-   full-width wastes the extra horizontal room a wider page now has. Return
-   Attribution stays full width since its bar chart benefits from the space. */
-@media (min-width: 1020px) {
+/* Pair the allocation donut with the risk/fundamentals cards side by side
+   once there's room — both are roughly the same height, and stacking them
+   full-width wastes space. Return Attribution stays full width since its
+   bar chart benefits from it. A container query (against .lists-main, see
+   Portfolio.css) rather than a viewport media query, because this column's
+   actual width depends on whether the AI sidebar is present, not just on
+   viewport size — a viewport check would trigger the 2-column pairing at
+   widths where the sidebar has already squeezed this column too narrow. */
+@container lists-main (min-width: 820px) {
   .pa {
     display: grid;
     grid-template-columns: 1fr 1fr;

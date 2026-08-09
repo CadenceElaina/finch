@@ -328,29 +328,29 @@ const Portfolio = () => {
         {/* ── Active list content ── */}
         {activeTab && (
           <div className="lists-content">
-            {/* ── Watchlist view ── */}
-            {activeTab.type === "watchlist" && activeWatchlist && (
-              <>
-                <WatchlistContent
-                  watchlistName={activeWatchlist.title}
-                  handleDropdownOptionClick={handleDropdownOptionClick}
-                  handleDropdownToggle={() => setShowDropdown(!showDropdown)}
-                  showDropdown={showDropdown}
-                  openAddToWatchlistModal={() => setAddToWatchlistModalIsOpen(true)}
-                />
-                <WatchlistPerformance
-                  watchlist={activeWatchlist}
-                  onRemoveSecurity={(s) => {
-                    removeSecurityFromWatchlist(activeWatchlist.id, s);
-                    addNotification(`${s.symbol} removed`, "success");
-                  }}
-                />
-              </>
-            )}
+            <div className="lists-main">
+              {/* ── Watchlist view ── */}
+              {activeTab.type === "watchlist" && activeWatchlist && (
+                <>
+                  <WatchlistContent
+                    watchlistName={activeWatchlist.title}
+                    handleDropdownOptionClick={handleDropdownOptionClick}
+                    handleDropdownToggle={() => setShowDropdown(!showDropdown)}
+                    showDropdown={showDropdown}
+                    openAddToWatchlistModal={() => setAddToWatchlistModalIsOpen(true)}
+                  />
+                  <WatchlistPerformance
+                    watchlist={activeWatchlist}
+                    onRemoveSecurity={(s) => {
+                      removeSecurityFromWatchlist(activeWatchlist.id, s);
+                      addNotification(`${s.symbol} removed`, "success");
+                    }}
+                  />
+                </>
+              )}
 
-            {/* ── Portfolio view ── */}
-            {activeTab.type === "portfolio" && activePortfolio && (
-              <>
+              {/* ── Portfolio view ── */}
+              {activeTab.type === "portfolio" && activePortfolio && (
                 <PortfolioContent
                   portfolio={activePortfolio}
                   portfolioName={activePortfolio.title}
@@ -363,12 +363,17 @@ const Portfolio = () => {
                     addNotification(`${symbol.toUpperCase()} removed`, "success");
                   }}
                 />
-                <PortfolioSummary portfolio={activePortfolio} />
-              </>
-            )}
+              )}
+            </div>
 
-            {/* ── AI Chat ── */}
-            <ResearchChat contextHint={activeTab?.title ?? "your lists"} />
+            {/* ── AI sidebar — sticky, so the chat stays in view instead of
+                landing below a long table users have to scroll back up from ── */}
+            <aside className="lists-sidebar">
+              {activeTab.type === "portfolio" && activePortfolio && (
+                <PortfolioSummary portfolio={activePortfolio} />
+              )}
+              <ResearchChat contextHint={activeTab?.title ?? "your lists"} />
+            </aside>
           </div>
         )}
         <Footer />
