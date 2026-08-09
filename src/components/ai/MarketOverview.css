@@ -81,6 +81,15 @@
   display: none;
 }
 
+.market-overview-content ul {
+  margin: 4px 0;
+  padding-left: 1.1em;
+}
+
+.market-overview-content li {
+  margin-bottom: 2px;
+}
+
 .market-overview-empty {
   text-align: center;
   padding: var(--space-3) 0;

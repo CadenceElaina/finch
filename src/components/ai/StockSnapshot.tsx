@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useAi } from "../../context/AiContext";
 import { cacheStorage } from "../../services/storage";
 import { QuotePageData } from "../search/types";
+import { markdownLiteToHtml } from "../../utils/markdownLite";
 import { FaRobot, FaInfoCircle } from "react-icons/fa";
 import "./StockSnapshot.css";
 
@@ -106,15 +107,10 @@ Keep it under 150 words total. Be specific with numbers and dates. Be factual, n
       </div>
 
       {snapshot ? (
-        <div className="stock-snapshot-content">
-          {snapshot.split("\n").map((line, i) => (
-            <p key={i} dangerouslySetInnerHTML={{
-              __html: line
-                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g, "<em>$1</em>"),
-            }} />
-          ))}
-        </div>
+        <div
+          className="stock-snapshot-content"
+          dangerouslySetInnerHTML={{ __html: markdownLiteToHtml(snapshot) }}
+        />
       ) : (
         <div className="stock-snapshot-empty">
           <button

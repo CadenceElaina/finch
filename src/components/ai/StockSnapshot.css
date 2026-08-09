@@ -49,6 +49,18 @@
   color: var(--text-primary);
 }
 
+.stock-snapshot-content ul {
+  margin: 0 0 var(--space-1);
+  padding-left: 1.1em;
+}
+
+.stock-snapshot-content li {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
 .stock-snapshot-empty {
   text-align: center;
   padding: 6px 0;

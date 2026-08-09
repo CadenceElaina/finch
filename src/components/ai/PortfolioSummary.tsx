@@ -17,6 +17,7 @@ import { useAi } from "../../context/AiContext";
 import { isDemoActive } from "../../data/demo/demoState";
 import { cacheStorage } from "../../services/storage";
 import { Portfolio } from "../../types/types";
+import { markdownLiteToHtml } from "../../utils/markdownLite";
 import { FaRobot } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
 import { FiExternalLink } from "react-icons/fi";
@@ -162,13 +163,7 @@ Keep it under 100 words. Be factual, not advisory.`;
 
       {summary ? (
         <div className="portfolio-summary-content">
-          {summary.split("\n").map((line, i) => (
-            <p key={i} dangerouslySetInnerHTML={{
-              __html: line
-                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g, "<em>$1</em>"),
-            }} />
-          ))}
+          <div dangerouslySetInnerHTML={{ __html: markdownLiteToHtml(summary) }} />
           {!isDemoActive() && (
             <button
               className="portfolio-summary-refresh"

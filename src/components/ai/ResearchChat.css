@@ -95,6 +95,24 @@
   word-break: break-word;
 }
 
+.research-chat-bubble p {
+  margin: 0 0 4px;
+}
+
+.research-chat-bubble ul {
+  margin: 0 0 4px;
+  padding-left: 1.1em;
+}
+
+.research-chat-bubble li {
+  margin-bottom: 2px;
+}
+
+.research-chat-bubble p:last-child,
+.research-chat-bubble ul:last-child {
+  margin-bottom: 0;
+}
+
 .research-chat-msg.user .research-chat-bubble {
   background: var(--accent);
   color: var(--accent-active-text);

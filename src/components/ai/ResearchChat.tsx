@@ -6,6 +6,7 @@
 
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useAi, ChatMessage } from "../../context/AiContext";
+import { markdownLiteToHtml } from "../../utils/markdownLite";
 import { FaRobot, FaPaperPlane, FaTrash } from "react-icons/fa";
 import "./ResearchChat.css";
 
@@ -83,12 +84,7 @@ const ResearchChat: React.FC<ResearchChatProps> = ({ contextHint }) => {
             <div key={i} className={`research-chat-msg ${msg.role}`}>
               <div
                 className="research-chat-bubble"
-                dangerouslySetInnerHTML={{
-                  __html: msg.text
-                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                    .replace(/\n/g, "<br />"),
-                }}
+                dangerouslySetInnerHTML={{ __html: markdownLiteToHtml(msg.text) }}
               />
             </div>
           ))}

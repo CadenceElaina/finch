@@ -18,6 +18,7 @@ import { useAi } from "../../context/AiContext";
 import { useSnapshot } from "../../context/SnapshotContext";
 import { isDemoActive } from "../../data/demo/demoState";
 import { cacheStorage } from "../../services/storage";
+import { markdownLiteToHtml } from "../../utils/markdownLite";
 import { FaRobot, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { BsStars } from "react-icons/bs";
 import { FiExternalLink, FiInfo } from "react-icons/fi";
@@ -154,16 +155,7 @@ Format: Use **bold** for section headers and key numbers. Use bullet points. Kee
 
       {summary ? (
         <div className={`market-overview-content ${!expanded ? "collapsed" : ""}`}>
-          {visibleLines.map((line, i) => (
-            <p
-              key={i}
-              dangerouslySetInnerHTML={{
-                __html: line
-                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                  .replace(/\*(.*?)\*/g, "<em>$1</em>"),
-              }}
-            />
-          ))}
+          <div dangerouslySetInnerHTML={{ __html: markdownLiteToHtml(visibleLines.join("\n")) }} />
           {canCollapse && !expanded && (
             <button
               className="market-overview-expand"
