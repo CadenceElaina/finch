@@ -6,29 +6,7 @@
 .lists-page {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 var(--space-4) var(--space-7);
-}
-
-/* ── Breadcrumb ── */
-.lists-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-3) 0;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary, #999);
-  text-transform: uppercase;
-}
-
-.lists-breadcrumb a {
-  color: var(--text-secondary, #999);
-  text-decoration: none;
-}
-
-.lists-breadcrumb a:hover {
-  color: var(--accent, #4285f4);
+  padding: var(--space-4) var(--space-4) var(--space-7);
 }
 
 /* ── Unified tab bar ──
@@ -40,7 +18,7 @@
   align-items: center;
   gap: 2px;
   padding: var(--space-1);
-  margin: var(--space-3) 0 var(--space-4);
+  margin: 0 0 var(--space-4);
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -135,7 +113,6 @@
    portfolios) AI Commentary stay in view instead of sitting below a table
    users have to scroll all the way down — and back up — to reach. */
 .lists-content {
-  padding-top: var(--space-4);
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -147,11 +124,6 @@
 
 .lists-main {
   min-width: 0;
-  /* Lets PortfolioAnalysis's internal breakdown/risk pairing respond to the
-     space actually available in this column — which shrinks once the
-     sidebar claims 340px — rather than to the full viewport width. */
-  container-type: inline-size;
-  container-name: lists-main;
 }
 
 .lists-sidebar {
@@ -181,7 +153,7 @@
 
 /* ── Section header (title + actions) ── */
 .lists-section-header {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   width: 100%;
 }
 
@@ -350,7 +322,7 @@
 .perf {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   width: 100%;
 }
 

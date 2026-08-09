@@ -447,16 +447,10 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
         </div>
       )}
 
-      {/* ── Portfolio Analysis (allocation + risk) ── */}
-      {holdingsWithMeta.length > 0 && (
-        <PortfolioAnalysis
-          holdings={holdingsWithMeta}
-          totalValue={portfolioPerformance.totalCurrentValue}
-          etfSectors={etfSectors}
-        />
-      )}
-
-      {/* ── Investments table ── */}
+      {/* ── Investments table ──
+          Placed right after the chart, ahead of the allocation/risk detail
+          below — holdings are what most people open a portfolio to check,
+          and the previous order buried them below three full-height cards. */}
       {securityDetails.length > 0 && (
         <div className="perf-table-wrap">
           <h3 className="perf-section-title">Investments</h3>
@@ -530,6 +524,15 @@ const PortfolioPerformance: React.FC<PortfolioPerformanceProps> = ({
             </p>
           )}
         </div>
+      )}
+
+      {/* ── Portfolio Analysis (allocation + risk + return attribution) ── */}
+      {holdingsWithMeta.length > 0 && (
+        <PortfolioAnalysis
+          holdings={holdingsWithMeta}
+          totalValue={portfolioPerformance.totalCurrentValue}
+          etfSectors={etfSectors}
+        />
       )}
     </div>
   );

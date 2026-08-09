@@ -8,41 +8,6 @@
   gap: var(--space-5);
 }
 
-/* Pair the allocation donut with the risk/fundamentals cards side by side
-   once there's room — both are roughly the same height, and stacking them
-   full-width wastes space. Return Attribution stays full width since its
-   bar chart benefits from it. A container query (against .lists-main, see
-   Portfolio.css) rather than a viewport media query, because this column's
-   actual width depends on whether the AI sidebar is present, not just on
-   viewport size — a viewport check would trigger the 2-column pairing at
-   widths where the sidebar has already squeezed this column too narrow. */
-@container lists-main (min-width: 820px) {
-  .pa {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
-
-  /* Rows are pinned explicitly, not left to auto-placement: DOM order is
-     alloc → returns → risk (Return Attribution only renders when there's
-     more than one holding), so an auto row for "risk" would have the
-     placement cursor already past row 1 and get pushed to a lonely row 3. */
-  .pa-section-alloc {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .pa-section-risk {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .pa-section-returns {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-}
-
 .pa-section {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -50,16 +15,53 @@
   background: var(--bg-secondary);
 }
 
-/* ── Header + tabs ── */
-.pa-tabs-header {
+/* ── Section switcher (Breakdown / Risk & Fundamentals / Return
+   Attribution) — these used to be three full cards stacked one after
+   another; now one card whose body swaps, so the holdings table below it
+   doesn't sit a full screen further down than it needs to. */
+.pa-section-tabs {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: 2px;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
 }
 
+.pa-section-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pa-section-tab:hover {
+  color: var(--text-primary);
+}
+
+.pa-section-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.pa-panel {
+  animation: pa-panel-in 0.12s ease;
+}
+
+@keyframes pa-panel-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Allocation sub-tabs (Holdings / Sector / Asset Type) ── */
 .pa-tabs {
   display: flex;
   gap: 3px;
@@ -88,7 +90,7 @@
 
 .pa-tab.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-active-text);
 }
 
 /* ── Allocation layout ── */
@@ -297,11 +299,6 @@
   .pa-alloc-row {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .pa-tabs-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .pa-tabs {

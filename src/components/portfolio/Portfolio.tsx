@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useState } from "react";
-import { FaList, FaChartLine, FaPlus, FaAngleRight } from "react-icons/fa";
+import { FaList, FaChartLine, FaPlus } from "react-icons/fa";
 import Layout from "../layout/Layout";
 import "./Portfolio.css";
 import { usePortfolios } from "../../context/PortfoliosContext";
 import AddToPortfolioModal from "../../components/modals/AddToPortfolioModal";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import AddWatchlistModal from "../modals/AddWatchlistModal";
 import NewPortfolioModal from "../modals/AddPortfolioModal";
 import { useWatchlists } from "../../context/WatchlistContext";
@@ -265,12 +265,10 @@ const Portfolio = () => {
       )}
 
       <div className="lists-page">
-        {/* ── Breadcrumb ── */}
-        <div className="lists-breadcrumb">
-          <Link to="/">HOME</Link>
-          <FaAngleRight size={10} />
-          <span>YOUR LISTS</span>
-        </div>
+        {/* No breadcrumb here — the top nav's "Lists" pill already marks
+            where you are, and a "HOME > YOUR LISTS" row was 40px of static
+            chrome above the fold that told the user nothing the tab bar
+            below doesn't already say. */}
 
         {/* ── Unified tab bar ── */}
         <div className="lists-tab-bar">

@@ -44,6 +44,17 @@ interface PortfolioAnalysisProps {
 
 type AllocTab = "holdings" | "sector" | "assetType";
 
+/**
+ * Breakdown, Risk & Fundamentals, and Return Attribution used to be three
+ * separately-titled cards stacked full height, one after another — good
+ * data, but it pushed the holdings table (what people actually open a
+ * portfolio to check) a full screen further down. They're secondary detail
+ * once you already know the top-line numbers, so they now share one card
+ * behind a tab switcher — all still reachable, none of them permanently
+ * claiming scroll space.
+ */
+type AnalysisSection = "breakdown" | "risk" | "returns";
+
 // ── Constants ────────────────────────────────────────────
 
 const PIE_COLORS = [
@@ -124,6 +135,7 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
 }) => {
   const [allocTab, setAllocTab] = useState<AllocTab>("holdings");
   const [showInfo, setShowInfo] = useState(false);
+  const [section, setSection] = useState<AnalysisSection>("breakdown");
 
   // ── Allocation data by category ──
   const allocations = useMemo(() => {
@@ -272,72 +284,314 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
     return { weightedBeta, concentrated, weightedDivYield, weightedPE };
   }, [holdings, totalValue]);
 
+  const sectionTabs = useMemo(() => {
+    const tabs: { id: AnalysisSection; label: string; icon: React.ReactNode }[] = [
+      { id: "breakdown", label: "Breakdown", icon: <FaChartPie size={13} /> },
+    ];
+    if (riskMetrics) {
+      tabs.push({ id: "risk", label: "Risk & Fundamentals", icon: <FaShieldAlt size={13} /> });
+    }
+    if (returnData.length > 1) {
+      tabs.push({ id: "returns", label: "Return Attribution", icon: <FaChartBar size={13} /> });
+    }
+    return tabs;
+  }, [riskMetrics, returnData.length]);
+
+  // Falls back to the first available tab if the stored preference points at
+  // a section that's no longer there (e.g. down to one holding, so Return
+  // Attribution has nothing to attribute).
+  const activeSection = sectionTabs.some((t) => t.id === section) ? section : sectionTabs[0].id;
+
   if (holdings.length === 0) return null;
 
   return (
     <div className="pa">
-      {/* ── Allocation Breakdown ── */}
-      <div className="pa-section pa-section-alloc">
-        <div className="pa-tabs-header">
-          <h3 className="perf-section-title">
-            <FaChartPie
-              size={14}
-              style={{ marginRight: 6, opacity: 0.7 }}
-            />
-            Portfolio Breakdown
-          </h3>
-          <div className="pa-tabs">
-            {(Object.keys(TAB_LABELS) as AllocTab[]).map((tab) => (
-              <button
-                key={tab}
-                className={`pa-tab ${allocTab === tab ? "active" : ""}`}
-                onClick={() => setAllocTab(tab)}
-              >
-                {TAB_LABELS[tab]}
-                {tab === "assetType" && (
-                  <FaInfoCircle
-                    size={10}
-                    style={{ marginLeft: 4, opacity: 0.6 }}
-                    title="Classification methodology"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setAllocTab("assetType");
-                      setShowInfo((v) => !v);
-                    }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+      <div className="pa-section">
+        <div className="pa-section-tabs">
+          {sectionTabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`pa-section-tab ${activeSection === tab.id ? "active" : ""}`}
+              onClick={() => setSection(tab.id)}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="pa-alloc-content">
-          {activeData.length > 0 ? (
-            <div className="pa-alloc-row">
-              <ResponsiveContainer width={200} height={200}>
-                <PieChart>
-                  <Pie
-                    data={activeData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    stroke="none"
-                  >
-                    {activeData.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={PIE_COLORS[i % PIE_COLORS.length]}
+        {/* ── Breakdown ── */}
+        {activeSection === "breakdown" && (
+          <div className="pa-panel">
+            <div className="pa-tabs">
+              {(Object.keys(TAB_LABELS) as AllocTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  className={`pa-tab ${allocTab === tab ? "active" : ""}`}
+                  onClick={() => setAllocTab(tab)}
+                >
+                  {TAB_LABELS[tab]}
+                  {tab === "assetType" && (
+                    <FaInfoCircle
+                      size={10}
+                      style={{ marginLeft: 4, opacity: 0.6 }}
+                      title="Classification methodology"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setAllocTab("assetType");
+                        setShowInfo((v) => !v);
+                      }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="pa-alloc-content">
+              {activeData.length > 0 ? (
+                <div className="pa-alloc-row">
+                  <ResponsiveContainer width={200} height={200}>
+                    <PieChart>
+                      <Pie
+                        data={activeData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={90}
+                        paddingAngle={2}
+                        stroke="none"
+                      >
+                        {activeData.map((_, i) => (
+                          <Cell
+                            key={i}
+                            fill={PIE_COLORS[i % PIE_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [
+                          `$${fmt(value)}`,
+                        ]}
+                        contentStyle={{
+                          background: "var(--bg-elevated)",
+                          border: "1px solid var(--border-strong)",
+                          borderRadius: 8,
+                          fontSize: "0.85rem",
+                        }}
+                        itemStyle={{ color: "var(--text-primary)" }}
                       />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  <div className="pa-alloc-table">
+                    <div className="pa-alloc-table-header">
+                      <span>Category</span>
+                      <span className="pa-alloc-table-num">Value</span>
+                      <span className="pa-alloc-table-pct">Weight</span>
+                    </div>
+                    {activeData.map((entry, i) => (
+                      <div key={entry.name} className="pa-alloc-table-row">
+                        <div className="pa-alloc-table-label">
+                          <span
+                            className="pa-alloc-dot"
+                            style={{
+                              background:
+                                PIE_COLORS[i % PIE_COLORS.length],
+                            }}
+                          />
+                          <span>{entry.name}</span>
+                        </div>
+                        <span className="pa-alloc-table-num">
+                          ${fmt(entry.value)}
+                        </span>
+                        <span className="pa-alloc-table-pct">
+                          {entry.pct.toFixed(1)}%
+                        </span>
+                      </div>
                     ))}
-                  </Pie>
+                  </div>
+                </div>
+              ) : (
+                <p className="pa-empty">No allocation data available</p>
+              )}
+
+              {/* Methodology notes */}
+              {allocTab === "assetType" && showInfo && (
+                <div className="pa-method-note">
+                  <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>{ASSET_TYPE_METHOD}</span>
+                </div>
+              )}
+              {allocTab === "sector" && etfSectors && Object.keys(etfSectors).length > 0 && (
+                <div className="pa-method-note">
+                  <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>
+                    ETF sector weights use look-through analysis — each ETF's value is
+                    distributed across sectors based on its underlying holdings data.
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Risk & Fundamentals ── */}
+        {activeSection === "risk" && riskMetrics && (
+          <div className="pa-panel">
+            <div className="pa-risk-grid">
+              {/* Beta */}
+              <div className="pa-risk-card">
+                <span className="pa-risk-label">Portfolio Beta</span>
+                <span className="pa-risk-value">
+                  {riskMetrics.weightedBeta.toFixed(2)}
+                </span>
+                <div className="pa-risk-beta-bar">
+                  <span className="pa-risk-hint" style={{ minWidth: 8 }}>
+                    0
+                  </span>
+                  <div className="pa-risk-beta-track">
+                    <div
+                      className="pa-risk-beta-marker"
+                      style={{
+                        left: `${Math.min(
+                          100,
+                          (riskMetrics.weightedBeta / 2.5) * 100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="pa-risk-hint">2.5</span>
+                </div>
+                <span className="pa-risk-hint">
+                  {riskMetrics.weightedBeta > 1.3
+                    ? "Higher volatility than market"
+                    : riskMetrics.weightedBeta > 0.9
+                    ? "Near-market volatility"
+                    : riskMetrics.weightedBeta > 0
+                    ? "Lower volatility than market"
+                    : "No beta data"}
+                </span>
+              </div>
+
+              {/* Concentration */}
+              <div
+                className={`pa-risk-card ${
+                  riskMetrics.concentrated.length > 0 ? "pa-risk-warn" : ""
+                }`}
+              >
+                <span className="pa-risk-label">
+                  Concentration
+                  {riskMetrics.concentrated.length > 0 && (
+                    <FaExclamationTriangle
+                      size={11}
+                      style={{
+                        marginLeft: 5,
+                        color: "var(--negative, #ea4335)",
+                      }}
+                    />
+                  )}
+                </span>
+                <span className="pa-risk-value">
+                  {riskMetrics.concentrated.length > 0
+                    ? riskMetrics.concentrated
+                        .map(
+                          (c) => `${c.symbol} ${c.pct.toFixed(0)}%`
+                        )
+                        .join(", ")
+                    : "Diversified"}
+                </span>
+                <span className="pa-risk-hint">
+                  {riskMetrics.concentrated.length > 0
+                    ? "Single position exceeds 25% of portfolio"
+                    : "No single stock or crypto exceeds 25%"}
+                </span>
+              </div>
+
+              {/* Dividend Yield */}
+              <div className="pa-risk-card">
+                <span className="pa-risk-label">Dividend Yield</span>
+                <span className="pa-risk-value">
+                  {riskMetrics.weightedDivYield.toFixed(2)}%
+                </span>
+                <span className="pa-risk-hint">
+                  {riskMetrics.weightedDivYield > 3
+                    ? "High-yield portfolio"
+                    : riskMetrics.weightedDivYield > 1
+                    ? "Moderate income"
+                    : "Growth-oriented (low yield)"}
+                </span>
+              </div>
+
+              {/* P/E Ratio */}
+              <div className="pa-risk-card">
+                <span className="pa-risk-label">P/E Ratio</span>
+                <span className="pa-risk-value">
+                  {riskMetrics.weightedPE > 0
+                    ? riskMetrics.weightedPE.toFixed(1)
+                    : "—"}
+                </span>
+                <span className="pa-risk-hint">
+                  {riskMetrics.weightedPE > 40
+                    ? "High-growth valuation"
+                    : riskMetrics.weightedPE > 20
+                    ? "Moderate valuation"
+                    : riskMetrics.weightedPE > 0
+                    ? "Value-oriented"
+                    : "N/A — no earnings data"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Return Attribution ── */}
+        {activeSection === "returns" && returnData.length > 1 && (
+          <div className="pa-panel">
+            <p className="pa-return-subtitle">
+              Total gain: <span className={totalGain >= 0 ? "pa-gain" : "pa-loss"}>
+                {formatSignedCurrency(totalGain)}
+              </span>
+            </p>
+            <div className="pa-return-chart">
+              <ResponsiveContainer width="100%" height={Math.max(160, returnData.length * 36 + 40)}>
+                <BarChart
+                  data={returnData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--border)"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                    tickFormatter={(val: number) => {
+                      const abs = Math.abs(val);
+                      if (abs >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
+                      if (abs >= 1e3) return `${(val / 1e3).toFixed(1)}K`;
+                      return `$${val.toFixed(0)}`;
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="symbol"
+                    tick={{ fontSize: 12, fill: "var(--text-primary)", fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={48}
+                  />
                   <Tooltip
                     formatter={(value: number) => [
-                      `$${fmt(value)}`,
+                      formatSignedCurrency(value),
+                      "Gain/Loss",
                     ]}
+                    labelFormatter={(label: string) => label}
                     contentStyle={{
                       background: "var(--bg-elevated)",
                       border: "1px solid var(--border-strong)",
@@ -346,255 +600,25 @@ const PortfolioAnalysis: React.FC<PortfolioAnalysisProps> = ({
                     }}
                     itemStyle={{ color: "var(--text-primary)" }}
                   />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="pa-alloc-table">
-                <div className="pa-alloc-table-header">
-                  <span>Category</span>
-                  <span className="pa-alloc-table-num">Value</span>
-                  <span className="pa-alloc-table-pct">Weight</span>
-                </div>
-                {activeData.map((entry, i) => (
-                  <div key={entry.name} className="pa-alloc-table-row">
-                    <div className="pa-alloc-table-label">
-                      <span
-                        className="pa-alloc-dot"
-                        style={{
-                          background:
-                            PIE_COLORS[i % PIE_COLORS.length],
-                        }}
+                  <ReferenceLine x={0} stroke="var(--text-tertiary)" strokeWidth={1} />
+                  <Bar
+                    dataKey="gain"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={24}
+                  >
+                    {returnData.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={entry.gain >= 0 ? "#34a853" : "#ea4335"}
                       />
-                      <span>{entry.name}</span>
-                    </div>
-                    <span className="pa-alloc-table-num">
-                      ${fmt(entry.value)}
-                    </span>
-                    <span className="pa-alloc-table-pct">
-                      {entry.pct.toFixed(1)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          ) : (
-            <p className="pa-empty">No allocation data available</p>
-          )}
-
-          {/* Methodology notes */}
-          {allocTab === "assetType" && showInfo && (
-            <div className="pa-method-note">
-              <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
-              <span>{ASSET_TYPE_METHOD}</span>
-            </div>
-          )}
-          {allocTab === "sector" && etfSectors && Object.keys(etfSectors).length > 0 && (
-            <div className="pa-method-note">
-              <FaInfoCircle size={11} style={{ flexShrink: 0, marginTop: 2 }} />
-              <span>
-                ETF sector weights use look-through analysis — each ETF's value is
-                distributed across sectors based on its underlying holdings data.
-              </span>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-
-      {/* ── Return Attribution ── */}
-      {returnData.length > 1 && (
-        <div className="pa-section pa-section-returns">
-          <h3 className="perf-section-title">
-            <FaChartBar
-              size={14}
-              style={{ marginRight: 6, opacity: 0.7 }}
-            />
-            Return Attribution
-          </h3>
-          <p className="pa-return-subtitle">
-            Total gain: <span className={totalGain >= 0 ? "pa-gain" : "pa-loss"}>
-              {formatSignedCurrency(totalGain)}
-            </span>
-          </p>
-          <div className="pa-return-chart">
-            <ResponsiveContainer width="100%" height={Math.max(160, returnData.length * 36 + 40)}>
-              <BarChart
-                data={returnData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border)"
-                  horizontal={false}
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
-                  tickFormatter={(val: number) => {
-                    const abs = Math.abs(val);
-                    if (abs >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
-                    if (abs >= 1e3) return `${(val / 1e3).toFixed(1)}K`;
-                    return `$${val.toFixed(0)}`;
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="symbol"
-                  tick={{ fontSize: 12, fill: "var(--text-primary)", fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={48}
-                />
-                <Tooltip
-                  formatter={(value: number) => [
-                    formatSignedCurrency(value),
-                    "Gain/Loss",
-                  ]}
-                  labelFormatter={(label: string) => label}
-                  contentStyle={{
-                    background: "var(--bg-elevated)",
-                    border: "1px solid var(--border-strong)",
-                    borderRadius: 8,
-                    fontSize: "0.85rem",
-                  }}
-                  itemStyle={{ color: "var(--text-primary)" }}
-                />
-                <ReferenceLine x={0} stroke="var(--text-tertiary)" strokeWidth={1} />
-                <Bar
-                  dataKey="gain"
-                  radius={[0, 4, 4, 0]}
-                  maxBarSize={24}
-                >
-                  {returnData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.gain >= 0 ? "#34a853" : "#ea4335"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* ── Risk & Fundamentals ── */}
-      {riskMetrics && (
-        <div className="pa-section pa-section-risk">
-          <h3 className="perf-section-title">
-            <FaShieldAlt
-              size={14}
-              style={{ marginRight: 6, opacity: 0.7 }}
-            />
-            Risk &amp; Fundamentals
-          </h3>
-          <div className="pa-risk-grid">
-            {/* Beta */}
-            <div className="pa-risk-card">
-              <span className="pa-risk-label">Portfolio Beta</span>
-              <span className="pa-risk-value">
-                {riskMetrics.weightedBeta.toFixed(2)}
-              </span>
-              <div className="pa-risk-beta-bar">
-                <span className="pa-risk-hint" style={{ minWidth: 8 }}>
-                  0
-                </span>
-                <div className="pa-risk-beta-track">
-                  <div
-                    className="pa-risk-beta-marker"
-                    style={{
-                      left: `${Math.min(
-                        100,
-                        (riskMetrics.weightedBeta / 2.5) * 100
-                      )}%`,
-                    }}
-                  />
-                </div>
-                <span className="pa-risk-hint">2.5</span>
-              </div>
-              <span className="pa-risk-hint">
-                {riskMetrics.weightedBeta > 1.3
-                  ? "Higher volatility than market"
-                  : riskMetrics.weightedBeta > 0.9
-                  ? "Near-market volatility"
-                  : riskMetrics.weightedBeta > 0
-                  ? "Lower volatility than market"
-                  : "No beta data"}
-              </span>
-            </div>
-
-            {/* Concentration */}
-            <div
-              className={`pa-risk-card ${
-                riskMetrics.concentrated.length > 0 ? "pa-risk-warn" : ""
-              }`}
-            >
-              <span className="pa-risk-label">
-                Concentration
-                {riskMetrics.concentrated.length > 0 && (
-                  <FaExclamationTriangle
-                    size={11}
-                    style={{
-                      marginLeft: 5,
-                      color: "var(--negative, #ea4335)",
-                    }}
-                  />
-                )}
-              </span>
-              <span className="pa-risk-value">
-                {riskMetrics.concentrated.length > 0
-                  ? riskMetrics.concentrated
-                      .map(
-                        (c) => `${c.symbol} ${c.pct.toFixed(0)}%`
-                      )
-                      .join(", ")
-                  : "Diversified"}
-              </span>
-              <span className="pa-risk-hint">
-                {riskMetrics.concentrated.length > 0
-                  ? "Single position exceeds 25% of portfolio"
-                  : "No single stock or crypto exceeds 25%"}
-              </span>
-            </div>
-
-            {/* Dividend Yield */}
-            <div className="pa-risk-card">
-              <span className="pa-risk-label">Dividend Yield</span>
-              <span className="pa-risk-value">
-                {riskMetrics.weightedDivYield.toFixed(2)}%
-              </span>
-              <span className="pa-risk-hint">
-                {riskMetrics.weightedDivYield > 3
-                  ? "High-yield portfolio"
-                  : riskMetrics.weightedDivYield > 1
-                  ? "Moderate income"
-                  : "Growth-oriented (low yield)"}
-              </span>
-            </div>
-
-            {/* P/E Ratio */}
-            <div className="pa-risk-card">
-              <span className="pa-risk-label">P/E Ratio</span>
-              <span className="pa-risk-value">
-                {riskMetrics.weightedPE > 0
-                  ? riskMetrics.weightedPE.toFixed(1)
-                  : "—"}
-              </span>
-              <span className="pa-risk-hint">
-                {riskMetrics.weightedPE > 40
-                  ? "High-growth valuation"
-                  : riskMetrics.weightedPE > 20
-                  ? "Moderate valuation"
-                  : riskMetrics.weightedPE > 0
-                  ? "Value-oriented"
-                  : "N/A — no earnings data"}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
