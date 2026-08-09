@@ -159,7 +159,10 @@
 
 .main-content {
   flex-grow: 1;
-  padding-top: 64px;
+  /* .top-banner renders ~77px tall (nav row + inline search), taller than its
+     52px min-height — this must clear it plus a visible gap, or page content
+     tucks in underneath the fixed header. */
+  padding-top: 96px;
   width: 100%;
 }
 
@@ -203,7 +206,8 @@
   }
 
   .main-content {
-    padding-top: 56px;
+    /* .top-banner is ~65px here, same reasoning as the desktop rule above. */
+    padding-top: 84px;
   }
 
   .header-nav-link span {

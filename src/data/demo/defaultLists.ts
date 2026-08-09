@@ -25,7 +25,17 @@ type DemoPortfolio = Omit<Portfolio, "securities"> & {
 
 const id = () => crypto.randomUUID();
 
-/** Generate synthetic daily portfolio values between two dates. */
+/**
+ * Generate synthetic daily portfolio values between two dates.
+ *
+ * Walks a deterministic geometric random walk (realistic day-to-day
+ * volatility, so the path actually dips and recovers) rather than a fixed
+ * growth rate plus a sliver of noise — the old ±0.3%-of-value jitter was
+ * tiny next to the linear trend, so every seeded portfolio rendered as a
+ * near-straight ramp with no drawdowns, which doesn't read as real market
+ * history. The per-step drift is solved for after the walk is drawn so the
+ * path still lands exactly on `endValue`.
+ */
 function synthHistory(
   startDate: string,
   startValue: number,
@@ -33,41 +43,63 @@ function synthHistory(
 ): Array<{ date: string; value: number }> {
   const start = new Date(startDate);
   const end = new Date();
-  const days: Array<{ date: string; value: number }> = [];
   const totalDays = Math.round(
     (end.getTime() - start.getTime()) / 86_400_000
   );
   if (totalDays <= 0) return [{ date: startDate, value: startValue }];
 
-  // Simple growth curve with slight noise
-  const growthRate = (endValue - startValue) / totalDays;
-  let seed = startValue * 7 + totalDays; // deterministic seed
-  const rand = () => {
-    seed = (seed * 16807 + 0) % 2147483647;
-    return ((seed - 1) / 2147483646 - 0.5) * 2; // -1 to 1
-  };
-
+  const tradingDates: Date[] = [];
   for (let d = 0; d <= totalDays; d++) {
     const date = new Date(start);
     date.setDate(date.getDate() + d);
     const dow = date.getDay();
     if (dow === 0 || dow === 6) continue; // skip weekends
+    tradingDates.push(date);
+  }
+  if (tradingDates.length <= 1) {
+    return [{ date: startDate, value: startValue }];
+  }
 
-    const baseValue = startValue + growthRate * d;
-    const noise = baseValue * 0.003 * rand(); // ±0.3% daily noise
-    const value = Math.max(0, Number((baseValue + noise).toFixed(2)));
+  let seed = startValue * 7 + totalDays; // deterministic seed
+  const rand = () => {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return ((seed - 1) / 2147483646 - 0.5) * 2; // -1 to 1
+  };
+  // Sum of two uniforms approximates a bell curve, so single-day spikes are
+  // rare but plausible up/down swings (rather than a uniform sawtooth) show
+  // up along the path.
+  const gaussianish = () => (rand() + rand()) / 2;
 
-    days.push({
+  const dailyVol = 0.011; // ~1.1% daily stdev, in line with a diversified equity portfolio
+  const steps = tradingDates.length - 1;
+  const cumLogReturns = [0];
+  let cumLog = 0;
+  for (let i = 1; i <= steps; i++) {
+    cumLog += gaussianish() * dailyVol;
+    cumLogReturns.push(cumLog);
+  }
+
+  // Distribute the drift needed to land exactly on endValue evenly across
+  // every step, on top of the random walk drawn above.
+  const targetLog = Math.log(Math.max(endValue, 0.01) / startValue);
+  const driftPerStep = (targetLog - cumLog) / steps;
+
+  return tradingDates.map((date, i) => {
+    const value = Math.max(
+      0,
+      Number(
+        (startValue * Math.exp(cumLogReturns[i] + driftPerStep * i)).toFixed(2)
+      )
+    );
+    return {
       date: date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
       }),
       value,
-    });
-  }
-
-  return days;
+    };
+  });
 }
 
 // ── Portfolio 1: Core ETF Portfolio ──────────────────────
